@@ -1,0 +1,1 @@
+ALTER TABLE public.consultations ADD COLUMN is_urgent boolean NOT NULL DEFAULT false;
