@@ -121,6 +121,19 @@ const Analytics = () => {
     toast.success('Exporting analytics data...');
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+          <TrendingUp className="h-12 w-12 text-primary animate-pulse mb-4" />
+          <h2 className="text-xl font-bold mb-2">Preparing Analytics</h2>
+          <p className="text-muted-foreground max-w-xs">Aggregating platform data for your review. This may take a few seconds...</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

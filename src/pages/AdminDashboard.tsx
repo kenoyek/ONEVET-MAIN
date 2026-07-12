@@ -142,6 +142,19 @@ const AdminDashboard = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container-wide py-20 flex flex-col items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground font-medium">Loading dashboard data...</p>
+          <p className="text-xs text-muted-foreground mt-2 italic">This may take a moment if you haven't run the latest database migrations.</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
