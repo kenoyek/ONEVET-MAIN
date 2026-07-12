@@ -36,18 +36,24 @@ const Auth = () => {
     }
   }, [searchParams]);
 
-  // Role-based redirect after login
+  // Role-based redirect after login.
+  // We redirect as soon as `user` is known — we must NOT wait for `role`
+  // because `role` is fetched from a DB table and can be slow or fail.
+  // We derive the destination from role if available, otherwise from JWT metadata.
   useEffect(() => {
-    if (!loading && user && role && mode !== 'reset') {
-      if (role === 'admin') {
+    if (!loading && user && mode !== 'reset') {
+      // Use DB role if already loaded; otherwise fall back to JWT user_metadata.role
+      const effectiveRole = role ?? (user.user_metadata?.role as string);
+      if (effectiveRole === 'admin') {
         navigate('/admin');
-      } else if (role === 'veterinarian') {
+      } else if (effectiveRole === 'veterinarian') {
         navigate('/vet-dashboard');
       } else {
+        // Default: pet_owner / service_provider → /dashboard
         navigate('/dashboard');
       }
     }
-  }, [user, role, loading, navigate, mode]);
+  }, [user, loading, navigate, mode]); // role intentionally excluded — redirect must not block on it
 
   if (loading) {
     return (

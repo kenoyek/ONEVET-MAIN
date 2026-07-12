@@ -1,15 +1,17 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'pet_owner' | 'veterinarian' | 'service_provider' | 'admin';
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface Profile {
+export type AppRole = 'pet_owner' | 'veterinarian' | 'service_provider' | 'admin';
+
+export interface Profile {
   id: string;
   user_id: string;
-  first_name: string;
-  last_name: string;
+  first_name: string | null;
+  last_name: string | null;
   email: string | null;
   phone: string | null;
   avatar_url: string | null;
@@ -28,6 +30,11 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
+  /**
+   * TRUE only while we haven't yet received the first auth event from Supabase.
+   * Once loading is false, `user` is the single source of truth for "is logged in".
+   * Profile/role may still be loading in the background — never use them to gate auth.
+   */
   loading: boolean;
   signUp: (
     email: string,
@@ -49,140 +56,200 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
+// ─── Context ──────────────────────────────────────────────────────────────────
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
+
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+
+  // loading = true until we get the FIRST auth response (session or null).
+  // This prevents any flash of "logged out" on page load.
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string, currentUser?: User) => {
+  const mounted = useRef(true);
+  // Track whether we have resolved the initial session at least once.
+  // This prevents the onAuthStateChange INITIAL_SESSION event from overriding
+  // a successful getSession() result with a stale null value.
+  const initialSessionResolved = useRef(false);
+
+  // ── Background profile/role fetch ─────────────────────────────────────────
+  // IMPORTANT: This function NEVER modifies user/session state.
+  // Auth state (user + session) is set exclusively from Supabase auth events.
+  const fetchProfile = useCallback(async (authUser: User) => {
+    if (!authUser?.id || !mounted.current) return;
+
     try {
-      const activeUser = currentUser || user;
-      const { data: profileData } = await supabase
+      // ── Profile ───────────────────────────────────────────────────────────
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
-        .maybeSingle(); // Use maybeSingle to avoid errors if missing
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.warn('[Auth] Profile query failed (non-fatal):', profileError.message);
+      }
+
+      if (!mounted.current) return;
 
       if (profileData) {
-        setProfile(profileData);
-      } else {
-        // Automatically create missing profile
+        setProfile(profileData as Profile);
+      } else if (!profileError) {
+        // No profile row — attempt to auto-create from auth metadata
+        const meta = authUser.user_metadata ?? {};
         const { data: newProfile } = await supabase
           .from('profiles')
           .insert({
-            user_id: userId,
-            email: activeUser?.email || '',
-            first_name: activeUser?.user_metadata?.first_name || '',
-            last_name: activeUser?.user_metadata?.last_name || '',
-            customer_type: activeUser?.user_metadata?.customer_type || 'pet_owner',
-            vendor_type: activeUser?.user_metadata?.vendor_type || null,
-            business_name: activeUser?.user_metadata?.business_name || null,
-            location: activeUser?.user_metadata?.location || null,
-            license_number: activeUser?.user_metadata?.license_number || null,
-            specialty: activeUser?.user_metadata?.specialty || null,
-            verification_status: activeUser?.user_metadata?.role === 'veterinarian' ? 'pending' : (activeUser?.user_metadata?.role === 'service_provider' ? 'approved' : 'inactive')
+            user_id: authUser.id,
+            email: authUser.email ?? '',
+            first_name: meta.first_name ?? '',
+            last_name: meta.last_name ?? '',
+            customer_type: meta.customer_type ?? 'pet_owner',
+            vendor_type: meta.vendor_type ?? null,
+            business_name: meta.business_name ?? null,
+            location: meta.location ?? null,
+            license_number: meta.license_number ?? null,
+            specialty: meta.specialty ?? null,
+            verification_status:
+              meta.role === 'veterinarian'
+                ? 'pending'
+                : meta.role === 'service_provider'
+                ? 'approved'
+                : 'inactive',
           })
           .select()
           .maybeSingle();
 
-        if (newProfile) {
-          setProfile(newProfile);
-        } else {
-          setProfile(null);
-        }
+        if (mounted.current) setProfile((newProfile as Profile) ?? null);
       }
 
-      const { data: roleData } = await supabase
+      // ── Role ──────────────────────────────────────────────────────────────
+      if (!mounted.current) return;
+
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
+        .eq('user_id', authUser.id)
         .maybeSingle();
+
+      if (roleError) {
+        console.warn('[Auth] Role query failed (non-fatal):', roleError.message);
+      }
+
+      if (!mounted.current) return;
 
       if (roleData) {
         setRole(roleData.role as AppRole);
-      } else {
-        // Create user role in DB if missing
-        const requestedRole = (activeUser?.user_metadata?.role as AppRole) || 'pet_owner';
+      } else if (!roleError) {
+        // No role row — create from metadata
+        const requestedRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
         const { data: newRole } = await supabase
           .from('user_roles')
-          .insert({
-            user_id: userId,
-            role: requestedRole
-          })
+          .insert({ user_id: authUser.id, role: requestedRole })
           .select()
           .maybeSingle();
-          
-        setRole(newRole ? (newRole.role as AppRole) : requestedRole);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      setProfile(null);
-      setRole('pet_owner');
-    }
-  };
 
-  const refreshProfile = async () => {
-    if (user) {
-      await fetchProfile(user.id, user);
-    }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!mounted) return;
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          await fetchProfile(session.user.id, session.user);
+        if (mounted.current) {
+          setRole(newRole ? (newRole.role as AppRole) : requestedRole);
         }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-      } finally {
-        if (mounted) setLoading(false);
+      } else {
+        // Role query errored — derive from metadata so UI isn't stuck
+        const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
+        if (mounted.current) setRole(fallbackRole);
       }
-    };
+    } catch (err) {
+      console.warn('[Auth] fetchProfile error (non-fatal):', err);
+      if (mounted.current) {
+        // Derive role from JWT metadata as a fallback so redirects still work
+        const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
+        setRole(fallbackRole);
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    initializeAuth();
+  const refreshProfile = useCallback(async () => {
+    if (user) await fetchProfile(user);
+  }, [user, fetchProfile]);
 
+  // ── Single auth listener ──────────────────────────────────────────────────
+  useEffect(() => {
+    mounted.current = true;
+
+    // STEP 1 – Subscribe FIRST so we never miss an event.
+    // The 'INITIAL_SESSION' event will fire immediately with whatever session
+    // is stored. We use this as our primary source of truth.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
+      async (event, newSession) => {
+        if (!mounted.current) return;
+
+        console.debug('[Auth] event:', event, '| user:', newSession?.user?.id ?? 'none');
 
         if (event === 'PASSWORD_RECOVERY') {
-          window.location.href = '/auth?mode=reset';
+          // Let the current tab handle the reset flow
+          if (mounted.current) setLoading(false);
           return;
         }
 
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id, session.user);
+        // ── Set user/session IMMEDIATELY ─────────────────────────────────────
+        // This is what makes the Navbar re-render right away.
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+
+        if (newSession?.user) {
+          // Profile fetch runs in background — auth state is already updated
+          fetchProfile(newSession.user);
         } else {
           setProfile(null);
           setRole(null);
         }
 
-        setLoading(false);
+        // Mark as no longer loading on the first event we receive
+        if (mounted.current) {
+          setLoading(false);
+          initialSessionResolved.current = true;
+        }
       }
     );
 
+    // STEP 2 – getSession() is called AFTER subscribing.
+    // In supabase-js v2, onAuthStateChange fires 'INITIAL_SESSION' synchronously
+    // from the stored token, so in most cases loading will already be false by
+    // the time this resolves. We only use it as a safety net for environments
+    // where INITIAL_SESSION doesn't fire (e.g. SSR or certain build configs).
+    supabase.auth.getSession().then(({ data: { session: storedSession }, error }) => {
+      if (!mounted.current) return;
+      if (error) console.error('[Auth] getSession error:', error.message);
+
+      // If onAuthStateChange already resolved the session, skip this — we don't
+      // want to overwrite a known user with a potentially delayed null result.
+      if (!initialSessionResolved.current) {
+        console.debug('[Auth] getSession fallback firing, INITIAL_SESSION was slow');
+        setSession(storedSession);
+        setUser(storedSession?.user ?? null);
+
+        if (storedSession?.user) {
+          fetchProfile(storedSession.user);
+        }
+        setLoading(false);
+        initialSessionResolved.current = true;
+      }
+    });
+
     return () => {
-      mounted = false;
+      mounted.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Auth actions ───────────────────────────────────────────────────────────
 
   const signUp = async (
     email: string,
@@ -200,7 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   ) => {
     const redirectUrl = `${window.location.origin}/auth/callback`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -224,20 +291,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error as Error | null };
   };
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
+    } catch (err) {
+      console.warn('[Auth] signOut API call failed (non-fatal):', err);
     } finally {
+      // Always clear locally regardless of API success
       queryClient.clear();
       setUser(null);
       setSession(null);
@@ -247,11 +311,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider
+      value={{ user, session, profile, role, loading, signUp, signIn, signOut, refreshProfile }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useAuth() {
   const context = useContext(AuthContext);
