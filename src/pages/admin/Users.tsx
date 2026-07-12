@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import {
@@ -426,5 +426,3 @@ export default function AdminUsers() {
     </div>
   );
 }
-
-import { useNavigate } from 'react-router-dom';

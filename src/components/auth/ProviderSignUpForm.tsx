@@ -340,4 +340,3 @@ export function ProviderSignUpForm() {
     </Form>
   );
 }
-}

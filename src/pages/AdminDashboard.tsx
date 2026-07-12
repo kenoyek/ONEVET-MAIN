@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Users, Stethoscope, MessageCircle, FileText, CreditCard,
   Shield, TrendingUp, Search, ChevronRight, AlertCircle,
-  CheckCircle, Clock, XCircle, RefreshCcw
+  CheckCircle, Clock, XCircle, RefreshCcw, Loader2
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/integrations/supabase/client';

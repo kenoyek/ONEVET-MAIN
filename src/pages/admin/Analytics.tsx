@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, Stethoscope, ShoppingBag, Landmark, TrendingUp,
@@ -490,6 +491,6 @@ const Analytics = () => {
   );
 };
 
-import { Link } from 'react-router-dom';
+export default Analytics;
 
 export default Analytics;
