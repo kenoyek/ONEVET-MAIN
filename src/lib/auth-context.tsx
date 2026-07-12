@@ -67,6 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileData) {
         setProfile(profileData);
+      } else {
+        setProfile(null);
       }
 
       const { data: roleData, error: roleError } = await supabase
@@ -83,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      // Fallback role on error
+      setProfile(null);
       setRole('pet_owner');
     }
   };
@@ -195,11 +197,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setRole(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setRole(null);
+    }
   };
 
   return (
