@@ -72,10 +72,12 @@ const AdminDashboard = () => {
         .eq('role', 'veterinarian');
 
       // Fetch pending vendors
-      const { data: pendingVetsData } = await supabase
+      const { data: pendingVetsData, error: pendingError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, license_number, license_url, created_at, vendor_type')
         .eq('verification_status', 'pending');
+
+      if (pendingError) throw pendingError;
 
       // Fetch active subscriptions
       const { count: activeSubsCount } = await supabase
