@@ -91,7 +91,7 @@ export default function Contact() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
+      <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden liquid-bg">
         <div className="container-wide text-center relative z-10">
           <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
             Contact Us
@@ -99,7 +99,7 @@ export default function Contact() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-black text-foreground mb-6 tracking-tighter leading-tight"
+            className="text-5xl md:text-6xl font-black text-foreground mb-6 tracking-tighter heading-safe"
           >
             How can we <span className="text-gradient-brand">help you?</span>
           </motion.h1>
@@ -250,7 +250,7 @@ export default function Contact() {
                 <AccordionItem
                   key={index}
                   value={`item-${index}`}
-                  className="bg-card border border-border rounded-lg px-6"
+                  className="glass-card rounded-2xl px-6 overflow-hidden"
                 >
                   <AccordionTrigger className="text-left font-semibold hover:no-underline">
                     {faq.question}

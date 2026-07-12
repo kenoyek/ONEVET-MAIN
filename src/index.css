@@ -123,7 +123,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased overflow-x-hidden;
     padding-bottom: env(safe-area-inset-bottom);
   }
 
@@ -135,6 +135,10 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display font-bold tracking-tight;
+  }
+
+  h1, h2 {
+    line-height: 1.18;
   }
 }
 
@@ -162,6 +166,8 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    padding-top: 0.08em;
+    padding-bottom: 0.06em;
   }
 
   /* Card variants */
@@ -170,7 +176,7 @@
   }
 
   .card-interactive {
-    @apply card-elevated transition-all duration-300 hover:shadow-xl hover:shadow-[hsl(var(--shadow-color))/0.12] hover:-translate-y-1;
+    @apply card-elevated transition-all duration-300 hover:shadow-xl hover:shadow-[hsl(var(--shadow-color))/0.16] hover:-translate-y-1;
   }
 
   .card-feature {
@@ -179,15 +185,63 @@
 
   /* Glassmorphism */
   .glass {
-    @apply bg-background/60 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-sm;
+    @apply bg-background/60 backdrop-blur-md backdrop-saturate-150 border border-white/30 dark:border-white/10 shadow-sm;
   }
 
   .glass-strong {
-    @apply bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-soft;
+    @apply bg-background/[0.78] backdrop-blur-2xl backdrop-saturate-150 border-b border-white/20 dark:border-white/10 shadow-soft;
   }
 
   .glass-card {
-    @apply bg-white/40 dark:bg-white/5 backdrop-blur-md border border-white/20 dark:border-white/10 shadow-soft transition-all duration-300;
+    @apply relative bg-white/[0.58] dark:bg-white/[0.07] backdrop-blur-2xl backdrop-saturate-150 border border-white/45 dark:border-white/10 shadow-soft transition-all duration-300;
+    box-shadow:
+      inset 0 1px 0 hsl(0 0% 100% / 0.45),
+      inset 0 -1px 0 hsl(var(--primary) / 0.05),
+      0 24px 80px -36px hsl(var(--shadow-color) / 0.38),
+      0 10px 28px -18px hsl(var(--shadow-color) / 0.2);
+  }
+
+  .glass-card::before {
+    content: '';
+    @apply pointer-events-none absolute inset-0 rounded-[inherit];
+    background:
+      linear-gradient(135deg, hsl(0 0% 100% / 0.28), transparent 38%),
+      radial-gradient(circle at 18% 0%, hsl(var(--primary) / 0.12), transparent 36%),
+      radial-gradient(circle at 100% 100%, hsl(var(--secondary) / 0.08), transparent 34%);
+  }
+
+  .glass-panel {
+    @apply glass-card overflow-hidden;
+  }
+
+  .liquid-bg {
+    @apply relative overflow-hidden;
+  }
+
+  .liquid-bg::before,
+  .liquid-bg::after {
+    content: '';
+    @apply pointer-events-none absolute rounded-full blur-3xl;
+  }
+
+  .liquid-bg::before {
+    width: min(42vw, 34rem);
+    height: min(42vw, 34rem);
+    top: -12rem;
+    right: -8rem;
+    background: radial-gradient(circle, hsl(var(--secondary) / 0.22), transparent 68%);
+  }
+
+  .liquid-bg::after {
+    width: min(36vw, 28rem);
+    height: min(36vw, 28rem);
+    bottom: -10rem;
+    left: -8rem;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.2), transparent 70%);
+  }
+
+  .heading-safe {
+    @apply leading-[1.18] pt-1;
   }
 
   /* Premium Gradients */

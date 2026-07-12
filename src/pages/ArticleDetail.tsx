@@ -187,11 +187,11 @@ export default function ArticleDetail() {
                 ))}
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-8 tracking-tighter leading-[1.1]">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-8 tracking-tighter heading-safe">
                 {article.title}
               </h1>
 
-              <div className="flex items-center justify-between flex-wrap gap-6 p-6 rounded-[2rem] bg-card border border-border/50 shadow-soft">
+              <div className="glass-card flex items-center justify-between flex-wrap gap-6 p-6 rounded-[2rem] shadow-soft">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
                     <AvatarImage src={article.author?.avatar_url || undefined} />

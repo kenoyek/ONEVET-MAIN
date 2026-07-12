@@ -8,19 +8,20 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/use-cart";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   ShoppingBag, 
   Search,
   Filter,
-  Plus,
   ShoppingCart,
   ArrowRight,
   Loader2,
-  Package,
   CheckCircle2,
   MapPin
 } from "lucide-react";
+import { toast } from "sonner";
+import { ProductImageFallback } from "@/components/marketplace/ProductImageFallback";
+import livestockCareImage from "@/assets/marketing/livestock-care.jpg";
 
 import { Link } from "react-router-dom";
 
@@ -76,7 +77,7 @@ const Marketplace = () => {
       id: listing.id,
       title: listing.title,
       price: listing.price,
-      image: listing.images?.[0] || '/placeholder.svg',
+      image: listing.images?.[0] || '/product-fallback.svg',
       quantity: 1,
       seller_id: listing.seller_id
     });
@@ -147,13 +148,18 @@ const Marketplace = () => {
                   transition={{ duration: 0.4 }}
                 >
                   <Link to={`/marketplace/${item.id}`}>
-                    <Card className="h-full flex flex-col group rounded-[2rem] overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated bg-card">
+                    <Card className="glass-card h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
                       <div className="relative aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]">
-                        <img
-                          src={item.images?.[0] || '/placeholder.svg'}
-                          alt={item.title}
-                          className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-                        />
+                        {item.images?.[0] ? (
+                          <img
+                            src={item.images[0]}
+                            alt={item.title}
+                            loading="lazy"
+                            className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                          />
+                        ) : (
+                          <ProductImageFallback category={item.category} title={item.title} />
+                        )}
                         <Badge className="absolute top-3 right-3 bg-background/90 backdrop-blur-md text-foreground border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                           {item.category}
                         </Badge>
@@ -256,8 +262,9 @@ const Marketplace = () => {
                 <div className="hidden md:block">
                   <div className="relative">
                     <img
-                      src="https://images.unsplash.com/photo-1578496479914-7ef3b0193be3?q=80&w=1000&auto=format&fit=crop"
+                      src={livestockCareImage}
                       alt="Veterinary supplies"
+                      loading="lazy"
                       className="rounded-2xl shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"
                     />
                     <div className="absolute -bottom-6 -left-6 bg-background p-4 rounded-xl shadow-lg text-foreground animate-bounce">

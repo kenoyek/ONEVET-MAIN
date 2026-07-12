@@ -6,6 +6,8 @@ import { ServiceCard } from "@/components/services/ServiceCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import vetTeleconsultImage from "@/assets/marketing/vet-teleconsult.jpg";
+import livestockCareImage from "@/assets/marketing/livestock-care.jpg";
 import { 
   Stethoscope, 
   Scissors, 
@@ -99,7 +101,7 @@ const Services = () => {
       <Navbar />
       <main>
         {/* Hero Section */}
-        <section className="relative py-24 md:py-32 lg:py-40 bg-gradient-premium overflow-hidden">
+        <section className="relative py-24 md:py-32 lg:py-40 bg-gradient-premium overflow-hidden liquid-bg">
           {/* Decorative elements */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -116,7 +118,7 @@ const Services = () => {
               <Badge variant="outline" className="mb-6 border-white/30 text-white px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">
                 Premium Ecosystem
               </Badge>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-primary-foreground mb-8 tracking-tighter leading-tight">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-primary-foreground mb-8 tracking-tighter heading-safe">
                 Complete care for your <span className="text-secondary">animal family.</span>
               </h1>
               <p className="text-xl md:text-2xl text-primary-foreground/90 mb-10 font-medium leading-relaxed">
@@ -186,10 +188,11 @@ const Services = () => {
                 <div className="hidden md:block relative">
                   <div className="rounded-[2.5rem] overflow-hidden shadow-elevated border-8 border-background aspect-square">
                     <img
-                      src="https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?q=80&w=2070&auto=format&fit=crop"
-                      alt="Veterinary professional on tablet"
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                    />
+                    src={vetTeleconsultImage}
+                    alt="Veterinary professional on tablet"
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                  />
                   </div>
                 </div>
               </div>
@@ -260,9 +263,10 @@ const Services = () => {
                 className="hidden md:block"
               >
                 <img 
-                  src="/placeholder.svg" 
+                  src={livestockCareImage}
                   alt="Service providers" 
-                  className="rounded-xl shadow-lg w-full h-80 object-cover"
+                  loading="lazy"
+                  className="rounded-[2.5rem] shadow-elevated w-full h-80 object-cover border-8 border-primary-foreground/10"
                 />
               </motion.div>
             </div>

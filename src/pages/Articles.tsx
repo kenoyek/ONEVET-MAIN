@@ -79,7 +79,7 @@ export default function Articles() {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
+        <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden liquid-bg">
           <div className="container-wide text-center relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -89,7 +89,7 @@ export default function Articles() {
               <Badge variant="outline" className="mb-6 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
                 Knowledge Base
               </Badge>
-              <h1 className="text-5xl md:text-6xl font-black text-foreground mb-6 tracking-tighter leading-tight">
+              <h1 className="text-5xl md:text-6xl font-black text-foreground mb-6 tracking-tighter heading-safe">
                 Insights for <span className="text-gradient-brand">animal health.</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-10 font-medium leading-relaxed">
@@ -164,12 +164,13 @@ export default function Articles() {
                     transition={{ delay: index * 0.05, duration: 0.5 }}
                   >
                     <Link to={`/articles/${article.slug}`} className="group block h-full">
-                      <Card className="h-full rounded-[2.5rem] overflow-hidden border-border/50 bg-card hover:shadow-elevated hover:-translate-y-2 transition-all duration-500 flex flex-col">
+                      <Card className="glass-card h-full rounded-[2.5rem] overflow-hidden hover:shadow-elevated hover:-translate-y-2 transition-all duration-500 flex flex-col">
                         <div className="relative h-64 overflow-hidden m-2 rounded-[2rem]">
                           {article.image_url ? (
                             <img
                               src={article.image_url}
                               alt={article.title}
+                              loading="lazy"
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
                           ) : (

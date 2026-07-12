@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
+import { ProductImageFallback } from "@/components/marketplace/ProductImageFallback";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -76,7 +77,7 @@ const ProductDetail = () => {
       id: product.id,
       title: product.title,
       price: product.price,
-      image: product.images?.[0] || '/placeholder.svg',
+      image: product.images?.[0] || '/product-fallback.svg',
       quantity: 1,
       seller_id: product.seller_id
     });
@@ -100,11 +101,15 @@ const ProductDetail = () => {
             {/* Image Gallery */}
             <div className="space-y-6">
               <div className="aspect-square rounded-[3rem] overflow-hidden bg-white shadow-elevated border-8 border-background">
-                <img
-                  src={product.images?.[selectedImage] || '/placeholder.svg'}
-                  alt={product.title}
-                  className="w-full h-full object-cover transition-all duration-700 hover:scale-105"
-                />
+                {product.images?.[selectedImage] ? (
+                  <img
+                    src={product.images[selectedImage]}
+                    alt={product.title}
+                    className="w-full h-full object-cover transition-all duration-700 hover:scale-105"
+                  />
+                ) : (
+                  <ProductImageFallback category={product.category} title={product.title} />
+                )}
               </div>
               {product.images && product.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-4 px-2">
@@ -127,7 +132,7 @@ const ProductDetail = () => {
             <div className="flex flex-col pt-4">
               <div className="mb-8">
                 <Badge className="mb-4 bg-primary/10 text-primary border-none px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{product.category}</Badge>
-                <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4 tracking-tighter leading-tight">{product.title}</h1>
+                <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4 tracking-tighter heading-safe">{product.title}</h1>
                 <div className="flex items-center gap-4 mb-6">
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
                     <Store className="w-4 h-4 text-primary" />

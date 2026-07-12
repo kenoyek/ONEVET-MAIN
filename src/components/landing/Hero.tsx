@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { MessageCircle, Shield, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import vetTeleconsultImage from '@/assets/marketing/vet-teleconsult.jpg';
 
 const stats = [
   { value: '24/7', label: 'Vet Availability' },
@@ -11,7 +12,7 @@ const stats = [
 
 export function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center pt-24 md:pt-32 pb-16 overflow-hidden bg-mesh-gradient">
+    <section className="relative min-h-[90vh] flex items-center pt-24 md:pt-32 pb-16 overflow-hidden bg-mesh-gradient liquid-bg">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-secondary/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
@@ -30,13 +31,13 @@ export function Hero() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase mb-8"
+              className="inline-flex max-w-full items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] sm:text-xs font-bold tracking-widest uppercase mb-8"
             >
               <Shield className="w-4 h-4" />
               Licensed Veterinary Network • Nigeria
             </motion.div>
 
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold text-foreground leading-[1.1] mb-8 tracking-tighter">
+            <h1 className="font-display text-4xl sm:text-6xl lg:text-7xl font-extrabold text-foreground heading-safe mb-8 tracking-tighter">
               Exceptional care for your <span className="text-gradient-brand">best friend.</span>
             </h1>
 
@@ -45,13 +46,13 @@ export function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
-              <Button size="xl" className="font-bold shadow-glow hover:scale-105 transition-all rounded-full px-8" asChild>
+              <Button size="xl" className="w-full sm:w-auto font-bold shadow-glow hover:scale-105 transition-all rounded-full px-8" asChild>
                 <Link to="/consultations/new">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   Talk to a Vet Now
                 </Link>
               </Button>
-              <Button variant="outline" size="xl" className="font-bold border-2 rounded-full px-8 hover:bg-muted/50 transition-all" asChild>
+              <Button variant="glass" size="xl" className="w-full sm:w-auto font-bold rounded-full px-8 transition-all" asChild>
                 <Link to="/auth?mode=signup">
                   Explore Services
                   <ArrowRight className="w-5 h-5 ml-2" />
@@ -60,7 +61,7 @@ export function Hero() {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-10 md:gap-16 pt-4 border-t border-border/40">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-8 md:gap-16 pt-4 border-t border-border/40">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -88,8 +89,9 @@ export function Hero() {
           >
             <div className="relative rounded-[2.5rem] overflow-hidden shadow-elevated border-[8px] border-background aspect-[4/5] max-h-[600px]">
               <img
-                src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?q=80&w=2070&auto=format&fit=crop"
+                src={vetTeleconsultImage}
                 alt="Veterinarian examining a dog"
+                loading="eager"
                 className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
               />
               {/* Floating Cards */}

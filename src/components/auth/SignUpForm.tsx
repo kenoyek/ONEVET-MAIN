@@ -111,7 +111,7 @@ export function SignUpForm() {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name</Label>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Okagu" autoComplete="family-name" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
                 </FormControl>

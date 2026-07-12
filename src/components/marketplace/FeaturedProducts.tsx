@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/hooks/use-cart";
+import { ProductImageFallback } from "@/components/marketplace/ProductImageFallback";
 
 export function FeaturedProducts() {
   const { addItem } = useCart();
@@ -60,13 +61,18 @@ export function FeaturedProducts() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
             >
-              <Card className="h-full flex flex-col group rounded-[2rem] overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated bg-card">
+              <Card className="glass-card h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
                 <div className="relative aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]">
-                  <img
-                    src={product.images?.[0] || '/placeholder.svg'}
-                    alt={product.title}
-                    className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-                  />
+                  {product.images?.[0] ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.title}
+                      loading="lazy"
+                      className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <ProductImageFallback category={product.category} title={product.title} />
+                  )}
                   <div className="absolute top-3 left-3 flex flex-col gap-2">
                     <Badge className="bg-background/90 backdrop-blur-md text-foreground border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                       {product.category}
@@ -98,7 +104,7 @@ export function FeaturedProducts() {
                       id: product.id,
                       title: product.title,
                       price: product.price,
-                      image: product.images?.[0] || '/placeholder.svg',
+                      image: product.images?.[0] || '/product-fallback.svg',
                       quantity: 1,
                       seller_id: product.seller_id
                     })}

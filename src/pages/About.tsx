@@ -1,10 +1,12 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ValueCard } from "@/components/about/ValueCard";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import clinicCatExamImage from "@/assets/marketing/clinic-cat-exam.jpg";
 import { 
   Heart, 
   Shield, 
@@ -57,7 +59,7 @@ const About = () => {
       <Navbar />
       <main>
         {/* Hero Section */}
-        <section className="relative py-24 md:py-32 lg:py-40 bg-gradient-premium overflow-hidden">
+        <section className="relative py-24 md:py-32 lg:py-40 bg-gradient-premium overflow-hidden liquid-bg">
           {/* Decorative elements */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -74,7 +76,7 @@ const About = () => {
               <Badge variant="outline" className="mb-6 border-white/30 text-white px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">
                 Our Story
               </Badge>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-primary-foreground mb-8 tracking-tighter leading-tight">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-primary-foreground mb-8 tracking-tighter heading-safe">
                 Bringing premium care to <span className="text-secondary">every home.</span>
               </h1>
               <p className="text-xl md:text-2xl text-primary-foreground/90 font-medium leading-relaxed">
@@ -117,8 +119,9 @@ const About = () => {
               >
                 <div className="rounded-[3rem] overflow-hidden shadow-elevated border-8 border-background aspect-[4/3]">
                   <img
-                    src="https://images.unsplash.com/photo-1599443015574-be5fe8a05783?q=80&w=2070&auto=format&fit=crop"
+                    src={clinicCatExamImage}
                     alt="Veterinarian with animal"
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                   />
                 </div>
@@ -140,7 +143,7 @@ const About = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <Card className="h-full rounded-[3rem] p-10 border border-border/50 bg-card overflow-hidden group">
+                <Card className="h-full glass-card rounded-[3rem] p-10 overflow-hidden group">
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-8 shadow-soft transition-all duration-500 group-hover:scale-110 group-hover:bg-primary group-hover:text-white">
                     <Target className="w-8 h-8" />
                   </div>
@@ -157,7 +160,7 @@ const About = () => {
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
               >
-                <Card className="h-full rounded-[3rem] p-10 border border-border/50 bg-card overflow-hidden group">
+                <Card className="h-full glass-card rounded-[3rem] p-10 overflow-hidden group">
                   <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-8 shadow-soft transition-all duration-500 group-hover:scale-110 group-hover:bg-secondary group-hover:text-white">
                     <Eye className="w-8 h-8" />
                   </div>

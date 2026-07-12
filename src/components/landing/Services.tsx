@@ -2,7 +2,12 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { MessageCircle, Scissors, Home, Hospital, BookOpen, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/lib/auth-context';
+import vetTeleconsultImage from '@/assets/marketing/vet-teleconsult.jpg';
+import petGroomingImage from '@/assets/marketing/pet-grooming.jpg';
+import petSittingImage from '@/assets/marketing/pet-sitting.jpg';
+import livestockCareImage from '@/assets/marketing/livestock-care.jpg';
 
 const services = [
   {
@@ -11,7 +16,7 @@ const services = [
     description: 'Instant access to licensed veterinarians for medical advice, diagnosis, and triage from your phone.',
     href: '/consultations',
     color: 'bg-primary',
-    image: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop'
+    image: vetTeleconsultImage
   },
   {
     icon: Scissors,
@@ -19,7 +24,7 @@ const services = [
     description: 'Expert grooming services including bathing, styling, and hygiene care to keep your pet looking its best.',
     href: '/services/groomers',
     color: 'bg-secondary',
-    image: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?q=80&w=2071&auto=format&fit=crop'
+    image: petGroomingImage
   },
   {
     icon: Home,
@@ -27,15 +32,15 @@ const services = [
     description: 'Vetted boarding facilities and professional sitters providing a safe, loving home away from home.',
     href: '/services/pet-sitting',
     color: 'bg-accent',
-    image: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2069&auto=format&fit=crop'
+    image: petSittingImage
   },
   {
     icon: BookOpen,
-    title: 'Pet Health Education',
-    description: 'Evidence-based articles and guides on pet nutrition, behavior, and preventive healthcare.',
+    title: 'Pet & Livestock Education',
+    description: 'Evidence-based articles and guides on pet nutrition, behavior, and preventive livestock healthcare.',
     href: '/education',
     color: 'bg-info',
-    image: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=2064&auto=format&fit=crop'
+    image: livestockCareImage
   },
 ];
 
@@ -84,6 +89,7 @@ export function Services() {
                   <img
                     src={service.image}
                     alt={service.title}
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />

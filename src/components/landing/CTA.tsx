@@ -7,7 +7,7 @@ export function CTA() {
   return (
     <section className="section-padding bg-background relative overflow-hidden">
       <div className="container-wide relative z-10">
-        <div className="bg-gradient-premium rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden shadow-elevated">
+        <div className="bg-gradient-premium rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden shadow-elevated liquid-bg">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-20 pointer-events-none">
             <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
@@ -21,7 +21,7 @@ export function CTA() {
             transition={{ duration: 0.6 }}
             className="max-w-3xl mx-auto relative z-10"
           >
-            <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-primary-foreground mb-8 tracking-tighter leading-tight">
+            <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-primary-foreground mb-8 tracking-tighter heading-safe">
               Ready to give your pet the <span className="text-secondary">best care?</span>
             </h2>
             <p className="text-xl md:text-2xl text-primary-foreground/90 mb-12 font-medium leading-relaxed">
@@ -35,7 +35,7 @@ export function CTA() {
                   Get Started for Free
                 </Link>
               </Button>
-              <Button variant="outline" size="xl" className="border-white/30 text-white hover:bg-white/10 font-bold rounded-full px-10 hover:scale-105 transition-all" asChild>
+              <Button variant="glass" size="xl" className="text-white font-bold rounded-full px-10 hover:scale-105 transition-all" asChild>
                 <Link to="/auth?mode=signup">
                   Register Account
                   <ArrowRight className="w-5 h-5 ml-3" />

@@ -150,7 +150,7 @@ export default function Pricing() {
               <Badge variant="outline" className="mb-6 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
                 <Sparkles className="w-3 h-3 mr-2" /> Memberships
               </Badge>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-6 tracking-tighter leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-6 tracking-tighter heading-safe">
                 Healthcare without <span className="text-gradient-brand">boundaries.</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto font-medium">
@@ -211,7 +211,7 @@ export default function Pricing() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: i * 0.15 }}
                     >
-                      <Card className={`relative h-full flex flex-col rounded-[3rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 ${isPopular ? 'border-primary border-4 shadow-elevated bg-card' : 'border-border/50 shadow-soft bg-card/50'}`}>
+                      <Card className={`glass-card relative h-full flex flex-col rounded-[3rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 ${isPopular ? 'border-primary/50 shadow-elevated bg-primary/[0.03]' : 'border-border/50 shadow-soft'}`}>
                         {isPopular && (
                           <div className="absolute top-0 right-0">
                             <div className="bg-primary text-white px-8 py-2 rounded-bl-[2rem] font-black text-[10px] uppercase tracking-widest shadow-soft">
@@ -315,7 +315,7 @@ export default function Pricing() {
             </motion.div>
             <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, i) => (
-                <AccordionItem key={i} value={`faq-${i}`} className="border border-border/50 rounded-2xl px-6 bg-card/50 overflow-hidden">
+                <AccordionItem key={i} value={`faq-${i}`} className="glass-card rounded-2xl px-6 overflow-hidden">
                   <AccordionTrigger className="text-left py-6 font-bold text-lg hover:no-underline group">
                     <div className="flex items-center gap-4">
                       <div className="p-2 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary group-data-[state=open]:text-white transition-colors">
