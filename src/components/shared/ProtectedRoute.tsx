@@ -19,23 +19,38 @@ export function ProtectedRoute({
   const { user, role, loading } = useAuth();
   const location = useLocation();
 
+  // 1. Wait for Auth metadata (Vite/Supabase session)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium">Authenticating...</p>
         </div>
       </div>
     );
   }
 
+  // 2. No user? Send to login
   if (!user) {
     return <Navigate to={redirectTo} state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to appropriate dashboard based on role
+  // 3. User exists but Role is still fetching from DB? Wait for it.
+  // This prevents redirect loops while database queries are in flight.
+  if (allowedRoles && role === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium">Verifying Permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Role exists but is not allowed? Send to their respective home
+  if (allowedRoles && !allowedRoles.includes(role)) {
     const dashboardPath = role === 'admin' 
       ? '/admin' 
       : role === 'veterinarian' 

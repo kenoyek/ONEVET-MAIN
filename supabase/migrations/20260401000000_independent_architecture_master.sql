@@ -670,10 +670,17 @@ CREATE POLICY "Admins can manage contact messages" ON public.contact_messages FO
 -- 7. Performance Indexes
 CREATE INDEX IF NOT EXISTS idx_profiles_user_id ON public.profiles(user_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON public.profiles(created_at);
+CREATE INDEX IF NOT EXISTS idx_profiles_verification_status ON public.profiles(verification_status);
 CREATE INDEX IF NOT EXISTS idx_consultations_status ON public.consultations(status);
+CREATE INDEX IF NOT EXISTS idx_consultations_created_at ON public.consultations(created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_consultation_id ON public.messages(consultation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON public.messages(created_at);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_marketplace_active_approved ON public.marketplace_listings(is_active, is_approved);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_id ON public.orders(customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at);
 
 -- 8. Realtime Configuration
 ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
