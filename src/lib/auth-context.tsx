@@ -75,7 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-  useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
@@ -120,9 +119,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string, selectedRole: AppRole) => {
