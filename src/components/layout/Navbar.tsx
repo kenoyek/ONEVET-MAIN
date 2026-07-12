@@ -1,5 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Stethoscope, User, LogOut, LayoutDashboard, ShoppingCart, MessageCircle } from 'lucide-react';
+import { 
+  Stethoscope, User, LogOut, LayoutDashboard, ShoppingCart, MessageCircle,
+  ChevronDown, Calendar, Package, Settings, Sun, Moon, Laptop, HelpCircle, PhoneCall
+} from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
@@ -28,6 +32,7 @@ const navLinks = [
 
 export function Navbar() {
   const { user, profile, role, signOut, loading } = useAuth();
+  const { theme, setTheme } = useTheme();
   const { totalItems } = useCart();
   const navigate = useNavigate();
 
@@ -37,8 +42,10 @@ export function Navbar() {
   };
 
   const getInitials = () => {
-    if (profile?.first_name && profile?.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+    if (profile?.first_name || profile?.last_name) {
+      const f = profile.first_name?.[0] || '';
+      const l = profile.last_name?.[0] || '';
+      return `${f}${l}`.toUpperCase() || 'U';
     }
     return user?.email?.[0]?.toUpperCase() || 'U';
   };
@@ -88,17 +95,21 @@ export function Navbar() {
             <Separator orientation="vertical" className="h-6 hidden md:block mx-1" />
 
             {loading ? (
-              <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />
+              <div className="flex items-center gap-1.5 animate-pulse">
+                <div className="w-8 h-8 rounded-full bg-muted border border-border/50" />
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground/30" />
+              </div>
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 border border-border/50 hover:border-primary/50 transition-colors">
-                    <Avatar className="h-full w-full">
+                  <Button variant="ghost" className="relative flex items-center gap-1.5 p-1 h-auto rounded-full border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all">
+                    <Avatar className="h-8 w-8">
                       <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.first_name || 'User'} className="object-cover" />
-                      <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                      <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted-foreground mr-1.5 group-hover:text-primary transition-colors" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64 mt-2 glass-card p-2" align="end">
@@ -110,30 +121,105 @@ export function Navbar() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col space-y-0.5 overflow-hidden">
-                      <p className="font-bold text-sm truncate">{profile?.first_name} {profile?.last_name}</p>
-                      <p className="text-[10px] text-muted-foreground truncate uppercase tracking-widest font-bold">{role?.replace('_', ' ')}</p>
+                      <p className="font-bold text-sm truncate">
+                        {profile?.first_name || profile?.last_name 
+                          ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
+                          : 'User Account'}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate uppercase tracking-widest font-bold">
+                        {role?.replace('_', ' ') || 'Pet Owner'}
+                      </p>
                     </div>
                   </div>
+                  
                   <DropdownMenuSeparator className="bg-border/40" />
-                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2.5">
+                  
+                  {/* Account Section */}
+                  <div className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/75">
+                    Account
+                  </div>
+                  
+                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Link to="/profile">
+                      <User className="mr-3 h-4 w-4 text-primary" />
+                      <span className="font-medium">My Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
                     <Link to={role === 'veterinarian' ? '/vet-dashboard' : role === 'admin' ? '/admin' : '/dashboard'}>
                       <LayoutDashboard className="mr-3 h-4 w-4 text-primary" />
                       <span className="font-medium">Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2.5">
+                  
+                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
                     <Link to="/consultations">
-                      <MessageCircle className="mr-3 h-4 w-4 text-primary" />
-                      <span className="font-medium">Consultations</span>
+                      <Calendar className="mr-3 h-4 w-4 text-primary" />
+                      <span className="font-medium">Appointments</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2.5">
-                    <Link to="/profile">
-                      <User className="mr-3 h-4 w-4 text-primary" />
-                      <span className="font-medium">Profile Settings</span>
+                  
+                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Link to="/cart">
+                      <Package className="mr-3 h-4 w-4 text-primary" />
+                      <span className="font-medium">Orders</span>
                     </Link>
                   </DropdownMenuItem>
+                  
+                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Link to="/profile#settings">
+                      <Settings className="mr-3 h-4 w-4 text-primary" />
+                      <span className="font-medium">Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+
                   <DropdownMenuSeparator className="bg-border/40" />
+
+                  {/* Theme Section */}
+                  <div className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/75">
+                    Theme
+                  </div>
+                  
+                  <DropdownMenuItem onClick={() => setTheme('light')} className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Sun className="mr-3 h-4 w-4 text-primary" />
+                    <span className="font-medium">Light</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onClick={() => setTheme('dark')} className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Moon className="mr-3 h-4 w-4 text-primary" />
+                    <span className="font-medium">Dark</span>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onClick={() => setTheme('system')} className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Laptop className="mr-3 h-4 w-4 text-primary" />
+                    <span className="font-medium">System</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className="bg-border/40" />
+
+                  {/* Support Section */}
+                  <div className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/75">
+                    Support
+                  </div>
+                  
+                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Link to="/about">
+                      <HelpCircle className="mr-3 h-4 w-4 text-primary" />
+                      <span className="font-medium">Help Center</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
+                    <Link to="/contact">
+                      <PhoneCall className="mr-3 h-4 w-4 text-primary" />
+                      <span className="font-medium">Contact Support</span>
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className="bg-border/40" />
+
+                  {/* Danger Zone Section */}
                   <DropdownMenuItem onClick={handleSignOut} className="rounded-md focus:bg-destructive/10 cursor-pointer py-2.5 text-destructive">
                     <LogOut className="mr-3 h-4 w-4" />
                     <span className="font-bold">Sign out</span>

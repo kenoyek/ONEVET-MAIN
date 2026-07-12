@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 type AppRole = 'pet_owner' | 'veterinarian' | 'service_provider' | 'admin';
@@ -51,15 +52,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, currentUser?: User) => {
     try {
-      const { data: profileData, error: profileError } = await supabase
+      const activeUser = currentUser || user;
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
@@ -68,10 +71,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (profileData) {
         setProfile(profileData);
       } else {
-        setProfile(null);
+        // Automatically create missing profile
+        const { data: newProfile } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: userId,
+            email: activeUser?.email || '',
+            first_name: activeUser?.user_metadata?.first_name || '',
+            last_name: activeUser?.user_metadata?.last_name || '',
+            customer_type: activeUser?.user_metadata?.customer_type || 'pet_owner',
+            vendor_type: activeUser?.user_metadata?.vendor_type || null,
+            business_name: activeUser?.user_metadata?.business_name || null,
+            location: activeUser?.user_metadata?.location || null,
+            license_number: activeUser?.user_metadata?.license_number || null,
+            specialty: activeUser?.user_metadata?.specialty || null,
+            verification_status: activeUser?.user_metadata?.role === 'veterinarian' ? 'pending' : (activeUser?.user_metadata?.role === 'service_provider' ? 'approved' : 'inactive')
+          })
+          .select()
+          .maybeSingle();
+
+        if (newProfile) {
+          setProfile(newProfile);
+        } else {
+          setProfile(null);
+        }
       }
 
-      const { data: roleData, error: roleError } = await supabase
+      const { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
@@ -80,8 +106,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (roleData) {
         setRole(roleData.role as AppRole);
       } else {
-        // If no role found in DB, default to pet_owner to allow access to basic dashboard
-        setRole('pet_owner');
+        // Create user role in DB if missing
+        const requestedRole = (activeUser?.user_metadata?.role as AppRole) || 'pet_owner';
+        const { data: newRole } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: userId,
+            role: requestedRole
+          })
+          .select()
+          .maybeSingle();
+          
+        setRole(newRole ? (newRole.role as AppRole) : requestedRole);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -92,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) {
-      await fetchProfile(user.id);
+      await fetchProfile(user.id, user);
     }
   };
 
@@ -108,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, session.user);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -132,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, session.user);
         } else {
           setProfile(null);
           setRole(null);
@@ -202,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error signing out:', error);
     } finally {
+      queryClient.clear();
       setUser(null);
       setSession(null);
       setProfile(null);
