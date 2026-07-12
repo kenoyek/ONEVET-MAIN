@@ -111,29 +111,22 @@ export default function Pricing() {
       },
       onSuccess: async (reference) => {
         try {
-          // Calculate expiration date
-          const expires_at = new Date();
-          expires_at.setMonth(expires_at.getMonth() + plan.duration_months);
-
-          // Update or create subscription
-          const { error } = await supabase
-            .from('subscriptions')
-            .upsert({
-              user_id: user.id,
-              plan_id: plan.id,
-              status: 'active',
-              starts_at: new Date().toISOString(),
-              expires_at: expires_at.toISOString(),
-              updated_at: new Date().toISOString()
-            });
+          // Call edge function to verify payment and activate subscription
+          const { data, error } = await supabase.functions.invoke('verify-payment', {
+            body: {
+              reference,
+              type: 'subscription',
+              plan_id: plan.id
+            }
+          });
 
           if (error) throw error;
 
           toast.success(`Successfully subscribed to ${plan.name}!`);
           await refetch();
-        } catch (error) {
+        } catch (error: any) {
           console.error('Subscription error:', error);
-          toast.error('Payment successful but failed to activate subscription. Please contact support.');
+          toast.error(error.message || 'Payment successful but failed to activate subscription. Please contact support.');
         } finally {
           setIsProcessing(null);
         }

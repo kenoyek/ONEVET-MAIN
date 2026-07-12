@@ -65,32 +65,41 @@ export default function ArticleDetail() {
 
   const fetchArticle = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: articleData, error: articleError } = await supabase
         .from('articles')
-        .select(`
-          *,
-          author:profiles!author_id(first_name, last_name, avatar_url)
-        `)
+        .select('*')
         .eq('slug', slug)
         .eq('is_published', true)
         .single();
 
-      if (error) throw error;
-      setArticle(data as unknown as Article);
+      if (articleError) throw articleError;
+
+      // Fetch author from public_profiles
+      let author = null;
+      if (articleData.author_id) {
+        const { data: authorData } = await supabase
+          .from('public_profiles')
+          .select('first_name, last_name, avatar_url')
+          .eq('id', articleData.author_id)
+          .single();
+        author = authorData;
+      }
+
+      setArticle({ ...articleData, author } as unknown as Article);
 
       // Increment view count
       await supabase
         .from('articles')
-        .update({ view_count: (data.view_count || 0) + 1 })
-        .eq('id', data.id);
+        .update({ view_count: (articleData.view_count || 0) + 1 })
+        .eq('id', articleData.id);
 
       // Fetch related articles
       const { data: related } = await supabase
         .from('articles')
         .select('id, title, slug, category, image_url')
         .eq('is_published', true)
-        .eq('category', data.category)
-        .neq('id', data.id)
+        .eq('category', articleData.category)
+        .neq('id', articleData.id)
         .limit(3);
 
       setRelatedArticles(related || []);

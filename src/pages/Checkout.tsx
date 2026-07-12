@@ -38,24 +38,34 @@ const Checkout = () => {
     state: "",
   });
 
+  const [orderId, setOrderId] = useState<string | null>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const saveOrderToDatabase = async (reference: string) => {
-    try {
-      if (!profile) return;
+  const handleCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      // 1. Create the order
+    if (!formData.address || !formData.phone || !formData.email) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      if (!profile) throw new Error("User profile not found");
+
+      // 1. Create the pending order first
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           customer_id: profile.id,
           total_amount: totalPrice,
-          status: 'processing',
-          payment_status: 'paid',
-          payment_reference: reference,
+          status: 'pending',
+          payment_status: 'pending',
           shipping_address: `${formData.address}, ${formData.city}, ${formData.state}`,
           phone_number: formData.phone
         })
@@ -80,47 +90,48 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
-      return true;
-    } catch (error) {
-      console.error('Error saving order:', error);
-      toast.error("Payment successful but failed to save order record. Please contact support.");
-      return false;
-    }
-  };
+      // 3. Initialize Paystack
+      initializePayment({
+        email: formData.email,
+        amount: totalPrice,
+        metadata: {
+          order_id: order.id,
+          cart_items: items.map(i => i.id)
+        },
+        onSuccess: async (reference) => {
+          try {
+            // 4. Verify payment via edge function
+            const { data, error } = await supabase.functions.invoke('verify-payment', {
+              body: {
+                reference,
+                type: 'order',
+                order_id: order.id
+              }
+            });
 
-  const handleCheckout = (e: React.FormEvent) => {
-    e.preventDefault();
+            if (error) throw error;
 
-    if (!formData.address || !formData.phone || !formData.email) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    setIsProcessing(true);
-
-    initializePayment({
-      email: formData.email,
-      amount: totalPrice,
-      metadata: {
-        cart_items: items.map(i => i.id),
-        shipping_address: formData.address
-      },
-      onSuccess: async (reference) => {
-        const saved = await saveOrderToDatabase(reference);
-        if (saved) {
+            setIsProcessing(false);
+            setOrderId(order.id);
+            setIsSuccess(true);
+            clearCart();
+            toast.success("Order placed successfully!");
+          } catch (err: any) {
+            console.error('Payment verification error:', err);
+            toast.error(err.message || "Payment verified by Paystack but failed to update order. Please contact support.");
+            setIsProcessing(false);
+          }
+        },
+        onClose: () => {
           setIsProcessing(false);
-          setIsSuccess(true);
-          clearCart();
-          toast.success("Order placed successfully!");
-        } else {
-          setIsProcessing(false);
+          toast.error("Payment cancelled");
         }
-      },
-      onClose: () => {
-        setIsProcessing(false);
-        toast.error("Payment cancelled");
-      }
-    });
+      });
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast.error(error.message || "Failed to initialize checkout. Please try again.");
+      setIsProcessing(false);
+    }
   };
 
   if (isSuccess) {
@@ -134,7 +145,7 @@ const Checkout = () => {
             </div>
             <h1 className="text-3xl font-bold mb-4">Order Confirmed!</h1>
             <p className="text-muted-foreground mb-8 text-lg">
-              Thank you for your purchase. Your order #OV-{Math.floor(Math.random() * 10000)} has been placed and is being processed.
+              Thank you for your purchase. Your order #{orderId?.slice(0, 8).toUpperCase()} has been placed and is being processed.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={() => navigate('/dashboard')}>

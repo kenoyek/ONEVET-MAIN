@@ -157,8 +157,10 @@ const ProductDetail = () => {
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
                     <Package className="w-5 h-5 text-primary" />
                     <div className="text-xs">
-                      <p className="font-bold">In Stock</p>
-                      <p className="text-muted-foreground">Ready to ship</p>
+                      <p className="font-bold">{product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}</p>
+                      <p className="text-muted-foreground">
+                        {product.stock_quantity > 0 ? `${product.stock_quantity} units available` : 'Check back later'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -169,9 +171,10 @@ const ProductDetail = () => {
                   size="lg"
                   className="flex-grow h-14 text-lg font-bold gap-2"
                   onClick={handleAddToCart}
+                  disabled={product.stock_quantity <= 0}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  Add to Cart
+                  {product.stock_quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
                 </Button>
                 <Button size="lg" variant="outline" className="h-14 w-14 p-0">
                   <Heart className="w-5 h-5" />

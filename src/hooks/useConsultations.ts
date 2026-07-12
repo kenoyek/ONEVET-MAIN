@@ -71,9 +71,7 @@ export function useConsultations(statusFilter?: ConsultationStatus | Consultatio
         .from('consultations')
         .select(`
           *,
-          pet:pets(*),
-          pet_owner:profiles!pet_owner_id(id, first_name, last_name, avatar_url, specialty, is_available, license_verified),
-          veterinarian:profiles!veterinarian_id(id, first_name, last_name, avatar_url, specialty, is_available, license_verified)
+          pet:pets(*)
         `)
         .order('created_at', { ascending: false });
 
@@ -86,10 +84,33 @@ export function useConsultations(statusFilter?: ConsultationStatus | Consultatio
         }
       }
 
-      const { data, error: fetchError } = await query;
+      const { data: consultationsData, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
-      setConsultations(data || []);
+      if (!consultationsData) {
+        setConsultations([]);
+        return;
+      }
+
+      // Fetch related profiles from public_profiles
+      const petOwnerIds = consultationsData.map(c => c.pet_owner_id);
+      const vetIds = consultationsData.map(c => c.veterinarian_id).filter(Boolean) as string[];
+      const profileIds = [...new Set([...petOwnerIds, ...vetIds])];
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('public_profiles')
+        .select('id, first_name, last_name, avatar_url, specialty, is_available, license_verified')
+        .in('id', profileIds);
+
+      if (profilesError) throw profilesError;
+
+      const enrichedConsultations = consultationsData.map(c => ({
+        ...c,
+        pet_owner: profilesData.find(p => p.id === c.pet_owner_id),
+        veterinarian: c.veterinarian_id ? profilesData.find(p => p.id === c.veterinarian_id) : null,
+      }));
+
+      setConsultations(enrichedConsultations as Consultation[]);
     } catch (err) {
       setError(err as Error);
     } finally {

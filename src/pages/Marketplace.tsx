@@ -65,6 +65,12 @@ const Marketplace = () => {
   const handleAddToCart = (e: React.MouseEvent, listing: any) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (listing.stock_quantity <= 0) {
+      toast.error("This item is out of stock");
+      return;
+    }
+
     addItem({
       id: listing.id,
       title: listing.title,
@@ -158,20 +164,26 @@ const Marketplace = () => {
                         <CardDescription className="line-clamp-2 text-sm">
                           {item.description || "No description provided."}
                         </CardDescription>
-                        {item.location && (
-                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                            <Package className="w-3 h-3" />
-                            {item.location}
-                          </div>
-                        )}
+                        <div className="flex items-center justify-between mt-2">
+                          {item.location && (
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Package className="w-3 h-3" />
+                              {item.location}
+                            </div>
+                          )}
+                          <span className={`text-xs font-medium ${item.stock_quantity > 0 ? 'text-green-600' : 'text-destructive'}`}>
+                            {item.stock_quantity > 0 ? `${item.stock_quantity} in stock` : 'Out of stock'}
+                          </span>
+                        </div>
                       </CardContent>
                       <CardFooter className="p-4 pt-0">
                         <Button
                           className="w-full gap-2 font-bold"
                           onClick={(e) => handleAddToCart(e, item)}
+                          disabled={item.stock_quantity <= 0}
                         >
                           <ShoppingCart className="w-4 h-4" />
-                          Add to Cart
+                          {item.stock_quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
                         </Button>
                       </CardFooter>
                     </Card>

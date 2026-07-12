@@ -681,7 +681,35 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.consultations;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.vet_presence;
 
--- 9. Initial Data
+-- 9. Storage Configuration
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES
+  ('licenses', 'licenses', false, 10485760, ARRAY['application/pdf', 'image/jpeg', 'image/png', 'image/webp']),
+  ('pet-avatars', 'pet-avatars', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']),
+  ('avatars', 'avatars', true, 2097152, ARRAY['image/jpeg', 'image/png', 'image/webp']),
+  ('products', 'products', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp']),
+  ('documents', 'documents', false, 10485760, ARRAY['application/pdf', 'image/jpeg', 'image/png'])
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage Policies
+
+-- Licenses
+CREATE POLICY "Users can upload their own license" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'licenses' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can view their own license" ON storage.objects FOR SELECT USING (bucket_id = 'licenses' AND (auth.uid()::text = (storage.foldername(name))[1] OR public.has_role(auth.uid(), 'admin')));
+CREATE POLICY "Users can update their own license" ON storage.objects FOR UPDATE USING (bucket_id = 'licenses' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can delete their own license" ON storage.objects FOR DELETE USING (bucket_id = 'licenses' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Pet Avatars
+CREATE POLICY "Anyone can view pet avatars" ON storage.objects FOR SELECT USING (bucket_id = 'pet-avatars');
+CREATE POLICY "Authenticated users can upload pet avatars" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'pet-avatars' AND auth.uid() IS NOT NULL);
+CREATE POLICY "Users can update their pet avatars" ON storage.objects FOR UPDATE USING (bucket_id = 'pet-avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Users can delete their pet avatars" ON storage.objects FOR DELETE USING (bucket_id = 'pet-avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Public Avatars
+CREATE POLICY "Anyone can view avatars" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+CREATE POLICY "Authenticated users can upload avatars" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'avatars' AND auth.uid() IS NOT NULL);
+
+-- 10. Initial Data
 INSERT INTO public.subscription_plans (name, description, duration_months, price, currency, features)
 VALUES
   ('Monthly', 'Monthly access to 24/7 vet consultations', 1, 5000, 'NGN', '["Unlimited vet consultations", "Pet health records", "24/7 availability", "Chat history"]'::jsonb),

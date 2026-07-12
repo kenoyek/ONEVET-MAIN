@@ -292,13 +292,13 @@ export default function ArticleEditor() {
                             <FormLabel>Content</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Write your article content here... (Markdown supported)"
+                                placeholder="Write your article content here..."
                                 className="min-h-[400px] font-mono text-sm"
                                 {...field}
                               />
                             </FormControl>
                             <FormDescription>
-                              Write in plain text or use Markdown for formatting
+                              Write in plain text. Use line breaks for paragraphs.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>

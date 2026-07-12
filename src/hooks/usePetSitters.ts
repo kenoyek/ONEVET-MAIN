@@ -33,7 +33,7 @@ export function usePetSitters({ locationFilter, sortBy }: UsePetSittersOptions =
     queryFn: async (): Promise<PetSitterListing[]> => {
       const { data: listings, error } = await supabase
         .from('service_listings')
-        .select('id, title, description, price, price_unit, location, image_url, category, provider_id, profiles!service_listings_provider_id_fkey(first_name, last_name, business_name, avatar_url, location)')
+        .select('id, title, description, price, price_unit, location, image_url, category, provider_id')
         .in('category', ['pet_sitting', 'boarding'])
         .eq('is_active', true);
 
@@ -41,6 +41,15 @@ export function usePetSitters({ locationFilter, sortBy }: UsePetSittersOptions =
       if (!listings || listings.length === 0) return [];
 
       const providerIds = [...new Set(listings.map(l => l.provider_id))];
+
+      // Fetch public profiles for these providers
+      const { data: profiles, error: profileError } = await supabase
+        .from('public_profiles')
+        .select('*')
+        .in('id', providerIds);
+
+      if (profileError) throw profileError;
+
       const { data: reviews } = await supabase
         .from('reviews')
         .select('reviewed_id, rating')
@@ -55,7 +64,7 @@ export function usePetSitters({ locationFilter, sortBy }: UsePetSittersOptions =
       });
 
       let result: PetSitterListing[] = listings.map(listing => {
-        const profile = listing.profiles as any;
+        const profile = profiles?.find(p => p.id === listing.provider_id);
         const ratings = ratingMap.get(listing.provider_id);
         return {
           id: listing.id,
@@ -70,9 +79,9 @@ export function usePetSitters({ locationFilter, sortBy }: UsePetSittersOptions =
           provider: {
             first_name: profile?.first_name || '',
             last_name: profile?.last_name || '',
-            business_name: profile?.business_name,
-            avatar_url: profile?.avatar_url,
-            location: profile?.location,
+            business_name: profile?.business_name || null,
+            avatar_url: profile?.avatar_url || null,
+            location: profile?.location || null,
           },
           avg_rating: ratings ? Math.round((ratings.sum / ratings.count) * 10) / 10 : null,
           review_count: ratings?.count || 0,
