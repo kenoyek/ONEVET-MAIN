@@ -30,6 +30,7 @@ import Groomers from "./pages/services/Groomers";
 import PetSitting from "./pages/services/PetSitting";
 import VetClinics from "./pages/services/VetClinics";
 import Marketplace from "./pages/Marketplace";
+import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import About from "./pages/About";
@@ -146,6 +147,11 @@ const App = () => (
             <Route path="/marketplace" element={
               <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
                 <Marketplace />
+              </ProtectedRoute>
+            } />
+            <Route path="/marketplace/:id" element={
+              <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
+                <ProductDetail />
               </ProtectedRoute>
             } />
             <Route path="/cart" element={

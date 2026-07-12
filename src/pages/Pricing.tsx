@@ -33,26 +33,29 @@ const defaultFeatures = [
   'Follow-up consultations',
 ];
 
+import { usePaystack } from '@/hooks/use-paystack';
+import { toast } from 'sonner';
+
 const faqs = [
   {
     q: 'How does the subscription work?',
-    a: 'Choose a plan, make payment via bank transfer, and our admin team will activate your account within 24 hours. You then get unlimited access to all premium features for the duration of your plan.',
+    a: 'Choose a plan, complete your payment via Paystack, and your account will be activated instantly. You then get 24/7 access to licensed veterinarians and all premium features.',
   },
   {
     q: 'How do I make payment?',
-    a: 'After selecting a plan, contact our support team via the Contact page or WhatsApp. They will provide bank transfer details. Once payment is confirmed, your subscription is activated.',
+    a: 'We use Paystack for secure payments. You can pay using your debit card, bank transfer, or USSD directly on our platform.',
   },
   {
     q: 'Can I cancel my subscription?',
-    a: 'Yes, you can cancel at any time by contacting support. Your access remains active until the end of your current billing period.',
+    a: 'Yes, you can cancel at any time. Your access remains active until the end of your current billing period.',
   },
   {
     q: 'What happens when my subscription expires?',
-    a: 'You will lose access to premium features like vet consultations. You can renew anytime by contacting support or selecting a plan again.',
+    a: 'You will lose access to premium features like vet consultations. You can renew anytime by selecting a plan again.',
   },
   {
     q: 'Is there a free trial?',
-    a: 'New users may receive a trial period at the admin\'s discretion. Contact support to inquire about trial availability.',
+    a: 'We occasionally offer trial periods. If available, it will be automatically applied when you sign up.',
   },
   {
     q: 'What\'s included in the consultation?',
@@ -62,8 +65,8 @@ const faqs = [
 
 const steps = [
   { icon: CreditCard, title: 'Choose a Plan', desc: 'Pick the monthly or yearly plan that suits you.' },
-  { icon: Zap, title: 'Make Payment', desc: 'Transfer to our account and share proof with support.' },
-  { icon: UserCheck, title: 'Get Activated', desc: 'Your subscription is activated within 24 hours.' },
+  { icon: Zap, title: 'Pay Securely', desc: 'Complete your payment instantly via Paystack.' },
+  { icon: UserCheck, title: 'Get Activated', desc: 'Your subscription is activated immediately.' },
 ];
 
 function formatNGN(amount: number) {
@@ -71,10 +74,12 @@ function formatNGN(amount: number) {
 }
 
 export default function Pricing() {
-  const { user } = useAuth();
-  const { subscription, isActive, loading: subLoading } = useSubscription();
+  const { user, profile } = useAuth();
+  const { subscription, isActive, loading: subLoading, refetch } = useSubscription();
+  const { initializePayment } = usePaystack();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -88,6 +93,56 @@ export default function Pricing() {
     };
     fetchPlans();
   }, []);
+
+  const handleSubscribe = (plan: Plan) => {
+    if (!user) {
+      toast.error('Please sign in to subscribe');
+      return;
+    }
+
+    setIsProcessing(plan.id);
+
+    initializePayment({
+      email: user.email!,
+      amount: plan.price,
+      metadata: {
+        plan_id: plan.id,
+        user_id: user.id
+      },
+      onSuccess: async (reference) => {
+        try {
+          // Calculate expiration date
+          const expires_at = new Date();
+          expires_at.setMonth(expires_at.getMonth() + plan.duration_months);
+
+          // Update or create subscription
+          const { error } = await supabase
+            .from('subscriptions')
+            .upsert({
+              user_id: user.id,
+              plan_id: plan.id,
+              status: 'active',
+              starts_at: new Date().toISOString(),
+              expires_at: expires_at.toISOString(),
+              updated_at: new Date().toISOString()
+            });
+
+          if (error) throw error;
+
+          toast.success(`Successfully subscribed to ${plan.name}!`);
+          await refetch();
+        } catch (error) {
+          console.error('Subscription error:', error);
+          toast.error('Payment successful but failed to activate subscription. Please contact support.');
+        } finally {
+          setIsProcessing(null);
+        }
+      },
+      onClose: () => {
+        setIsProcessing(null);
+      }
+    });
+  };
 
   const yearlyPlan = plans.find(p => p.duration_months >= 12);
 
@@ -194,15 +249,23 @@ export default function Pricing() {
                             ))}
                           </ul>
                           {user ? (
-                            isActive ? (
+                            isActive && subscription?.plan_id === plan.id ? (
                               <Button variant="outline" className="w-full" disabled>
                                 Current Plan Active
                               </Button>
                             ) : (
-                              <Button className="w-full group" asChild>
-                                <Link to="/contact">
-                                  Get Started <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                </Link>
+                              <Button
+                                className="w-full group"
+                                onClick={() => handleSubscribe(plan)}
+                                disabled={isProcessing !== null}
+                              >
+                                {isProcessing === plan.id ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    Subscribe Now <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                  </>
+                                )}
                               </Button>
                             )
                           ) : (

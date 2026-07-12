@@ -8,6 +8,8 @@ import { useCart } from "@/hooks/use-cart";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { usePaystack } from "@/hooks/use-paystack";
+import { supabase } from "@/integrations/supabase/client";
 import {
   CreditCard,
   Truck,
@@ -23,6 +25,7 @@ const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const { initializePayment } = usePaystack();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -40,28 +43,84 @@ const Checkout = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckout = async (e: React.FormEvent) => {
+  const saveOrderToDatabase = async (reference: string) => {
+    try {
+      if (!profile) return;
+
+      // 1. Create the order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          customer_id: profile.id,
+          total_amount: totalPrice,
+          status: 'processing',
+          payment_status: 'paid',
+          payment_reference: reference,
+          shipping_address: `${formData.address}, ${formData.city}, ${formData.state}`,
+          phone_number: formData.phone
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 2. Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.price * item.quantity,
+        seller_id: item.seller_id
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      return true;
+    } catch (error) {
+      console.error('Error saving order:', error);
+      toast.error("Payment successful but failed to save order record. Please contact support.");
+      return false;
+    }
+  };
+
+  const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.address || !formData.phone) {
+    if (!formData.address || !formData.phone || !formData.email) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     setIsProcessing(true);
 
-    // Simulate Payment Gateway (Paystack)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // In a real app, you would:
-    // 1. Initialize Paystack
-    // 2. On success, create order in Supabase
-    // 3. Send confirmation email
-
-    setIsProcessing(false);
-    setIsSuccess(true);
-    clearCart();
-    toast.success("Order placed successfully!");
+    initializePayment({
+      email: formData.email,
+      amount: totalPrice,
+      metadata: {
+        cart_items: items.map(i => i.id),
+        shipping_address: formData.address
+      },
+      onSuccess: async (reference) => {
+        const saved = await saveOrderToDatabase(reference);
+        if (saved) {
+          setIsProcessing(false);
+          setIsSuccess(true);
+          clearCart();
+          toast.success("Order placed successfully!");
+        } else {
+          setIsProcessing(false);
+        }
+      },
+      onClose: () => {
+        setIsProcessing(false);
+        toast.error("Payment cancelled");
+      }
+    });
   };
 
   if (isSuccess) {

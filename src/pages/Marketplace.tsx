@@ -21,6 +21,8 @@ import {
   CheckCircle2
 } from "lucide-react";
 
+import { Link } from "react-router-dom";
+
 const CATEGORIES = [
   "All",
   "Pet Food",
@@ -60,7 +62,9 @@ const Marketplace = () => {
     item.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddToCart = (listing: any) => {
+  const handleAddToCart = (e: React.MouseEvent, listing: any) => {
+    e.preventDefault();
+    e.stopPropagation();
     addItem({
       id: listing.id,
       title: listing.title,
@@ -130,46 +134,48 @@ const Marketplace = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:border-primary/30 transition-colors shadow-sm hover:shadow-md">
-                    <div className="relative aspect-square overflow-hidden bg-muted">
-                      <img
-                        src={item.images?.[0] || '/placeholder.svg'}
-                        alt={item.title}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <Badge className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground hover:bg-background/90">
-                        {item.category}
-                      </Badge>
-                    </div>
-                    <CardHeader className="p-4 pb-2">
-                      <div className="flex justify-between items-start gap-2">
-                        <CardTitle className="text-lg line-clamp-1">{item.title}</CardTitle>
+                  <Link to={`/marketplace/${item.id}`}>
+                    <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:border-primary/30 transition-colors shadow-sm hover:shadow-md">
+                      <div className="relative aspect-square overflow-hidden bg-muted">
+                        <img
+                          src={item.images?.[0] || '/placeholder.svg'}
+                          alt={item.title}
+                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <Badge className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground hover:bg-background/90 border-none">
+                          {item.category}
+                        </Badge>
                       </div>
-                      <div className="text-2xl font-bold text-primary">
-                        ₦{item.price.toLocaleString()}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0 flex-grow">
-                      <CardDescription className="line-clamp-2 text-sm">
-                        {item.description || "No description provided."}
-                      </CardDescription>
-                      {item.location && (
-                        <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                          <Package className="w-3 h-3" />
-                          {item.location}
+                      <CardHeader className="p-4 pb-2">
+                        <div className="flex justify-between items-start gap-2">
+                          <CardTitle className="text-lg line-clamp-1 group-hover:text-primary transition-colors">{item.title}</CardTitle>
                         </div>
-                      )}
-                    </CardContent>
-                    <CardFooter className="p-4 pt-0">
-                      <Button
-                        className="w-full gap-2"
-                        onClick={() => handleAddToCart(item)}
-                      >
-                        <ShoppingCart className="w-4 h-4" />
-                        Add to Cart
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                        <div className="text-2xl font-bold text-primary">
+                          ₦{item.price.toLocaleString()}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0 flex-grow">
+                        <CardDescription className="line-clamp-2 text-sm">
+                          {item.description || "No description provided."}
+                        </CardDescription>
+                        {item.location && (
+                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                            <Package className="w-3 h-3" />
+                            {item.location}
+                          </div>
+                        )}
+                      </CardContent>
+                      <CardFooter className="p-4 pt-0">
+                        <Button
+                          className="w-full gap-2 font-bold"
+                          onClick={(e) => handleAddToCart(e, item)}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Add to Cart
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  </Link>
                 </motion.div>
               ))}
             </div>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   PawPrint, MessageCircle, Calendar, ChevronRight, Plus,
-  Clock, CheckCircle, AlertCircle, Bell
+  Clock, CheckCircle, AlertCircle, Bell, ShoppingBag
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,11 +39,19 @@ interface Subscription {
   } | null;
 }
 
+interface Order {
+  id: string;
+  total_amount: number;
+  status: string;
+  created_at: string;
+}
+
 const Dashboard = () => {
   const { profile, user } = useAuth();
   const [pets, setPets] = useState<Pet[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -84,6 +92,18 @@ const Dashboard = () => {
 
       if (subError) throw subError;
       setSubscription(subData as unknown as Subscription);
+
+      // Fetch recent orders
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, total_amount, status, created_at')
+        .eq('customer_id', profile!.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (!ordersError) {
+        setOrders(ordersData || []);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -305,6 +325,56 @@ const Dashboard = () => {
                     <p className="text-muted-foreground mb-4">No active subscription</p>
                     <Link to="/subscription">
                       <Button>Subscribe Now</Button>
+                    </Link>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Recent Orders */}
+            <Card className="card-feature">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  Recent Orders
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : orders.length > 0 ? (
+                  <div className="space-y-3">
+                    {orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between p-2 rounded-lg border text-sm"
+                      >
+                        <div>
+                          <p className="font-medium">₦{order.total_amount.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="capitalize">
+                          {order.status}
+                        </Badge>
+                      </div>
+                    ))}
+                    <Link to="/marketplace">
+                      <Button variant="outline" className="w-full mt-2">
+                        Marketplace
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-4">No orders yet</p>
+                    <Link to="/marketplace">
+                      <Button>Shop Marketplace</Button>
                     </Link>
                   </div>
                 )}

@@ -16,7 +16,7 @@ import {
   Package,
   Heart
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 
 const ProductDetail = () => {
@@ -42,6 +42,16 @@ const ProductDetail = () => {
     },
     enabled: !!id
   });
+
+  useEffect(() => {
+    if (product) {
+      document.title = `${product.title} | 1Vet Marketplace`;
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        metaDesc.setAttribute('content', product.description || `Buy ${product.title} on 1Vet Marketplace.`);
+      }
+    }
+  }, [product]);
 
   if (isLoading) {
     return (
