@@ -66,6 +66,7 @@ interface UserProfile {
 }
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
