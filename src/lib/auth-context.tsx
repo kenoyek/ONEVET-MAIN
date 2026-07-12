@@ -49,22 +49,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle(); // Use maybeSingle to avoid errors if missing
 
-      if (profileError) throw profileError;
-      setProfile(profileData);
+      if (profileData) {
+        setProfile(profileData);
+      }
 
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (!roleError && roleData) {
+      if (roleData) {
         setRole(roleData.role as AppRole);
+      } else {
+        // If no role found in DB, default to pet_owner to allow access to basic dashboard
+        setRole('pet_owner');
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
+      // Fallback role on error
+      setRole('pet_owner');
     }
   };
 
