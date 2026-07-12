@@ -18,7 +18,8 @@ import {
   ArrowRight,
   Loader2,
   Package,
-  CheckCircle2
+  CheckCircle2,
+  MapPin
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
@@ -195,8 +196,7 @@ const Marketplace = () => {
               ))}
             </div>
           ) : (
-...
-        <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
+            <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
               <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
               <h3 className="text-xl font-semibold">No products found</h3>
               <p className="text-muted-foreground mt-2">

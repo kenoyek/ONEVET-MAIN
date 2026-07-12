@@ -14,7 +14,8 @@ import {
   Truck,
   Store,
   Package,
-  Heart
+  Heart,
+  Star
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";

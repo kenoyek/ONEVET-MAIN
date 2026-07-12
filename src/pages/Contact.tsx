@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -220,7 +221,7 @@ export default function Contact() {
           </div>
         </div>
       </section>
-...
+
       {/* FAQ */}
       <section className="section-padding bg-muted/30">
         <div className="container-wide max-w-3xl">

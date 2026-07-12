@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ServiceCard } from "@/components/services/ServiceCard";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
@@ -15,7 +16,9 @@ import {
   ArrowRight,
   Users,
   Shield,
-  Clock
+  Clock,
+  MessageCircle,
+  Check
 } from "lucide-react";
 
 const services = [
@@ -193,7 +196,7 @@ const Services = () => {
             </motion.div>
           </div>
         </section>
-...
+
         {/* Services Grid */}
         <section className="section-padding">
           <div className="container-wide">
