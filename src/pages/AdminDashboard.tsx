@@ -253,7 +253,13 @@ const AdminDashboard = () => {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="vets" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+            <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+              <TabsTrigger value="analytics" className="gap-2" asChild>
+                <Link to="/admin/analytics">
+                  <TrendingUp className="h-4 w-4" />
+                  <span className="hidden sm:inline">Analytics</span>
+                </Link>
+              </TabsTrigger>
               <TabsTrigger value="vets" className="gap-2">
                 <Shield className="h-4 w-4" />
                 <span className="hidden sm:inline">Vet Verification</span>

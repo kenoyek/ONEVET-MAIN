@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import VetDashboard from "./pages/VetDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminAnalytics from "./pages/admin/Analytics";
 import Consultations from "./pages/Consultations";
 import ConsultationNew from "./pages/ConsultationNew";
 import ConsultationChat from "./pages/ConsultationChat";
@@ -66,6 +67,11 @@ const App = () => (
             <Route path="/admin" element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/analytics" element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminAnalytics />
               </ProtectedRoute>
             } />
             <Route path="/consultations" element={
