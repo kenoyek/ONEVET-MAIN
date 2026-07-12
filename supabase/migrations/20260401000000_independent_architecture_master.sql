@@ -353,100 +353,128 @@ CREATE TRIGGER update_vet_presence_updated_at BEFORE UPDATE ON public.vet_presen
 -- Check if user has role
 CREATE OR REPLACE FUNCTION public.has_role(_user_id UUID, _role app_role)
 RETURNS BOOLEAN
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT EXISTS (
+BEGIN
+  RETURN EXISTS (
     SELECT 1 FROM public.user_roles
     WHERE user_id = _user_id AND role = _role
-  )
+  );
+END;
 $$;
 
 -- Get profile ID
 CREATE OR REPLACE FUNCTION public.get_profile_id(_user_id UUID)
 RETURNS UUID
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT id FROM public.profiles WHERE user_id = _user_id LIMIT 1
+DECLARE
+  v_id UUID;
+BEGIN
+  SELECT id INTO v_id FROM public.profiles WHERE user_id = _user_id LIMIT 1;
+  RETURN v_id;
+END;
 $$;
 
 -- Is consultation participant
 CREATE OR REPLACE FUNCTION public.is_consultation_participant(_consultation_id UUID, _user_id UUID)
 RETURNS BOOLEAN
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT EXISTS (
+BEGIN
+  RETURN EXISTS (
     SELECT 1 FROM public.consultations c
     JOIN public.profiles p ON (c.pet_owner_id = p.id OR c.veterinarian_id = p.id)
     WHERE c.id = _consultation_id AND p.user_id = _user_id
-  )
+  );
+END;
 $$;
 
 -- Get unread message count
 CREATE OR REPLACE FUNCTION public.get_unread_message_count(p_user_id uuid)
 RETURNS integer
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT COALESCE(COUNT(*)::integer, 0)
+DECLARE
+  v_count integer;
+  v_profile_id UUID;
+BEGIN
+  v_profile_id := get_profile_id(p_user_id);
+  SELECT COALESCE(COUNT(*)::integer, 0) INTO v_count
   FROM messages m
   JOIN consultations c ON m.consultation_id = c.id
   WHERE m.is_read = false
-  AND m.sender_id != get_profile_id(p_user_id)
-  AND (c.pet_owner_id = get_profile_id(p_user_id) OR c.veterinarian_id = get_profile_id(p_user_id));
+  AND m.sender_id != v_profile_id
+  AND (c.pet_owner_id = v_profile_id OR c.veterinarian_id = v_profile_id);
+  RETURN v_count;
+END;
 $$;
 
 -- Get online vets count
 CREATE OR REPLACE FUNCTION public.get_online_vets_count()
 RETURNS integer
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT COALESCE(COUNT(*)::integer, 0)
+DECLARE
+  v_count integer;
+BEGIN
+  SELECT COALESCE(COUNT(*)::integer, 0) INTO v_count
   FROM profiles p
   JOIN user_roles ur ON p.user_id = ur.user_id
   WHERE ur.role = 'veterinarian'
   AND p.is_available = true
   AND p.license_verified = true;
+  RETURN v_count;
+END;
 $$;
 
 -- Get unread notification count
 CREATE OR REPLACE FUNCTION public.get_unread_notification_count(_user_id UUID)
 RETURNS INTEGER
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT count(*)::int FROM public.notifications
-  WHERE user_id = _user_id AND is_read = false
+DECLARE
+  v_count integer;
+BEGIN
+  SELECT count(*)::int INTO v_count FROM public.notifications
+  WHERE user_id = _user_id AND is_read = false;
+  RETURN v_count;
+END;
 $$;
 
 -- Has active subscription
 CREATE OR REPLACE FUNCTION public.has_active_subscription(_user_id uuid)
 RETURNS boolean
-LANGUAGE sql
+LANGUAGE plpgsql
 STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT EXISTS (
+BEGIN
+  RETURN EXISTS (
     SELECT 1
     FROM public.subscriptions
     WHERE user_id = _user_id
       AND status IN ('active', 'trial')
       AND (expires_at IS NULL OR expires_at > now())
-  )
+  );
+END;
 $$;
 
 -- Grant role (Admin only)
