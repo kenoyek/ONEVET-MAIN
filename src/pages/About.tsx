@@ -53,12 +53,17 @@ const stats = [
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       <main>
         {/* Hero Section */}
-        <section className="relative py-20 lg:py-28 bg-gradient-hero overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5" />
+        <section className="relative py-24 md:py-32 lg:py-40 bg-gradient-premium overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+          </div>
+
           <div className="container-wide relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -66,11 +71,14 @@ const About = () => {
               transition={{ duration: 0.6 }}
               className="text-center max-w-4xl mx-auto"
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6">
-                Bringing Quality Pet & Livestock Care to Every Nigerian Home
+              <Badge variant="outline" className="mb-6 border-white/30 text-white px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">
+                Our Story
+              </Badge>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-primary-foreground mb-8 tracking-tighter leading-tight">
+                Bringing premium care to <span className="text-secondary">every home.</span>
               </h1>
-              <p className="text-lg md:text-xl text-primary-foreground/80">
-                We're on a mission to make veterinary care accessible, affordable, and available 24/7 across Nigeria.
+              <p className="text-xl md:text-2xl text-primary-foreground/90 font-medium leading-relaxed">
+                We're on a mission to make world-class veterinary care accessible, affordable, and available 24/7 across Nigeria.
               </p>
             </motion.div>
           </div>
@@ -79,38 +87,45 @@ const About = () => {
         {/* Our Story */}
         <section className="section-padding">
           <div className="container-wide">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="grid md:grid-cols-2 gap-16 items-center">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
               >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6">Our Story</h2>
-                <div className="space-y-4 text-muted-foreground text-lg">
-                <p>
-                    Founded in Port-Harcourt, 1vet was born from a simple observation: getting quality vet care in Nigeria shouldn't be difficult. 
+                <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">The Beginning</Badge>
+                <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tight">Our Story</h2>
+                <div className="space-y-6 text-muted-foreground text-lg font-medium leading-relaxed">
+                  <p>
+                    Founded in Port-Harcourt, 1vet was born from a simple observation: getting quality vet care in Nigeria shouldn't be a struggle of logistics and luck.
                   </p>
                   <p>
-                    Whether you're in Port-Harcourt, Lagos, or a rural community, your animals deserve expert care. But for too many Nigerians, 
-                    finding a qualified vet meant long trips, uncertain wait times, and often, arriving too late.
+                    Whether you're managing a commercial poultry farm in Enugu or raising a companion dog in Lagos, your animals deserve expert care. We saw that finding a qualified vet often meant long trips and uncertain wait times.
                   </p>
-                  <p>
-                    We built 1vet to change that. By connecting pet owners and farmers with licensed veterinarians through technology, 
-                    we're making quality animal healthcare just a few taps away.
+                  <p className="p-6 rounded-2xl bg-primary/5 border-l-4 border-primary italic text-foreground">
+                    "We built 1vet to bridge the gap. By connecting animal owners with licensed veterinarians through technology, we're making quality healthcare just a few taps away."
                   </p>
                 </div>
               </motion.div>
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                className="hidden md:block"
+                transition={{ duration: 0.8 }}
+                className="hidden md:block relative"
               >
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Our story" 
-                  className="rounded-xl shadow-lg w-full h-96 object-cover"
-                />
+                <div className="rounded-[3rem] overflow-hidden shadow-elevated border-8 border-background aspect-[4/3]">
+                  <img
+                    src="https://images.unsplash.com/photo-1599443015574-be5fe8a05783?q=80&w=2070&auto=format&fit=crop"
+                    alt="Veterinarian with animal"
+                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                  />
+                </div>
+                <div className="absolute -bottom-8 -left-8 p-6 rounded-3xl glass-card shadow-elevated border border-white/20 animate-float">
+                  <p className="text-3xl font-black text-primary tracking-tighter">500+</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Licensed Vets</p>
+                </div>
               </motion.div>
             </div>
           </div>
@@ -119,25 +134,21 @@ const About = () => {
         {/* Mission & Vision */}
         <section className="section-padding bg-muted/30">
           <div className="container-wide">
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-10">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <Card className="h-full border-l-4 border-l-primary">
-                  <CardHeader>
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                      <Target className="w-6 h-6 text-primary" />
-                    </div>
-                    <CardTitle className="text-2xl">Our Mission</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-lg">
-                      To make quality veterinary care accessible to every pet and livestock owner in Nigeria, anytime, anywhere. 
-                      We believe every animal deserves proper healthcare, and every owner deserves peace of mind.
-                    </CardDescription>
-                  </CardContent>
+                <Card className="h-full rounded-[3rem] p-10 border border-border/50 bg-card overflow-hidden group">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-8 shadow-soft transition-all duration-500 group-hover:scale-110 group-hover:bg-primary group-hover:text-white">
+                    <Target className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-3xl font-black mb-6 tracking-tight">Our Mission</h3>
+                  <p className="text-muted-foreground text-lg font-medium leading-relaxed">
+                    To make quality veterinary care accessible to every pet and livestock owner in Nigeria, anytime, anywhere.
+                    We believe every animal deserves proper healthcare, and every owner deserves peace of mind.
+                  </p>
                 </Card>
               </motion.div>
               <motion.div
@@ -146,62 +157,37 @@ const About = () => {
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
               >
-                <Card className="h-full border-l-4 border-l-secondary">
-                  <CardHeader>
-                    <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-4">
-                      <Eye className="w-6 h-6 text-secondary" />
-                    </div>
-                    <CardTitle className="text-2xl">Our Vision</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-lg">
-                      To become Africa's leading digital veterinary platform, empowering animal owners with the tools, knowledge, 
-                      and professional support they need to keep their animals healthy and thriving.
-                    </CardDescription>
-                  </CardContent>
+                <Card className="h-full rounded-[3rem] p-10 border border-border/50 bg-card overflow-hidden group">
+                  <div className="w-16 h-16 rounded-2xl bg-secondary/10 flex items-center justify-center mb-8 shadow-soft transition-all duration-500 group-hover:scale-110 group-hover:bg-secondary group-hover:text-white">
+                    <Eye className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-3xl font-black mb-6 tracking-tight">Our Vision</h3>
+                  <p className="text-muted-foreground text-lg font-medium leading-relaxed">
+                    To become Africa's leading digital veterinary platform, empowering animal owners with the tools, knowledge,
+                    and professional support they need to keep their animals healthy and thriving.
+                  </p>
                 </Card>
               </motion.div>
             </div>
           </div>
         </section>
 
-        {/* Core Values */}
-        <section className="section-padding">
-          <div className="container-wide">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Our Core Values</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                These principles guide everything we do at 1vet.
-              </p>
-            </motion.div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {values.map((value, index) => (
-                <ValueCard key={index} {...value} delay={index * 0.1} />
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Stats */}
-        <section className="section-padding bg-primary text-primary-foreground">
-          <div className="container-wide">
+        <section className="section-padding bg-primary text-primary-foreground relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+          <div className="container-wide relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="text-center mb-20"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">1vet by the Numbers</h2>
-              <p className="text-primary-foreground/80 text-lg">
-                Growing every day to serve more Nigerian pet and livestock owners.
+              <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter">1vet by the numbers.</h2>
+              <p className="text-primary-foreground/70 text-lg font-medium">
+                Growing every day to serve more Nigerian animal owners.
               </p>
             </motion.div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
               {stats.map((stat, index) => (
                 <motion.div
                   key={index}
@@ -211,8 +197,8 @@ const About = () => {
                   transition={{ delay: index * 0.1 }}
                   className="text-center"
                 >
-                  <div className="text-4xl md:text-5xl font-bold mb-2">{stat.value}</div>
-                  <div className="text-primary-foreground/80">{stat.label}</div>
+                  <div className="text-5xl md:text-6xl font-black mb-4 tracking-tighter">{stat.value}</div>
+                  <div className="text-xs font-black uppercase tracking-[0.2em] text-primary-foreground/60">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -226,18 +212,19 @@ const About = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="text-center mb-20"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Meet Our Team</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                A passionate team of veterinarians, technologists, and animal lovers working to transform pet care in Nigeria.
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">The Collective</Badge>
+              <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter">Meet our team.</h2>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto font-medium">
+                A passionate coalition of veterinarians and technologists working to transform animal care.
               </p>
             </motion.div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
               {[
-                { role: "Founders", icon: Users, description: "Veterinary and tech professionals who saw a need and built a solution." },
-                { role: "Veterinary Team", icon: Stethoscope, description: "500+ licensed vets across Nigeria ready to help your pets." },
-                { role: "Support Team", icon: Clock, description: "Available 24/7 to ensure you get the help you need." },
+                { role: "Leadership", icon: Users, description: "Veterinary and tech professionals who saw a need and built a solution." },
+                { role: "Veterinary Council", icon: Stethoscope, description: "500+ licensed experts across Nigeria ready to support your animals." },
+                { role: "Operations", icon: Clock, description: "Available 24/7 to ensure seamless platform performance." },
               ].map((team, index) => (
                 <motion.div
                   key={index}
@@ -246,16 +233,12 @@ const About = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="h-full text-center">
-                    <CardHeader>
-                      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                        <team.icon className="w-10 h-10 text-muted-foreground" />
-                      </div>
-                      <CardTitle>{team.role}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-base">{team.description}</CardDescription>
-                    </CardContent>
+                  <Card className="h-full glass-card rounded-[2.5rem] p-8 text-center group hover:-translate-y-2 transition-all duration-500">
+                    <div className="w-24 h-24 rounded-[2rem] bg-muted/50 flex items-center justify-center mx-auto mb-8 shadow-soft group-hover:bg-primary group-hover:text-white transition-all duration-500 group-hover:shadow-glow">
+                      <team.icon className="w-10 h-10" />
+                    </div>
+                    <h3 className="text-2xl font-black mb-4 tracking-tight">{team.role}</h3>
+                    <p className="text-muted-foreground font-medium leading-relaxed">{team.description}</p>
                   </Card>
                 </motion.div>
               ))}
@@ -264,70 +247,64 @@ const About = () => {
         </section>
 
         {/* Contact Info */}
-        <section className="section-padding bg-muted/30">
-          <div className="container-wide">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+        <section className="section-padding bg-muted/20 relative overflow-hidden">
+          <div className="absolute top-1/2 left-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -translate-x-1/2" />
+          <div className="container-wide relative z-10">
+            <div className="grid lg:grid-cols-2 gap-20 items-center">
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
               >
-                <h2 className="text-3xl md:text-4xl font-bold mb-6">Get in Touch</h2>
-                <p className="text-muted-foreground text-lg mb-8">
-                  Have questions or want to learn more? We'd love to hear from you.
+                <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">Connect</Badge>
+                <h2 className="text-4xl md:text-5xl font-black mb-8 tracking-tighter">Get in touch.</h2>
+                <p className="text-muted-foreground text-lg mb-12 font-medium leading-relaxed">
+                  Have inquiries or partnership proposals? Our elite support team is standing by.
                 </p>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <MapPin className="w-6 h-6 text-primary" />
+                <div className="space-y-6">
+                  {[
+                    { icon: MapPin, label: "Global HQ", value: "Port-Harcourt, Rivers State" },
+                    { icon: Mail, label: "Support Email", value: "support@1vet.store" },
+                    { icon: Phone, label: "Priority Line", value: "+234 809 800 0355" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-6 group">
+                      <div className="w-14 h-14 rounded-2xl bg-card border border-border/50 flex items-center justify-center shadow-soft group-hover:shadow-glow transition-all duration-300">
+                        <item.icon className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">{item.label}</div>
+                        <div className="font-bold text-lg">{item.value}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium">Location</div>
-                      <div className="text-muted-foreground">Port-Harcourt, Rivers State</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Mail className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-medium">Email</div>
-                      <div className="text-muted-foreground">support@1vet.store</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-medium">Phone</div>
-                      <div className="text-muted-foreground">+234 809 800 0355</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </motion.div>
+
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Join Us</CardTitle>
-                    <CardDescription>
+                <Card className="glass-card rounded-[3rem] p-10 md:p-12 overflow-hidden relative border-primary/10">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                  <CardHeader className="p-0 mb-10">
+                    <CardTitle className="text-3xl font-black tracking-tight mb-4">Join the network.</CardTitle>
+                    <CardDescription className="text-base font-medium">
                       Whether you're a pet owner, veterinarian, or service provider, there's a place for you at 1vet.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button className="w-full" size="lg" asChild>
+                  <div className="flex flex-col gap-4">
+                    <Button size="xl" className="w-full rounded-full font-black shadow-glow hover:scale-[1.02] transition-all" asChild>
                       <Link to="/auth">
-                        Create Account <ArrowRight className="ml-2" />
+                        Establish Account <ArrowRight className="ml-2 w-5 h-5" />
                       </Link>
                     </Button>
-                    <Button className="w-full" size="lg" variant="outline" asChild>
-                      <Link to="/services">View Our Services</Link>
+                    <Button variant="outline" size="xl" className="w-full rounded-full font-black border-2 hover:bg-muted/50 transition-all" asChild>
+                      <Link to="/services">Explore Ecosystem</Link>
                     </Button>
-                  </CardContent>
+                  </div>
                 </Card>
               </motion.div>
             </div>

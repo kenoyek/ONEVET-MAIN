@@ -128,10 +128,10 @@ const Dashboard = () => {
   const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trial';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       
-      <main className="container-wide py-8">
+      <main className="container-wide py-12 pt-28 md:pt-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -177,18 +177,20 @@ const Dashboard = () => {
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Quick Stats */}
-            <Card className="card-feature">
+            <Card className="glass-card overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <PawPrint className="h-5 w-5 text-primary" />
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <PawPrint className="h-5 w-5" />
+                  </div>
                   My Pets
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {isLoading ? (
                   <div className="space-y-3">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-14 w-full rounded-xl" />
+                    <Skeleton className="h-14 w-full rounded-xl" />
                   </div>
                 ) : pets.length > 0 ? (
                   <div className="space-y-3">
@@ -196,34 +198,38 @@ const Dashboard = () => {
                       <Link
                         key={pet.id}
                         to={`/pets/${pet.id}`}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-primary/5 transition-all group border border-transparent hover:border-primary/10"
                       >
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <PawPrint className="h-5 w-5 text-primary" />
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-background shadow-sm">
+                          {pet.avatar_url ? (
+                            <img src={pet.avatar_url} alt={pet.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <PawPrint className="h-6 w-6 text-primary" />
+                          )}
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium">{pet.name}</p>
-                          <p className="text-sm text-muted-foreground capitalize">
+                          <p className="font-bold text-sm">{pet.name}</p>
+                          <p className="text-xs text-muted-foreground capitalize font-medium">
                             {pet.species}{pet.breed ? ` • ${pet.breed}` : ''}
                           </p>
                         </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors group-hover:translate-x-1" />
                       </Link>
                     ))}
-                    <Link to="/pets">
-                      <Button variant="outline" className="w-full mt-2">
-                        View All Pets
-                      </Button>
-                    </Link>
+                    <Button variant="ghost" className="w-full mt-2 font-bold text-xs" asChild>
+                      <Link to="/pets">View All Pets</Link>
+                    </Button>
                   </div>
                 ) : (
-                  <div className="text-center py-6">
-                    <PawPrint className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">No pets added yet</p>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 opacity-50">
+                      <PawPrint className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4 font-medium">No pets added yet</p>
                     <Link to="/pets/new">
-                      <Button>
+                      <Button size="sm" className="rounded-full font-bold">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Your First Pet
+                        Add First Pet
                       </Button>
                     </Link>
                   </div>
@@ -232,18 +238,20 @@ const Dashboard = () => {
             </Card>
 
             {/* Recent Consultations */}
-            <Card className="card-feature">
+            <Card className="glass-card overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-primary" />
-                  Recent Consultations
+                  <div className="p-2 rounded-lg bg-secondary/10 text-secondary">
+                    <MessageCircle className="h-5 w-5" />
+                  </div>
+                  Consultations
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {isLoading ? (
                   <div className="space-y-3">
-                    <Skeleton className="h-16 w-full" />
-                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-20 w-full rounded-xl" />
+                    <Skeleton className="h-20 w-full rounded-xl" />
                   </div>
                 ) : consultations.length > 0 ? (
                   <div className="space-y-3">
@@ -251,30 +259,30 @@ const Dashboard = () => {
                       <Link
                         key={consultation.id}
                         to={`/consultations/${consultation.id}`}
-                        className="block p-3 rounded-lg border hover:bg-muted transition-colors"
+                        className="block p-4 rounded-xl border border-border/50 hover:border-secondary/20 hover:bg-secondary/5 transition-all group"
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm line-clamp-2">{consultation.chief_complaint}</p>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <p className="text-sm font-bold line-clamp-1 group-hover:text-secondary transition-colors">{consultation.chief_complaint}</p>
                           {getStatusBadge(consultation.status)}
                         </div>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {new Date(consultation.created_at).toLocaleDateString()}
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                          {new Date(consultation.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </p>
                       </Link>
                     ))}
-                    <Link to="/consultations">
-                      <Button variant="outline" className="w-full mt-2">
-                        View All Consultations
-                      </Button>
-                    </Link>
+                    <Button variant="ghost" className="w-full mt-2 font-bold text-xs" asChild>
+                      <Link to="/consultations">View History</Link>
+                    </Button>
                   </div>
                 ) : (
-                  <div className="text-center py-6">
-                    <MessageCircle className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">No consultations yet</p>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 opacity-50">
+                      <MessageCircle className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4 font-medium">No consultations yet</p>
                     {hasActiveSubscription && (
                       <Link to="/consultations/new">
-                        <Button>Start a Consultation</Button>
+                        <Button size="sm" className="rounded-full font-bold">Start Chat</Button>
                       </Link>
                     )}
                   </div>
@@ -283,48 +291,52 @@ const Dashboard = () => {
             </Card>
 
             {/* Subscription Status */}
-            <Card className="card-feature">
+            <Card className="glass-card overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  Subscription
+                  <div className="p-2 rounded-lg bg-accent/10 text-accent">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  Membership
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {isLoading ? (
-                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-32 w-full rounded-xl" />
                 ) : subscription ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Plan</span>
-                      <span className="font-medium">{subscription.plan?.name || 'Basic'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Status</span>
-                      <Badge variant={hasActiveSubscription ? 'default' : 'secondary'}>
-                        {subscription.status}
-                      </Badge>
-                    </div>
-                    {subscription.expires_at && (
+                  <div className="space-y-5">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Active Plan</span>
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Expires</span>
-                        <span className="text-sm">
-                          {new Date(subscription.expires_at).toLocaleDateString()}
-                        </span>
+                        <span className="text-xl font-black text-foreground">{subscription.plan?.name || 'Basic'}</span>
+                        <Badge variant={hasActiveSubscription ? 'default' : 'secondary'} className="rounded-full px-3">
+                          {subscription.status}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {subscription.expires_at && (
+                      <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground font-semibold">Valid until</span>
+                          <span className="font-bold">
+                            {new Date(subscription.expires_at).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     )}
-                    <Link to="/subscription">
-                      <Button variant="outline" className="w-full">
-                        Manage Subscription
-                      </Button>
-                    </Link>
+                    <Button variant="outline" className="w-full rounded-full font-bold border-2 border-accent/20 hover:bg-accent hover:text-white hover:border-accent transition-all" asChild>
+                      <Link to="/subscription">Manage Subscription</Link>
+                    </Button>
                   </div>
                 ) : (
-                  <div className="text-center py-6">
-                    <Calendar className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">No active subscription</p>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 opacity-50">
+                      <Calendar className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4 font-medium">No active membership</p>
                     <Link to="/subscription">
-                      <Button>Subscribe Now</Button>
+                      <Button size="sm" className="rounded-full font-bold">Explore Plans</Button>
                     </Link>
                   </div>
                 )}
@@ -332,49 +344,51 @@ const Dashboard = () => {
             </Card>
 
             {/* Recent Orders */}
-            <Card className="card-feature">
+            <Card className="glass-card overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-primary" />
+                  <div className="p-2 rounded-lg bg-info/10 text-info">
+                    <ShoppingBag className="h-5 w-5" />
+                  </div>
                   Recent Orders
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 {isLoading ? (
                   <div className="space-y-3">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-14 w-full rounded-xl" />
+                    <Skeleton className="h-14 w-full rounded-xl" />
                   </div>
                 ) : orders.length > 0 ? (
                   <div className="space-y-3">
                     {orders.map((order) => (
                       <div
                         key={order.id}
-                        className="flex items-center justify-between p-2 rounded-lg border text-sm"
+                        className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-card hover:border-info/30 transition-all shadow-sm"
                       >
                         <div>
-                          <p className="font-medium">₦{order.total_amount.toLocaleString()}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="font-bold text-sm tracking-tight">₦{order.total_amount.toLocaleString()}</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">
                             {new Date(order.created_at).toLocaleDateString()}
                           </p>
                         </div>
-                        <Badge variant="outline" className="capitalize">
+                        <Badge variant="outline" className="capitalize text-[10px] font-bold">
                           {order.status}
                         </Badge>
                       </div>
                     ))}
-                    <Link to="/marketplace">
-                      <Button variant="outline" className="w-full mt-2">
-                        Marketplace
-                      </Button>
-                    </Link>
+                    <Button variant="ghost" className="w-full mt-2 font-bold text-xs" asChild>
+                      <Link to="/marketplace">Shop More</Link>
+                    </Button>
                   </div>
                 ) : (
-                  <div className="text-center py-6">
-                    <ShoppingBag className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">No orders yet</p>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4 opacity-50">
+                      <ShoppingBag className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4 font-medium">No orders yet</p>
                     <Link to="/marketplace">
-                      <Button>Shop Marketplace</Button>
+                      <Button size="sm" className="rounded-full font-bold">Go to Shop</Button>
                     </Link>
                   </div>
                 )}

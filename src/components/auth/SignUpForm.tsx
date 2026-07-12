@@ -45,7 +45,8 @@ export function SignUpForm() {
         values.password,
         values.firstName,
         values.lastName,
-        values.role
+        values.role,
+        values.customerType
       );
       if (error) {
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
@@ -56,14 +57,6 @@ export function SignUpForm() {
           toast.error(error.message || 'Failed to create account. Please try again.');
         }
       } else {
-        // Update profile with customer type
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase
-            .from('profiles')
-            .update({ customer_type: values.customerType })
-            .eq('user_id', user.id);
-        }
         toast.success('Account created successfully! Please check your email to verify your account.');
       }
     } catch {
@@ -75,26 +68,26 @@ export function SignUpForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <FormField
           control={form.control}
           name="customerType"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>I am a...</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Account Type</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all">
                     <SelectValue placeholder="Select account type" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="glass-card">
                   <SelectItem value="pet_owner">Pet Owner</SelectItem>
                   <SelectItem value="farm_owner">Farm Owner</SelectItem>
                   <SelectItem value="livestock_owner">Livestock Owner</SelectItem>
                 </SelectContent>
               </Select>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
@@ -104,11 +97,11 @@ export function SignUpForm() {
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John" autoComplete="given-name" {...field} />
+                  <Input placeholder="Ken" autoComplete="given-name" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="font-bold text-xs" />
               </FormItem>
             )}
           />
@@ -118,11 +111,11 @@ export function SignUpForm() {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name</Label>
                 <FormControl>
-                  <Input placeholder="Doe" autoComplete="family-name" {...field} />
+                  <Input placeholder="Okagu" autoComplete="family-name" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="font-bold text-xs" />
               </FormItem>
             )}
           />
@@ -133,16 +126,17 @@ export function SignUpForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="name@email.com"
                   autoComplete="email"
+                  className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
@@ -152,31 +146,32 @@ export function SignUpForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Password</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
+                    placeholder="••••••••••••"
                     autoComplete="new-password"
+                    className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all pr-12"
                     {...field}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-4 hover:bg-transparent text-muted-foreground hover:text-primary transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
@@ -186,43 +181,44 @@ export function SignUpForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Confirm Identity</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
                     type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
+                    placeholder="••••••••••••"
                     autoComplete="new-password"
+                    className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all pr-12"
                     {...field}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-4 hover:bg-transparent text-muted-foreground hover:text-primary transition-colors"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" size="xl" className="w-full rounded-full font-black shadow-glow hover:scale-[1.02] transition-all" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating account...
+              <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+              Initializing...
             </>
           ) : (
-            'Create Account'
+            'Generate Account'
           )}
         </Button>
       </form>

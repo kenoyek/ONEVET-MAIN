@@ -17,28 +17,33 @@ interface ServiceCardProps {
 
 export function ServiceCard({ icon: Icon, title, description, href, comingSoon = false, color = "primary" }: ServiceCardProps) {
   const colorClasses: Record<string, string> = {
-    primary: "bg-primary/10 text-primary",
-    secondary: "bg-secondary/10 text-secondary",
-    accent: "bg-accent/10 text-accent",
-    success: "bg-success/10 text-success",
+    primary: "bg-primary text-white",
+    secondary: "bg-secondary text-white",
+    accent: "bg-accent text-white",
+    success: "bg-success text-white",
   };
 
   const content = (
-    <Card className={`h-full transition-all duration-300 ${!comingSoon ? 'hover:shadow-lg hover:-translate-y-1 cursor-pointer' : 'opacity-80'}`}>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className={`w-14 h-14 rounded-xl ${colorClasses[color]} flex items-center justify-center mb-4`}>
-            <Icon className="w-7 h-7" />
+    <Card className={`h-full group rounded-[2.5rem] p-4 transition-all duration-500 overflow-hidden relative ${!comingSoon ? 'hover:shadow-elevated hover:-translate-y-2 cursor-pointer border-border/50' : 'opacity-60 bg-muted/30 border-dashed grayscale select-none'}`}>
+      {!comingSoon && (
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors" />
+      )}
+      <CardHeader className="p-6">
+        <div className="flex items-start justify-between mb-6">
+          <div className={`w-16 h-16 rounded-2xl ${colorClasses[color]} flex items-center justify-center shadow-glow transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}>
+            <Icon className="w-8 h-8" />
           </div>
-          {comingSoon && <ComingSoonBadge />}
+          {comingSoon && (
+             <div className="px-3 py-1 rounded-full bg-muted text-[10px] font-black uppercase tracking-widest text-muted-foreground border border-border/50">Roadmap</div>
+          )}
         </div>
-        <CardTitle className="text-xl">{title}</CardTitle>
-        <CardDescription className="text-base">{description}</CardDescription>
+        <CardTitle className="text-2xl font-black tracking-tight mb-3 group-hover:text-primary transition-colors">{title}</CardTitle>
+        <CardDescription className="text-sm font-medium leading-relaxed text-muted-foreground">{description}</CardDescription>
       </CardHeader>
       {!comingSoon && href && (
-        <CardContent>
-          <div className="flex items-center text-primary font-medium">
-            Learn more <ArrowRight className="w-4 h-4 ml-2" />
+        <CardContent className="px-6 pb-6 mt-auto">
+          <div className="flex items-center text-xs font-black uppercase tracking-[0.2em] text-primary group-hover:gap-2 transition-all">
+            Access Service <ArrowRight className="w-4 h-4 ml-1" />
           </div>
         </CardContent>
       )}

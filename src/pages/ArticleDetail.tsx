@@ -157,11 +157,11 @@ export default function ArticleDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background bg-mesh-gradient flex flex-col">
       <Navbar />
       
-      <main className="flex-1 pt-20">
-        <article className="container-tight py-12">
+      <main className="flex-1 pt-28 md:pt-32 pb-16">
+        <article className="container-tight">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -169,91 +169,103 @@ export default function ArticleDetail() {
             {/* Back Link */}
             <Link 
               to="/articles" 
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
+              className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-secondary mb-10 group"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back to Articles
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Return to Library
             </Link>
 
             {/* Header */}
-            <header className="mb-8">
-              <div className="flex items-center gap-2 mb-4">
-                <Badge variant="outline">{article.category}</Badge>
+            <header className="mb-12">
+              <div className="flex items-center gap-2 mb-6">
+                <Badge variant="default" className="bg-primary/10 text-primary hover:bg-primary/20 border-none px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{article.category}</Badge>
                 {article.tags.slice(0, 3).map(tag => (
-                  <Badge key={tag} variant="secondary" className="gap-1">
+                  <Badge key={tag} variant="secondary" className="gap-1 bg-muted/50 border-none px-4 py-1 rounded-full text-xs font-bold text-muted-foreground">
                     <Tag className="h-3 w-3" />
                     {tag}
                   </Badge>
                 ))}
               </div>
 
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-8 tracking-tighter leading-[1.1]">
                 {article.title}
               </h1>
 
-              {article.excerpt && (
-                <p className="text-xl text-muted-foreground mb-6">
-                  {article.excerpt}
-                </p>
-              )}
-
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {format(new Date(article.published_at || article.created_at), 'MMMM d, yyyy')}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    {article.view_count.toLocaleString()} views
-                  </span>
+              <div className="flex items-center justify-between flex-wrap gap-6 p-6 rounded-[2rem] bg-card border border-border/50 shadow-soft">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
+                    <AvatarImage src={article.author?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary/5 text-primary font-bold">
+                      {article.author?.first_name?.[0]}{article.author?.last_name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-bold text-sm leading-none mb-1">
+                      {article.author?.first_name} {article.author?.last_name}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        {format(new Date(article.published_at || article.created_at), 'MMM d, yyyy')}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleCopyLink}>
-                      {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-                      Copy Link
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleShare('facebook')}>
-                      <Facebook className="h-4 w-4 mr-2" />
-                      Facebook
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleShare('twitter')}>
-                      <Twitter className="h-4 w-4 mr-2" />
-                      Twitter
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleShare('linkedin')}>
-                      <Linkedin className="h-4 w-4 mr-2" />
-                      LinkedIn
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-2">
+                  <div className="px-4 py-2 rounded-full bg-muted/30 text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                    <Eye className="h-3.5 w-3.5" />
+                    {article.view_count.toLocaleString()} Views
+                  </div>
+
+                  <Separator orientation="vertical" className="h-8 mx-2" />
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="rounded-full font-bold hover:bg-primary/5">
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Share
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="glass-card">
+                      <DropdownMenuItem onClick={handleCopyLink} className="font-medium cursor-pointer">
+                        {copied ? <Check className="h-4 w-4 mr-2 text-success" /> : <Copy className="h-4 w-4 mr-2" />}
+                        Copy Link
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShare('facebook')} className="font-medium cursor-pointer">
+                        <Facebook className="h-4 w-4 mr-2" />
+                        Facebook
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShare('twitter')} className="font-medium cursor-pointer">
+                        <Twitter className="h-4 w-4 mr-2" />
+                        Twitter
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleShare('linkedin')} className="font-medium cursor-pointer">
+                        <Linkedin className="h-4 w-4 mr-2" />
+                        LinkedIn
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </header>
 
             {/* Featured Image */}
             {article.image_url && (
-              <div className="rounded-xl overflow-hidden mb-8">
+              <div className="rounded-[3rem] overflow-hidden mb-12 shadow-elevated border-8 border-background bg-muted">
                 <img
                   src={article.image_url}
                   alt={article.title}
-                  className="w-full h-64 md:h-96 object-cover"
+                  className="w-full h-auto max-h-[600px] object-cover"
                 />
               </div>
             )}
 
             {/* Content */}
-            <div className="prose prose-lg max-w-none">
+            <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:tracking-tighter prose-headings:font-black prose-p:font-medium prose-p:leading-relaxed prose-p:text-foreground/80 prose-strong:text-foreground prose-strong:font-bold prose-img:rounded-3xl">
               {article.content.split('\n').map((paragraph, index) => (
                 paragraph.trim() ? (
-                  <p key={index} className="mb-4 text-foreground leading-relaxed">
+                  <p key={index}>
                     {paragraph}
                   </p>
                 ) : null

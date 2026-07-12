@@ -82,41 +82,46 @@ const Marketplace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
-      <main className="pt-24 pb-16">
+      <main className="pt-28 md:pt-32 pb-20">
         <div className="container-wide">
           {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">1Vet Marketplace</h1>
-              <p className="text-muted-foreground mt-1">
-                Quality veterinary supplies and pet products from verified sellers.
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
+                Storefront
+              </Badge>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">1Vet Marketplace</h1>
+              <p className="text-muted-foreground mt-2 font-medium">
+                Premium veterinary supplies and pet products from verified sellers.
               </p>
             </div>
-            <div className="flex w-full md:w-auto gap-2">
+            <div className="flex w-full md:w-auto gap-3">
               <div className="relative flex-1 md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search products..."
-                  className="pl-9"
+                  className="pl-11 rounded-full bg-card border-border/50 shadow-soft"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="rounded-full border-2">
                 <Filter className="w-4 h-4" />
               </Button>
             </div>
           </div>
 
           {/* Categories */}
-          <div className="flex gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-6 mb-10 scrollbar-hide">
             {CATEGORIES.map((category) => (
               <Button
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
-                className="rounded-full whitespace-nowrap"
+                className={`rounded-full whitespace-nowrap px-6 font-bold transition-all ${
+                  selectedCategory === category ? 'shadow-glow scale-105' : 'hover:bg-primary/5'
+                }`}
                 onClick={() => setSelectedCategory(category)}
               >
                 {category}
@@ -126,59 +131,57 @@ const Marketplace = () => {
 
           {/* Product Grid */}
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Loading marketplace...</p>
+            <div className="flex flex-col items-center justify-center py-24">
+              <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Loading marketplace...</p>
             </div>
           ) : filteredListings && filteredListings.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {filteredListings.map((item) => (
                 <motion.div
                   key={item.id}
                   layout
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.4 }}
                 >
                   <Link to={`/marketplace/${item.id}`}>
-                    <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:border-primary/30 transition-colors shadow-sm hover:shadow-md">
-                      <div className="relative aspect-square overflow-hidden bg-muted">
+                    <Card className="h-full flex flex-col group rounded-[2rem] overflow-hidden border-border/50 hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated bg-card">
+                      <div className="relative aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]">
                         <img
                           src={item.images?.[0] || '/placeholder.svg'}
                           alt={item.title}
-                          className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+                          className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                         />
-                        <Badge className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground hover:bg-background/90 border-none">
+                        <Badge className="absolute top-3 right-3 bg-background/90 backdrop-blur-md text-foreground border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                           {item.category}
                         </Badge>
                       </div>
-                      <CardHeader className="p-4 pb-2">
-                        <div className="flex justify-between items-start gap-2">
-                          <CardTitle className="text-lg line-clamp-1 group-hover:text-primary transition-colors">{item.title}</CardTitle>
-                        </div>
-                        <div className="text-2xl font-bold text-primary">
+                      <CardHeader className="p-6 pb-2">
+                        <CardTitle className="text-lg font-bold line-clamp-1 group-hover:text-primary transition-colors tracking-tight">{item.title}</CardTitle>
+                        <div className="text-2xl font-black text-primary tracking-tighter mt-1">
                           ₦{item.price.toLocaleString()}
                         </div>
                       </CardHeader>
-                      <CardContent className="p-4 pt-0 flex-grow">
-                        <CardDescription className="line-clamp-2 text-sm">
+                      <CardContent className="p-6 pt-0 flex-grow">
+                        <CardDescription className="line-clamp-2 text-sm font-medium leading-relaxed">
                           {item.description || "No description provided."}
                         </CardDescription>
-                        <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center justify-between mt-4">
                           {item.location && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Package className="w-3 h-3" />
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                              <MapPin className="w-3 h-3" />
                               {item.location}
                             </div>
                           )}
-                          <span className={`text-xs font-medium ${item.stock_quantity > 0 ? 'text-green-600' : 'text-destructive'}`}>
-                            {item.stock_quantity > 0 ? `${item.stock_quantity} in stock` : 'Out of stock'}
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${item.stock_quantity > 0 ? 'text-success' : 'text-destructive'}`}>
+                            {item.stock_quantity > 0 ? `${item.stock_quantity} available` : 'Out of stock'}
                           </span>
                         </div>
                       </CardContent>
-                      <CardFooter className="p-4 pt-0">
+                      <CardFooter className="p-6 pt-0">
                         <Button
-                          className="w-full gap-2 font-bold"
+                          className="w-full gap-2 rounded-full font-bold shadow-soft hover:shadow-glow transition-all"
                           onClick={(e) => handleAddToCart(e, item)}
                           disabled={item.stock_quantity <= 0}
                         >
@@ -192,7 +195,8 @@ const Marketplace = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
+...
+        <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
               <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
               <h3 className="text-xl font-semibold">No products found</h3>
               <p className="text-muted-foreground mt-2">

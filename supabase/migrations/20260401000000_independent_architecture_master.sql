@@ -640,8 +640,20 @@ CREATE POLICY "Users can view own orders" ON public.orders FOR SELECT USING (aut
 CREATE POLICY "Users can insert pending orders" ON public.orders FOR INSERT WITH CHECK (auth.uid() IN (SELECT user_id FROM profiles WHERE id = customer_id) AND payment_status = 'pending');
 
 -- Policies for order_items
-CREATE POLICY "Users can view own order items" ON public.order_items FOR SELECT USING (auth.uid() IN (SELECT p.user_id FROM profiles p JOIN orders o ON o.customer_id = p.id WHERE o.id = order_id));
-CREATE POLICY "Users can insert order items" ON public.order_items FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can view own order items" ON public.order_items FOR SELECT USING (
+    EXISTS (
+        SELECT 1 FROM public.orders o
+        JOIN public.profiles p ON o.customer_id = p.id
+        WHERE o.id = order_items.order_id AND p.user_id = auth.uid()
+    )
+);
+CREATE POLICY "Users can insert order items" ON public.order_items FOR INSERT WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.orders o
+        JOIN public.profiles p ON o.customer_id = p.id
+        WHERE o.id = order_items.order_id AND p.user_id = auth.uid()
+    )
+);
 
 -- Policies for subscription plans
 CREATE POLICY "Anyone can view active plans" ON public.subscription_plans FOR SELECT USING (is_active = true OR public.has_role(auth.uid(), 'admin'));

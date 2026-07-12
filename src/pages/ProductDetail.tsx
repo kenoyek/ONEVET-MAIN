@@ -82,36 +82,36 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
-      <main className="pt-24 pb-16">
+      <main className="pt-28 md:pt-32 pb-16">
         <div className="container-wide">
           <Button
             variant="ghost"
-            className="mb-6"
+            className="mb-8 font-bold rounded-full hover:bg-primary/5 group"
             onClick={() => navigate(-1)}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
+            Back to Store
           </Button>
 
-          <div className="grid lg:grid-cols-2 gap-12">
+          <div className="grid lg:grid-cols-2 gap-16">
             {/* Image Gallery */}
-            <div className="space-y-4">
-              <div className="aspect-square rounded-2xl overflow-hidden bg-muted border">
+            <div className="space-y-6">
+              <div className="aspect-square rounded-[3rem] overflow-hidden bg-white shadow-elevated border-8 border-background">
                 <img
                   src={product.images?.[selectedImage] || '/placeholder.svg'}
                   alt={product.title}
-                  className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
+                  className="w-full h-full object-cover transition-all duration-700 hover:scale-105"
                 />
               </div>
               {product.images && product.images.length > 1 && (
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-4 gap-4 px-2">
                   {product.images.map((img: string, idx: number) => (
                     <button
                       key={idx}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === idx ? 'border-primary' : 'border-transparent'
+                      className={`aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 ${
+                        selectedImage === idx ? 'border-primary shadow-glow' : 'border-background shadow-soft opacity-60 hover:opacity-100'
                       }`}
                       onClick={() => setSelectedImage(idx)}
                     >
@@ -123,42 +123,53 @@ const ProductDetail = () => {
             </div>
 
             {/* Product Info */}
-            <div className="flex flex-col">
-              <div className="mb-6">
-                <Badge className="mb-2">{product.category}</Badge>
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">{product.title}</h1>
-                <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                  <Store className="w-4 h-4" />
-                  <span>Sold by <span className="font-medium text-foreground">{product.seller?.business_name || `${product.seller?.first_name} ${product.seller?.last_name}`}</span></span>
+            <div className="flex flex-col pt-4">
+              <div className="mb-8">
+                <Badge className="mb-4 bg-primary/10 text-primary border-none px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{product.category}</Badge>
+                <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4 tracking-tighter leading-tight">{product.title}</h1>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
+                    <Store className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                      Sold by <span className="text-foreground">{product.seller?.business_name || `${product.seller?.first_name} ${product.seller?.last_name}`}</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-amber-500 font-black text-sm">
+                    <Star className="w-4 h-4 fill-current" /> 5.0
+                  </div>
                 </div>
-                <div className="text-3xl font-bold text-primary">
+                <div className="text-4xl font-black text-primary tracking-tighter">
                   ₦{product.price.toLocaleString()}
                 </div>
               </div>
 
-              <Separator className="my-6" />
+              <Separator className="my-8 opacity-50" />
 
-              <div className="space-y-6 flex-grow">
+              <div className="space-y-8 flex-grow">
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Description</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {product.description || "No description provided for this product."}
+                  <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground mb-3">Description</h3>
+                  <p className="text-foreground/80 leading-relaxed font-medium">
+                    {product.description || "No description provided for this product. Premium quality guaranteed for your animal health needs."}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
-                    <Truck className="w-5 h-5 text-primary" />
-                    <div className="text-xs">
-                      <p className="font-bold">Fast Delivery</p>
-                      <p className="text-muted-foreground">Within 24-48 hours</p>
+                  <div className="flex items-center gap-4 p-5 rounded-[1.5rem] bg-card border border-border/40 shadow-soft">
+                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary shadow-sm">
+                      <Truck className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs uppercase tracking-wider">Fast Delivery</p>
+                      <p className="text-[10px] font-bold text-muted-foreground">Within 24-48 hours</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
-                    <Package className="w-5 h-5 text-primary" />
-                    <div className="text-xs">
-                      <p className="font-bold">{product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}</p>
-                      <p className="text-muted-foreground">
+                  <div className="flex items-center gap-4 p-5 rounded-[1.5rem] bg-card border border-border/40 shadow-soft">
+                    <div className="p-2.5 rounded-xl bg-success/10 text-success shadow-sm">
+                      <Package className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs uppercase tracking-wider">{product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground">
                         {product.stock_quantity > 0 ? `${product.stock_quantity} units available` : 'Check back later'}
                       </p>
                     </div>
@@ -166,23 +177,23 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="mt-8 flex gap-4">
+              <div className="mt-12 flex gap-4">
                 <Button
-                  size="lg"
-                  className="flex-grow h-14 text-lg font-bold gap-2"
+                  size="xl"
+                  className="flex-grow h-16 text-lg font-black gap-3 rounded-full shadow-glow hover:scale-[1.02] transition-all"
                   onClick={handleAddToCart}
                   disabled={product.stock_quantity <= 0}
                 >
-                  <ShoppingCart className="w-5 h-5" />
+                  <ShoppingCart className="w-6 h-6" />
                   {product.stock_quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 w-14 p-0">
-                  <Heart className="w-5 h-5" />
+                <Button size="xl" variant="outline" className="h-16 w-16 p-0 rounded-full border-2 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-all">
+                  <Heart className="w-6 h-6" />
                 </Button>
               </div>
 
-              <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <ShieldCheck className="w-4 h-4 text-green-500" />
+              <div className="mt-8 flex items-center justify-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                <ShieldCheck className="w-4 h-4 text-success" />
                 Secure Checkout with Paystack
               </div>
             </div>

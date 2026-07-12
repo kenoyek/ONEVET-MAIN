@@ -121,20 +121,23 @@ export default function ConsultationNew() {
   // Redirect if no subscription
   if (!subscriptionLoading && !isActive) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-mesh-gradient">
         <Navbar />
-        <main className="pt-20 pb-16">
-          <div className="container-wide py-8">
-            <Card className="max-w-md mx-auto">
-              <CardHeader className="text-center">
-                <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
-                <CardTitle>Subscription Required</CardTitle>
-                <CardDescription>
-                  You need an active subscription to start a consultation with a veterinarian.
+        <main className="pt-24 pb-16">
+          <div className="container-tight py-8">
+            <Card className="glass-card max-w-md mx-auto overflow-hidden">
+              <div className="h-2 bg-gradient-brand" />
+              <CardHeader className="text-center pt-8">
+                <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="h-8 w-8 text-destructive" />
+                </div>
+                <CardTitle className="text-2xl">Subscription Required</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  You need an active subscription to start a consultation with our expert veterinarians.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="text-center">
-                <Button onClick={() => navigate('/pricing')} className="w-full">
+              <CardContent className="text-center pb-8 px-8">
+                <Button onClick={() => navigate('/pricing')} className="w-full h-12 text-lg shadow-lg shadow-primary/20">
                   View Subscription Plans
                 </Button>
               </CardContent>
@@ -146,36 +149,43 @@ export default function ConsultationNew() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-mesh-gradient">
       <Navbar />
       
-      <main className="pt-20 pb-16">
+      <main className="pt-24 pb-16">
         <div className="container-wide py-8 max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <Card>
-              <CardHeader>
+            <Card className="glass-card overflow-hidden">
+              <div className="h-1.5 bg-gradient-brand" />
+              <CardHeader className="pb-4">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-primary/10">
+                  <div className="p-3.5 rounded-2xl bg-primary/10 shadow-inner">
                     <MessageCircle className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <CardTitle>Start a Consultation</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="text-2xl">Start a Consultation</CardTitle>
+                    <CardDescription className="text-base">
                       Describe your pet's symptoms and connect with a licensed vet
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
 
-              <CardContent>
+              <CardContent className="space-y-6">
                 {/* Online Vets Indicator */}
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-success/10 text-success mb-6">
-                  <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-                  <span className="text-sm font-medium">
-                    {onlineVetsCount} {onlineVetsCount === 1 ? 'vet' : 'vets'} available now
+                <div className="flex items-center justify-between p-4 rounded-xl bg-primary/5 border border-primary/10 mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2.5 w-2.5 rounded-full bg-success animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                    <span className="text-sm font-semibold text-primary">
+                      Live Support Available
+                    </span>
+                  </div>
+                  <span className="text-xs font-medium bg-white/50 px-2 py-1 rounded-full border border-primary/10">
+                    {onlineVetsCount} {onlineVetsCount === 1 ? 'vet' : 'vets'} online
                   </span>
                 </div>
 
@@ -187,17 +197,17 @@ export default function ConsultationNew() {
                       name="pet_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <PawPrint className="h-4 w-4" />
+                          <FormLabel className="flex items-center gap-2 text-sm font-semibold">
+                            <PawPrint className="h-4 w-4 text-primary" />
                             Select Pet (Optional)
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="h-12 bg-white/50 border-primary/20 hover:border-primary/40 focus:ring-primary/20 transition-all">
                                 <SelectValue placeholder={loadingPets ? 'Loading pets...' : 'Choose a pet'} />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="glass-card">
                               {pets.map((pet) => (
                                 <SelectItem key={pet.id} value={pet.id}>
                                   {pet.name} ({pet.species})
@@ -221,11 +231,11 @@ export default function ConsultationNew() {
                       name="chief_complaint"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>What's the issue?</FormLabel>
+                          <FormLabel className="text-sm font-semibold">What's the issue?</FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Describe your pet's symptoms, behavior changes, or any concerns you have..."
-                              className="min-h-[120px]"
+                              className="min-h-[160px] bg-white/50 border-primary/20 hover:border-primary/40 focus:ring-primary/20 transition-all resize-none p-4"
                               {...field}
                             />
                           </FormControl>
@@ -234,26 +244,31 @@ export default function ConsultationNew() {
                       )}
                     />
 
-                    <Button type="submit" className="w-full" disabled={submitting}>
+                    <Button
+                      type="submit"
+                      className="w-full h-12 text-lg font-semibold bg-gradient-brand hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 disabled:opacity-70"
+                      disabled={submitting}
+                    >
                       {submitting ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Submitting...
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Initializing...
                         </>
                       ) : (
                         <>
-                          <MessageCircle className="mr-2 h-4 w-4" />
-                          Start Consultation
+                          <MessageCircle className="mr-2 h-5 w-5" />
+                          Connect with a Vet
                         </>
                       )}
                     </Button>
                   </form>
                 </Form>
 
-                <p className="text-xs text-muted-foreground text-center mt-4">
-                  By starting a consultation, you agree to our terms of service.
-                  A veterinarian will respond as soon as possible.
-                </p>
+                <div className="pt-4 border-t border-primary/10">
+                  <p className="text-[11px] text-muted-foreground text-center uppercase tracking-wider font-medium">
+                    Secure & Confidential • Licensed Veterinarians • 24/7 Support
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -262,3 +277,4 @@ export default function ConsultationNew() {
     </div>
   );
 }
+

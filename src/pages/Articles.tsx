@@ -74,37 +74,36 @@ export default function Articles() {
   });
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background bg-mesh-gradient flex flex-col">
       <Navbar />
       
-      <main className="flex-1 pt-20">
+      <main className="flex-1">
         {/* Hero Section */}
-        <section className="bg-gradient-subtle py-16 border-b">
-          <div className="container-wide">
+        <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
+          <div className="container-wide text-center relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center max-w-2xl mx-auto"
+              className="max-w-3xl mx-auto"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
-                <BookOpen className="h-4 w-4" />
-                <span className="text-sm font-medium">Pet Education Hub</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
-                Learn About Pet Care
+              <Badge variant="outline" className="mb-6 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
+                Knowledge Base
+              </Badge>
+              <h1 className="text-5xl md:text-6xl font-black text-foreground mb-6 tracking-tighter leading-tight">
+                Insights for <span className="text-gradient-brand">animal health.</span>
               </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                Expert articles and guides to help you take the best care of your furry friends
+              <p className="text-lg md:text-xl text-muted-foreground mb-10 font-medium leading-relaxed">
+                Expert-authored guides, medical breakthroughs, and essential tips to help your animal companions thrive.
               </p>
               
               {/* Search */}
-              <div className="relative max-w-md mx-auto">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <div className="relative max-w-xl mx-auto">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  placeholder="Search articles..."
+                  placeholder="Search articles, symptoms, or guides..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12 text-lg"
+                  className="pl-14 h-16 text-lg rounded-full bg-card border-border/50 shadow-soft focus:shadow-glow transition-all"
                 />
               </div>
             </motion.div>
@@ -112,15 +111,15 @@ export default function Articles() {
         </section>
 
         {/* Categories */}
-        <section className="border-b sticky top-16 md:top-20 bg-background/95 backdrop-blur z-10">
-          <div className="container-wide py-4">
-            <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-              <TabsList className="h-auto flex-wrap gap-2 bg-transparent p-0">
+        <section className="sticky top-16 md:top-20 bg-background/80 backdrop-blur-xl z-20 border-y border-border/40">
+          <div className="container-wide py-4 overflow-x-auto scrollbar-hide">
+            <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+              <TabsList className="h-auto flex justify-start sm:justify-center gap-2 bg-transparent p-0">
                 {categories.map(cat => (
                   <TabsTrigger
                     key={cat}
                     value={cat}
-                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                    className="rounded-full px-6 py-2 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-glow transition-all"
                   >
                     {cat}
                   </TabsTrigger>
@@ -131,78 +130,84 @@ export default function Articles() {
         </section>
 
         {/* Articles Grid */}
-        <section className="py-12">
+        <section className="section-padding pt-16">
           <div className="container-wide">
             {isLoading ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {[1, 2, 3, 4, 5, 6].map(i => (
-                  <Card key={i}>
-                    <Skeleton className="h-48 w-full rounded-t-lg" />
-                    <CardHeader>
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full mt-2" />
-                    </CardHeader>
-                  </Card>
+                  <div key={i} className="space-y-4">
+                    <Skeleton className="h-64 w-full rounded-[2.5rem]" />
+                    <Skeleton className="h-6 w-3/4 rounded-full" />
+                    <Skeleton className="h-4 w-full rounded-full" />
+                  </div>
                 ))}
               </div>
             ) : filteredArticles.length === 0 ? (
-              <div className="text-center py-16">
-                <BookOpen className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No articles found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or category filter
+              <div className="text-center py-24">
+                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6 opacity-50">
+                  <BookOpen className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <h3 className="text-2xl font-black mb-2 tracking-tight">No articles discovered</h3>
+                <p className="text-muted-foreground font-medium">
+                  Try refining your search terms or exploring other categories.
                 </p>
+                <Button variant="link" onClick={() => {setSearchQuery(''); setSelectedCategory('All');}} className="mt-4 font-bold">Clear all filters</Button>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {filteredArticles.map((article, index) => (
                   <motion.div
                     key={article.id}
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.05, duration: 0.5 }}
                   >
-                    <Link to={`/articles/${article.slug}`}>
-                      <Card className="h-full hover:shadow-lg transition-shadow overflow-hidden group">
-                        {article.image_url ? (
-                          <div className="h-48 overflow-hidden">
+                    <Link to={`/articles/${article.slug}`} className="group block h-full">
+                      <Card className="h-full rounded-[2.5rem] overflow-hidden border-border/50 bg-card hover:shadow-elevated hover:-translate-y-2 transition-all duration-500 flex flex-col">
+                        <div className="relative h-64 overflow-hidden m-2 rounded-[2rem]">
+                          {article.image_url ? (
                             <img
                               src={article.image_url}
                               alt={article.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-brand flex items-center justify-center">
+                              <BookOpen className="h-12 w-12 text-white/50" />
+                            </div>
+                          )}
+                          <div className="absolute top-4 left-4">
+                            <Badge className="bg-background/90 backdrop-blur-md text-foreground border-none px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                              {article.category}
+                            </Badge>
                           </div>
-                        ) : (
-                          <div className="h-48 bg-gradient-brand flex items-center justify-center">
-                            <BookOpen className="h-16 w-16 text-primary-foreground/50" />
-                          </div>
-                        )}
-                        <CardHeader>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline">{article.category}</Badge>
-                          </div>
-                          <CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+                        </div>
+                        <CardHeader className="p-8 pb-4 flex-grow">
+                          <CardTitle className="text-2xl font-black line-clamp-2 group-hover:text-primary transition-colors tracking-tight leading-tight mb-4">
                             {article.title}
                           </CardTitle>
                           {article.excerpt && (
-                            <CardDescription className="line-clamp-2">
+                            <CardDescription className="line-clamp-3 text-sm font-medium leading-relaxed">
                               {article.excerpt}
                             </CardDescription>
                           )}
                         </CardHeader>
-                        <CardContent>
-                          <div className="flex items-center justify-between text-sm text-muted-foreground">
-                            <div className="flex items-center gap-4">
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-4 w-4" />
+                        <CardContent className="p-8 pt-0">
+                          <div className="flex items-center justify-between border-t border-border/40 pt-6">
+                            <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                              <span className="flex items-center gap-1.5">
+                                <Clock className="h-3.5 w-3.5" />
                                 {format(new Date(article.published_at || article.created_at), 'MMM d, yyyy')}
                               </span>
-                              <span className="flex items-center gap-1">
-                                <Eye className="h-4 w-4" />
-                                {article.view_count}
+                              <span className="flex items-center gap-1.5">
+                                <Eye className="h-3.5 w-3.5" />
+                                {article.view_count.toLocaleString()}
                               </span>
                             </div>
-                            <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            <div className="p-2 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                              <ChevronRight className="h-4 w-4" />
+                            </div>
                           </div>
                         </CardContent>
                       </Card>

@@ -190,117 +190,105 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       
-      <main className="container-wide py-8">
+      <main className="container-wide py-12 pt-28 md:pt-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
             <div>
-              <h1 className="text-3xl font-display font-bold">
-                Admin Dashboard
+              <h1 className="text-4xl font-black text-foreground tracking-tight mb-2">
+                Admin Center
               </h1>
-              <p className="text-muted-foreground mt-1">
-                Manage users, vets, content, and subscriptions
+              <p className="text-muted-foreground font-medium">
+                Comprehensive platform management and oversight.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search..."
+                  placeholder="Global Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-64"
+                  className="pl-11 w-64 rounded-full bg-card border-border/50 shadow-soft"
                 />
               </div>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6 mb-8">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.totalUsers}</p>
-                    <p className="text-xs text-muted-foreground">Total Users</p>
-                  </div>
+          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6 mb-10">
+            <Card className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary/10 text-primary shadow-sm">
+                  <Users className="h-5 w-5" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-xl font-black tracking-tight">{stats.totalUsers}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Users</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-info/10">
-                    <Stethoscope className="h-5 w-5 text-info" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.totalVets}</p>
-                    <p className="text-xs text-muted-foreground">Veterinarians</p>
-                  </div>
+            <Card className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-info/10 text-info shadow-sm">
+                  <Stethoscope className="h-5 w-5" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-xl font-black tracking-tight">{stats.totalVets}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Vets</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-warning/10">
-                    <AlertCircle className="h-5 w-5 text-warning" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.pendingVets}</p>
-                    <p className="text-xs text-muted-foreground">Pending Vets</p>
-                  </div>
+            <Card className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-warning/10 text-warning shadow-sm">
+                  <AlertCircle className="h-5 w-5" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-xl font-black tracking-tight">{stats.pendingVets}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pending</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-success/10">
-                    <CreditCard className="h-5 w-5 text-success" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.activeSubscriptions}</p>
-                    <p className="text-xs text-muted-foreground">Active Subs</p>
-                  </div>
+            <Card className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-success/10 text-success shadow-sm">
+                  <CreditCard className="h-5 w-5" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-xl font-black tracking-tight">{stats.activeSubscriptions}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Subs</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-secondary/10">
-                    <MessageCircle className="h-5 w-5 text-secondary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.totalConsultations}</p>
-                    <p className="text-xs text-muted-foreground">Consultations</p>
-                  </div>
+            <Card className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-secondary/10 text-secondary shadow-sm">
+                  <MessageCircle className="h-5 w-5" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-xl font-black tracking-tight">{stats.totalConsultations}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Consults</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <TrendingUp className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.consultationsToday}</p>
-                    <p className="text-xs text-muted-foreground">Today</p>
-                  </div>
+            <Card className="glass-card p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-accent/10 text-accent shadow-sm">
+                  <TrendingUp className="h-5 w-5" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-xl font-black tracking-tight">{stats.consultationsToday}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Today</p>
+                </div>
+              </div>
             </Card>
           </div>
 

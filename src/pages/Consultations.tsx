@@ -115,28 +115,31 @@ export default function Consultations() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       
-      <main className="pt-20 pb-16">
-        <div className="container-wide py-8">
+      <main className="pt-28 md:pt-32 pb-20">
+        <div className="container-wide">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+            className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12"
           >
             <div>
-              <h1 className="font-display text-3xl font-bold">Consultations</h1>
-              <p className="text-muted-foreground">
-                {isVet ? 'Manage your patient consultations' : 'Your vet consultation history'}
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
+                Medical Records
+              </Badge>
+              <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-2">Consultations</h1>
+              <p className="text-muted-foreground font-medium">
+                {isVet ? 'Review and manage your patient consultation history.' : 'Access your professional medical consultation history.'}
               </p>
             </div>
 
             {!isVet && (
-              <Button asChild>
+              <Button size="lg" className="rounded-full font-black px-8 shadow-glow" asChild>
                 <Link to="/consultations/new">
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="mr-3 h-5 w-5" />
                   New Consultation
                 </Link>
               </Button>
@@ -144,22 +147,22 @@ export default function Consultations() {
           </motion.div>
 
           {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="flex flex-col sm:flex-row items-center gap-4 mb-10 p-2 rounded-2xl bg-card border border-border/40 shadow-soft">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search consultations..."
+                placeholder="Search history..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-11 rounded-xl bg-muted/30 border-transparent focus:bg-background transition-all"
               />
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="active">Active</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+              <TabsList className="bg-muted/50 p-1 rounded-xl w-full sm:w-auto">
+                <TabsTrigger value="all" className="rounded-lg font-bold data-[state=active]:shadow-soft">All Records</TabsTrigger>
+                <TabsTrigger value="active" className="rounded-lg font-bold data-[state=active]:shadow-soft">In Progress</TabsTrigger>
+                <TabsTrigger value="completed" className="rounded-lg font-bold data-[state=active]:shadow-soft">Archived</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>

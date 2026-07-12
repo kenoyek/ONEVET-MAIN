@@ -140,21 +140,21 @@ export default function Pricing() {
   const yearlyPlan = plans.find(p => p.duration_months >= 12);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
-      <main className="pt-20">
+      <main className="pt-28 md:pt-32 pb-20">
         {/* Hero */}
-        <section className="py-16 md:py-24 text-center">
+        <section className="py-12 text-center">
           <div className="container-wide max-w-3xl mx-auto px-4">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
-                <Sparkles className="w-3 h-3 mr-1" /> Premium Plans
+              <Badge variant="outline" className="mb-6 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
+                <Sparkles className="w-3 h-3 mr-2" /> Memberships
               </Badge>
-              <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground mb-4">
-                Choose Your Plan
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-6 tracking-tighter leading-tight">
+                Healthcare without <span className="text-gradient-brand">boundaries.</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Unlock 24/7 access to licensed veterinarians and premium pet care features with a plan that fits your needs.
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto font-medium">
+                Unlock 24/7 access to licensed veterinarians and premium pet care features with a flexible membership plan.
               </p>
             </motion.div>
           </div>
@@ -162,27 +162,27 @@ export default function Pricing() {
 
         {/* Active Subscription Banner */}
         {user && !subLoading && isActive && subscription && (
-          <section className="pb-8">
-            <div className="container-wide max-w-3xl mx-auto px-4">
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                <Card className="border-primary/30 bg-primary/5">
-                  <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-6">
-                    <div className="p-3 rounded-full bg-primary/10">
-                      <Crown className="h-6 w-6 text-primary" />
+          <section className="pb-12">
+            <div className="container-wide max-w-4xl mx-auto px-4">
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                <Card className="border-primary/20 bg-primary/5 glass-card overflow-hidden">
+                  <CardContent className="flex flex-col sm:flex-row items-center gap-6 p-8 text-center sm:text-left">
+                    <div className="p-4 rounded-2xl bg-primary text-white shadow-glow">
+                      <Crown className="h-8 w-8" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-semibold text-foreground">
-                        You're on the <span className="text-primary">{(subscription as any).plan?.name || 'Active'}</span> plan
+                      <p className="text-2xl font-black text-foreground tracking-tight mb-1">
+                        You're a <span className="text-primary">{(subscription as any).plan?.name || 'Valued'}</span> Member
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        Status: <Badge variant="secondary" className="ml-1 capitalize">{subscription.status}</Badge>
+                      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                        <Badge variant="default" className="rounded-full px-3">{subscription.status}</Badge>
                         {subscription.expires_at && (
-                          <span className="ml-2">· Expires {format(new Date(subscription.expires_at), 'MMM d, yyyy')}</span>
+                          <span>• Valid until {format(new Date(subscription.expires_at), 'MMM d, yyyy')}</span>
                         )}
-                      </p>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/contact">Manage via Support</Link>
+                    <Button variant="outline" size="lg" className="rounded-full font-bold border-2" asChild>
+                      <Link to="/contact">Manage Account</Link>
                     </Button>
                   </CardContent>
                 </Card>
@@ -192,16 +192,16 @@ export default function Pricing() {
         )}
 
         {/* Plan Cards */}
-        <section className="pb-16 md:pb-24">
-          <div className="container-wide max-w-4xl mx-auto px-4">
+        <section className="pb-20">
+          <div className="container-wide max-w-5xl mx-auto px-4">
             {loading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="flex justify-center py-20">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+              <div className="grid md:grid-cols-2 gap-10">
                 {plans.map((plan, i) => {
-                  const isPopular = plan.id === yearlyPlan?.id;
+                  const isPopular = plan.duration_months >= 12;
                   const features: string[] = Array.isArray(plan.features) ? (plan.features as string[]) : defaultFeatures;
 
                   return (
@@ -211,60 +211,59 @@ export default function Pricing() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: i * 0.15 }}
                     >
-                      <Card className={`relative h-full flex flex-col ${isPopular ? 'border-primary shadow-lg ring-2 ring-primary/20' : ''}`}>
+                      <Card className={`relative h-full flex flex-col rounded-[3rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 ${isPopular ? 'border-primary border-4 shadow-elevated bg-card' : 'border-border/50 shadow-soft bg-card/50'}`}>
                         {isPopular && (
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                            <Badge className="bg-primary text-primary-foreground px-4 py-1">
-                              <Sparkles className="w-3 h-3 mr-1" /> Best Value
-                            </Badge>
+                          <div className="absolute top-0 right-0">
+                            <div className="bg-primary text-white px-8 py-2 rounded-bl-[2rem] font-black text-[10px] uppercase tracking-widest shadow-soft">
+                              Best Value
+                            </div>
                           </div>
                         )}
-                        <CardHeader className="text-center pb-2">
-                          <CardTitle className="text-xl font-display">{plan.name}</CardTitle>
-                          {plan.description && <CardDescription>{plan.description}</CardDescription>}
-                          <div className="pt-4">
-                            <span className="text-4xl font-bold text-foreground">{formatNGN(plan.price)}</span>
-                            <span className="text-muted-foreground ml-1">
-                              /{plan.duration_months >= 12 ? 'year' : 'month'}
+                        <CardHeader className="p-10 pb-6">
+                          <CardTitle className="text-2xl font-black tracking-tight mb-2 uppercase tracking-widest text-muted-foreground">{plan.name}</CardTitle>
+                          {plan.description && <CardDescription className="text-base font-medium">{plan.description}</CardDescription>}
+                          <div className="pt-8">
+                            <span className="text-6xl font-black text-foreground tracking-tighter">{formatNGN(plan.price)}</span>
+                            <span className="text-muted-foreground font-bold ml-2 uppercase tracking-widest text-xs">
+                              / {plan.duration_months >= 12 ? 'year' : 'month'}
                             </span>
                           </div>
-                          {isPopular && (
-                            <p className="text-sm text-primary font-medium mt-1">Save 2 months free!</p>
-                          )}
                         </CardHeader>
-                        <CardContent className="flex-1 flex flex-col">
-                          <ul className="space-y-3 mb-8 flex-1">
+                        <CardContent className="px-10 pb-10 flex-1 flex flex-col">
+                          <ul className="space-y-4 mb-10 flex-1">
                             {features.map((feature, fi) => (
-                              <li key={fi} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                              <li key={fi} className="flex items-start gap-3 text-sm font-bold text-foreground/70">
+                                <div className="mt-0.5 p-0.5 rounded-full bg-primary/10 text-primary">
+                                  <Check className="h-3.5 w-3.5" />
+                                </div>
                                 <span>{String(feature)}</span>
                               </li>
                             ))}
                           </ul>
                           {user ? (
                             isActive && subscription?.plan_id === plan.id ? (
-                              <Button variant="outline" className="w-full" disabled>
-                                Current Plan Active
+                              <Button variant="outline" className="w-full h-14 rounded-full font-black border-2" disabled>
+                                Currently Active
                               </Button>
                             ) : (
                               <Button
-                                className="w-full group"
+                                className="w-full h-16 rounded-full font-black text-lg shadow-glow hover:scale-105 transition-all"
                                 onClick={() => handleSubscribe(plan)}
                                 disabled={isProcessing !== null}
                               >
                                 {isProcessing === plan.id ? (
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  <Loader2 className="mr-3 h-6 w-6 animate-spin" />
                                 ) : (
                                   <>
-                                    Subscribe Now <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                    Activate Plan <ArrowRight className="ml-2 h-5 w-5" />
                                   </>
                                 )}
                               </Button>
                             )
                           ) : (
-                            <Button className="w-full group" asChild>
+                            <Button className="w-full h-16 rounded-full font-black text-lg shadow-glow hover:scale-105 transition-all" asChild>
                               <Link to="/auth?mode=signup">
-                                Get Started <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                Get Started <ArrowRight className="ml-2 h-5 w-5" />
                               </Link>
                             </Button>
                           )}
@@ -279,26 +278,27 @@ export default function Pricing() {
         </section>
 
         {/* How It Works */}
-        <section className="py-16 md:py-24 bg-muted/50">
-          <div className="container-wide max-w-4xl mx-auto px-4 text-center">
+        <section className="py-24 bg-muted/20 relative overflow-hidden">
+          <div className="container-wide max-w-5xl mx-auto px-4 text-center relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <h2 className="font-display text-3xl font-bold text-foreground mb-12">How It Works</h2>
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">Process</Badge>
+              <h2 className="font-display text-4xl font-black text-foreground mb-16 tracking-tight">Simple activation flow.</h2>
             </motion.div>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-12">
               {steps.map((step, i) => (
                 <motion.div
                   key={i}
-                  className="flex flex-col items-center"
+                  className="flex flex-col items-center group"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.15 }}
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                    <step.icon className="h-7 w-7 text-primary" />
+                  <div className="w-20 h-20 rounded-[2rem] bg-card border border-border/50 flex items-center justify-center mb-6 shadow-soft group-hover:shadow-glow group-hover:-translate-y-1 transition-all duration-500">
+                    <step.icon className="h-8 w-8 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.desc}</p>
+                  <h3 className="text-xl font-bold text-foreground mb-3 tracking-tight">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed px-4">{step.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -306,22 +306,25 @@ export default function Pricing() {
         </section>
 
         {/* FAQ */}
-        <section className="py-16 md:py-24">
-          <div className="container-wide max-w-2xl mx-auto px-4">
-            <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <h2 className="font-display text-3xl font-bold text-foreground mb-2">Frequently Asked Questions</h2>
-              <p className="text-muted-foreground">Everything you need to know about our plans</p>
+        <section className="section-padding">
+          <div className="container-wide max-w-3xl mx-auto px-4">
+            <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">Support</Badge>
+              <h2 className="font-display text-4xl font-black text-foreground mb-4 tracking-tight">Common questions.</h2>
+              <p className="text-muted-foreground font-medium">Everything you need to know about our premium memberships.</p>
             </motion.div>
-            <Accordion type="single" collapsible className="space-y-2">
+            <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, i) => (
-                <AccordionItem key={i} value={`faq-${i}`} className="border rounded-lg px-4">
-                  <AccordionTrigger className="text-left text-sm font-medium hover:no-underline">
-                    <div className="flex items-center gap-2">
-                      <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+                <AccordionItem key={i} value={`faq-${i}`} className="border border-border/50 rounded-2xl px-6 bg-card/50 overflow-hidden">
+                  <AccordionTrigger className="text-left py-6 font-bold text-lg hover:no-underline group">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary group-data-[state=open]:text-white transition-colors">
+                        <HelpCircle className="h-5 w-5" />
+                      </div>
                       {faq.q}
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="text-sm text-muted-foreground pl-6">
+                  <AccordionContent className="text-base text-muted-foreground font-medium pb-6 pl-14 leading-relaxed">
                     {faq.a}
                   </AccordionContent>
                 </AccordionItem>

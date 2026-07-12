@@ -20,20 +20,20 @@ const Cart = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background bg-mesh-gradient">
         <Navbar />
-        <main className="pt-32 pb-16">
+        <main className="pt-40 pb-16">
           <div className="container-tight text-center">
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShoppingCart className="w-12 h-12 text-muted-foreground" />
+            <div className="w-32 h-32 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-soft animate-float">
+              <ShoppingCart className="w-12 h-12 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
-            <p className="text-muted-foreground mb-8 text-lg">
-              Looks like you haven't added anything to your cart yet.
+            <h1 className="text-4xl font-black mb-4 tracking-tighter">Your cart is empty</h1>
+            <p className="text-muted-foreground mb-10 text-lg font-medium">
+              Explore our marketplace for premium veterinary supplies and pet products.
             </p>
-            <Button size="lg" asChild>
+            <Button size="xl" className="rounded-full font-black px-10 shadow-glow" asChild>
               <Link to="/marketplace">
-                <ArrowLeft className="mr-2 w-4 h-4" />
+                <ArrowLeft className="mr-3 w-5 h-5" />
                 Go to Marketplace
               </Link>
             </Button>
@@ -45,73 +45,76 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
-      <main className="pt-24 pb-16">
+      <main className="pt-28 md:pt-32 pb-20">
         <div className="container-wide">
-          <div className="flex items-center gap-2 mb-8">
-            <Button variant="ghost" size="sm" asChild>
+          <div className="flex items-center gap-2 mb-10">
+            <Button variant="ghost" size="sm" className="rounded-full font-bold hover:bg-primary/5 group" asChild>
               <Link to="/marketplace">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
                 Continue Shopping
               </Link>
             </Button>
           </div>
 
-          <h1 className="text-3xl font-bold mb-8">Shopping Cart ({totalItems})</h1>
+          <h1 className="text-4xl font-black mb-10 tracking-tighter">Shopping Cart <span className="text-primary/40 ml-2">({totalItems})</span></h1>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-12">
             {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-4">
+            <div className="lg:col-span-2 space-y-6">
               {items.map((item) => (
-                <Card key={item.id} className="overflow-hidden border-border/50">
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                <Card key={item.id} className="overflow-hidden glass-card rounded-[2rem] group hover:shadow-elevated transition-all duration-500">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row gap-6">
+                      <div className="w-full sm:w-32 h-32 rounded-2xl overflow-hidden bg-muted flex-shrink-0 shadow-soft">
                         <img
                           src={item.image}
                           alt={item.title}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                       </div>
                       <div className="flex-grow flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
+                        <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h3 className="font-semibold text-lg">{item.title}</h3>
-                            <p className="text-sm text-muted-foreground">Seller: Verified Merchant</p>
+                            <h3 className="font-black text-xl tracking-tight mb-1">{item.title}</h3>
+                            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                              <ShieldCheck className="w-3.5 h-3.5 text-success" />
+                              Verified Seller
+                            </div>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full h-10 w-10 transition-colors"
                             onClick={() => removeItem(item.id)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-5 h-5" />
                           </Button>
                         </div>
-                        <div className="flex justify-between items-end">
-                          <div className="flex items-center border rounded-lg overflow-hidden">
+                        <div className="flex flex-wrap justify-between items-end gap-4 pt-4 border-t border-border/40">
+                          <div className="flex items-center bg-muted/50 rounded-full p-1 border border-border/40 shadow-inner">
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-none"
+                              className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-3.5 h-3.5" />
                             </Button>
-                            <span className="w-10 text-center text-sm font-medium">
+                            <span className="w-12 text-center text-sm font-black">
                               {item.quantity}
                             </span>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-none"
+                              className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-3.5 h-3.5" />
                             </Button>
                           </div>
-                          <div className="text-xl font-bold">
+                          <div className="text-2xl font-black text-primary tracking-tighter">
                             ₦{(item.price * item.quantity).toLocaleString()}
                           </div>
                         </div>
@@ -124,40 +127,41 @@ const Cart = () => {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-24 border-primary/20 shadow-lg">
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>₦{totalPrice.toLocaleString()}</span>
+              <Card className="sticky top-28 glass-card rounded-[2.5rem] p-4 sm:p-6 overflow-hidden border-primary/20 bg-primary/[0.02]">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <CardContent className="p-4 relative z-10">
+                  <h2 className="text-2xl font-black mb-8 tracking-tight">Order Summary</h2>
+                  <div className="space-y-4 mb-8">
+                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                      <span>Subtotal</span>
+                      <span className="text-foreground">₦{totalPrice.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span className="text-green-600 font-medium">Free</span>
+                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                      <span>Shipping</span>
+                      <span className="text-success">Complimentary</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span>₦0.00</span>
+                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                      <span>Service Fee</span>
+                      <span className="text-foreground">₦0.00</span>
                     </div>
-                    <Separator className="my-2" />
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total</span>
-                      <span className="text-primary">₦{totalPrice.toLocaleString()}</span>
+                    <Separator className="bg-border/60" />
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-lg font-black tracking-tight uppercase tracking-widest">Total</span>
+                      <span className="text-3xl font-black text-primary tracking-tighter">₦{totalPrice.toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <Button className="w-full mt-6 h-12 text-lg font-bold gap-2" asChild>
+                  <Button className="w-full h-16 text-lg font-black gap-3 rounded-full shadow-glow hover:scale-[1.02] transition-all" asChild>
                     <Link to="/checkout">
-                      Proceed to Checkout
-                      <ArrowRight className="w-5 h-5" />
+                      Confirm & Checkout
+                      <ArrowRight className="w-6 h-6" />
                     </Link>
                   </Button>
 
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                      <ShieldCheck className="w-4 h-4 text-primary" />
-                      Secure transaction with Paystack encryption.
+                  <div className="mt-8 space-y-4">
+                    <div className="flex items-start gap-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-relaxed p-4 rounded-2xl bg-background/50 border border-border/40">
+                      <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                      Secure high-encryption transaction powered by Paystack.
                     </div>
                   </div>
                 </CardContent>

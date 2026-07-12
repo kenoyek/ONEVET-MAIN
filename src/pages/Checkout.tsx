@@ -136,22 +136,26 @@ const Checkout = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background bg-mesh-gradient flex flex-col">
         <Navbar />
-        <main className="pt-32 pb-16">
+        <main className="flex-1 flex items-center justify-center p-6 pt-32 pb-20">
           <div className="container-tight text-center">
-            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-12 h-12" />
-            </div>
-            <h1 className="text-3xl font-bold mb-4">Order Confirmed!</h1>
-            <p className="text-muted-foreground mb-8 text-lg">
-              Thank you for your purchase. Your order #{orderId?.slice(0, 8).toUpperCase()} has been placed and is being processed.
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-32 h-32 bg-success/10 text-success rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-soft border-4 border-background"
+            >
+              <CheckCircle2 className="w-16 h-16" />
+            </motion.div>
+            <h1 className="text-4xl font-black mb-4 tracking-tighter">Order Confirmed!</h1>
+            <p className="text-muted-foreground mb-10 text-lg font-medium max-w-md mx-auto">
+              Your high-priority order <span className="text-foreground font-bold">#{orderId?.slice(0, 8).toUpperCase()}</span> has been securely processed.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" onClick={() => navigate('/dashboard')}>
+              <Button size="xl" className="rounded-full font-black px-10 shadow-glow" onClick={() => navigate('/dashboard')}>
                 Go to Dashboard
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/marketplace')}>
+              <Button size="xl" variant="outline" className="rounded-full font-black px-10 border-2" onClick={() => navigate('/marketplace')}>
                 Continue Shopping
               </Button>
             </div>
@@ -168,43 +172,46 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
-      <main className="pt-24 pb-16">
+      <main className="pt-28 md:pt-32 pb-20">
         <div className="container-wide">
-          <div className="flex items-center gap-2 mb-8">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/cart')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
+          <div className="flex items-center gap-2 mb-10">
+            <Button variant="ghost" size="sm" className="rounded-full font-bold hover:bg-primary/5 group" onClick={() => navigate('/cart')}>
+              <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
               Back to Cart
             </Button>
           </div>
 
-          <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+          <h1 className="text-4xl font-black mb-10 tracking-tighter text-foreground">Secure Checkout</h1>
 
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-12">
             {/* Checkout Form */}
-            <form onSubmit={handleCheckout} className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Truck className="w-5 h-5 text-primary" />
-                    Shipping Information
+            <form onSubmit={handleCheckout} className="lg:col-span-2 space-y-8">
+              <Card className="glass-card rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 pb-0">
+                  <CardTitle className="flex items-center gap-3 text-2xl font-black tracking-tight">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                      <Truck className="w-6 h-6" />
+                    </div>
+                    Shipping Intelligence
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="p-8 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
+                      <Label htmlFor="fullName" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Recipient Name</Label>
                       <Input
                         id="fullName"
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleInputChange}
                         required
+                        className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Contact Phone</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -212,124 +219,131 @@ const Checkout = () => {
                         value={formData.phone}
                         onChange={handleInputChange}
                         required
+                        className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address">Delivery Address</Label>
+                    <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Complete Delivery Address</Label>
                     <Input
                       id="address"
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
                       required
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
+                      <Label htmlFor="city" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">City / Hub</Label>
                       <Input
                         id="city"
                         name="city"
                         value={formData.city}
                         onChange={handleInputChange}
                         required
+                        className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="state">State</Label>
+                      <Label htmlFor="state" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">State / Province</Label>
                       <Input
                         id="state"
                         name="state"
                         value={formData.state}
                         onChange={handleInputChange}
                         required
+                        className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                       />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-primary" />
-                    Payment Method
+              <Card className="glass-card rounded-[2.5rem] overflow-hidden">
+                <CardHeader className="p-8 pb-0">
+                  <CardTitle className="flex items-center gap-3 text-2xl font-black tracking-tight">
+                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                      <CreditCard className="w-6 h-6" />
+                    </div>
+                    Payment Infrastructure
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="p-4 border-2 border-primary/20 bg-primary/5 rounded-xl flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white rounded flex items-center justify-center border">
-                        <CreditCard className="w-6 h-6 text-primary" />
+                <CardContent className="p-8">
+                  <div className="p-6 border-2 border-primary/20 bg-primary/5 rounded-3xl flex items-center justify-between shadow-soft">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border-2 border-border/50 shadow-soft">
+                        <CreditCard className="w-7 h-7 text-primary" />
                       </div>
                       <div>
-                        <p className="font-semibold">Paystack (Debit/Credit Card)</p>
-                        <p className="text-xs text-muted-foreground">Secure payment via Paystack</p>
+                        <p className="font-black text-lg tracking-tight">Paystack Secure</p>
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Debit / Credit Cards & Transfer</p>
                       </div>
                     </div>
-                    <CheckCircle2 className="w-6 h-6 text-primary" />
+                    <CheckCircle2 className="w-7 h-7 text-primary" />
                   </div>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    You will be redirected to Paystack to complete your payment securely.
+                  <p className="mt-6 text-sm font-medium text-muted-foreground leading-relaxed">
+                    You will be redirected to the secure Paystack gateway to complete your premium transaction. Your data is protected with 256-bit encryption.
                   </p>
                 </CardContent>
               </Card>
 
               <Button
                 type="submit"
-                className="w-full h-14 text-lg font-bold"
+                size="xl"
+                className="w-full h-18 text-xl font-black rounded-full shadow-glow hover:scale-[1.02] transition-all"
                 disabled={isProcessing}
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Processing Payment...
+                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                    Validating Gateway...
                   </>
                 ) : (
-                  `Pay ₦${totalPrice.toLocaleString()}`
+                  `Authorize Payment: ₦${totalPrice.toLocaleString()}`
                 )}
               </Button>
             </form>
 
             {/* Order Review */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-24">
-                <CardHeader>
-                  <CardTitle>Order Review</CardTitle>
+              <Card className="sticky top-28 glass-card rounded-[2.5rem] overflow-hidden bg-primary/[0.01]">
+                <CardHeader className="p-8 pb-0">
+                  <CardTitle className="text-2xl font-black tracking-tight">Final Review</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4 mb-6">
+                <CardContent className="p-8">
+                  <div className="space-y-5 mb-8">
                     {items.map((item) => (
-                      <div key={item.id} className="flex justify-between text-sm">
-                        <div className="flex gap-2">
-                          <span className="font-medium">{item.quantity}x</span>
-                          <span className="text-muted-foreground line-clamp-1">{item.title}</span>
+                      <div key={item.id} className="flex justify-between items-center group">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <span className="font-black text-primary p-1 bg-primary/5 rounded-lg text-xs min-w-[24px] text-center">{item.quantity}x</span>
+                          <span className="text-sm font-bold text-foreground/80 line-clamp-1 group-hover:text-foreground transition-colors">{item.title}</span>
                         </div>
-                        <span className="font-semibold">₦{(item.price * item.quantity).toLocaleString()}</span>
+                        <span className="font-black text-sm tracking-tight whitespace-nowrap ml-4">₦{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
-                  <Separator className="my-4" />
-                  <div className="space-y-2 text-sm">
+                  <Separator className="bg-border/60 mb-6" />
+                  <div className="space-y-4 text-sm font-bold uppercase tracking-widest text-muted-foreground">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>₦{totalPrice.toLocaleString()}</span>
+                      <span>Subtotal</span>
+                      <span className="text-foreground">₦{totalPrice.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span className="text-green-600 font-medium">Free</span>
+                      <span>Shipping</span>
+                      <span className="text-success">Complimentary</span>
                     </div>
-                    <Separator className="my-2" />
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total</span>
-                      <span className="text-primary">₦{totalPrice.toLocaleString()}</span>
+                    <Separator className="bg-border/60 my-2" />
+                    <div className="flex justify-between items-center text-foreground">
+                      <span className="text-lg font-black tracking-tight">Total</span>
+                      <span className="text-3xl font-black text-primary tracking-tighter">₦{totalPrice.toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <div className="mt-8 flex items-center gap-2 text-xs text-muted-foreground">
-                    <ShieldCheck className="w-4 h-4 text-primary" />
-                    Your payment is secured with industry-standard encryption.
+                  <div className="mt-12 flex items-start gap-3 p-5 rounded-2xl bg-background/50 border border-border/40 text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-relaxed">
+                    <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                    Enterprise-grade security. 1Vet does not store your card information.
                   </div>
                 </CardContent>
               </Card>

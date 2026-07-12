@@ -200,42 +200,44 @@ const VetDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       
-      <main className="container-wide py-8">
+      <main className="container-wide py-12 pt-28 md:pt-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
             <div>
-              <h1 className="text-3xl font-display font-bold">
+              <h1 className="text-4xl font-black text-foreground tracking-tight mb-2">
                 Welcome, Dr. {profile?.last_name || 'Vet'}! 👋
               </h1>
-              <p className="text-muted-foreground mt-1">
-                {isAvailable 
-                  ? "You're online and ready to help pets!"
-                  : "You're currently offline"}
-              </p>
+              <div className="flex items-center gap-2">
+                {isAvailable ? (
+                  <span className="status-online font-bold uppercase tracking-widest text-[10px]">Online & Ready</span>
+                ) : (
+                  <span className="status-offline font-bold uppercase tracking-widest text-[10px]">Currently Offline</span>
+                )}
+              </div>
             </div>
             <Button 
               size="lg" 
               variant={isAvailable ? 'default' : 'outline'}
               onClick={toggleAvailability}
               disabled={isTogglingAvailability}
-              className="gap-2"
+              className="gap-3 font-bold rounded-full shadow-soft px-8 min-w-[160px]"
             >
               {isAvailable ? (
                 <>
-                  <ToggleRight className="h-5 w-5" />
+                  <ToggleRight className="h-6 w-6" />
                   Online
                 </>
               ) : (
                 <>
-                  <ToggleLeft className="h-5 w-5" />
+                  <ToggleLeft className="h-6 w-6" />
                   Go Online
                 </>
               )}
@@ -244,77 +246,71 @@ const VetDashboard = () => {
 
           {/* Verification Status */}
           {!profile?.license_verified && (
-            <Card className="mb-8 border-warning/50 bg-warning/5">
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-3">
-                  <Stethoscope className="h-5 w-5 text-warning" />
+            <Card className="mb-10 border-warning/50 bg-warning/5 glass-card">
+              <CardContent className="flex flex-col sm:flex-row items-center justify-between py-6 px-8 gap-4 text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-warning/10 text-warning">
+                    <Stethoscope className="h-8 w-8" />
+                  </div>
                   <div>
-                    <p className="font-medium">License verification pending</p>
-                    <p className="text-sm text-muted-foreground">
-                      Please upload your veterinary license for verification
+                    <p className="font-bold text-lg">License verification pending</p>
+                    <p className="text-sm text-muted-foreground font-medium">
+                      Please upload your veterinary license to start accepting consultations.
                     </p>
                   </div>
                 </div>
-                <Link to="/profile">
-                  <Button variant="default">Upload License</Button>
-                </Link>
+                <Button variant="default" className="rounded-full font-bold px-8" asChild>
+                  <Link to="/profile">Complete Profile</Link>
+                </Button>
               </CardContent>
             </Card>
           )}
 
           {/* Stats Grid */}
-          <div className="grid gap-4 md:grid-cols-4 mb-8">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.totalConsultations}</p>
-                    <p className="text-sm text-muted-foreground">Total Consultations</p>
-                  </div>
+          <div className="grid gap-6 md:grid-cols-4 mb-10">
+            <Card className="glass-card p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-sm">
+                  <Users className="h-6 w-6" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.totalConsultations}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Consults</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-success/10">
-                    <CheckCircle className="h-5 w-5 text-success" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.completedToday}</p>
-                    <p className="text-sm text-muted-foreground">Completed Today</p>
-                  </div>
+            <Card className="glass-card p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-success/10 text-success shadow-sm">
+                  <CheckCircle className="h-6 w-6" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.completedToday}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Done Today</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-warning/10">
-                    <Clock className="h-5 w-5 text-warning" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.pendingRequests}</p>
-                    <p className="text-sm text-muted-foreground">Pending Requests</p>
-                  </div>
+            <Card className="glass-card p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-warning/10 text-warning shadow-sm">
+                  <Clock className="h-6 w-6" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.pendingRequests}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Waiting</p>
+                </div>
+              </div>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <Star className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{stats.averageRating || '-'}</p>
-                    <p className="text-sm text-muted-foreground">Avg. Rating</p>
-                  </div>
+            <Card className="glass-card p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-accent/10 text-accent shadow-sm">
+                  <Star className="h-6 w-6" />
                 </div>
-              </CardContent>
+                <div>
+                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.averageRating || '-'}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Avg. Rating</p>
+                </div>
+              </div>
             </Card>
           </div>
 

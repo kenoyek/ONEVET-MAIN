@@ -119,18 +119,18 @@ export function ProviderSignUpForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="firstName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John" autoComplete="given-name" {...field} />
+                  <Input placeholder="John" autoComplete="given-name" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="font-bold text-xs" />
               </FormItem>
             )}
           />
@@ -139,11 +139,11 @@ export function ProviderSignUpForm() {
             name="lastName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Doe" autoComplete="family-name" {...field} />
+                  <Input placeholder="Doe" autoComplete="family-name" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="font-bold text-xs" />
               </FormItem>
             )}
           />
@@ -154,11 +154,11 @@ export function ProviderSignUpForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Business Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="you@example.com" autoComplete="email" {...field} />
+                <Input type="email" placeholder="dr.smith@clinic.com" autoComplete="email" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
@@ -168,14 +168,14 @@ export function ProviderSignUpForm() {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Service Type</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 text-center block mb-4">Professional Category</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={(val) => {
                     field.onChange(val);
                   }}
                   defaultValue={field.value}
-                  className="grid grid-cols-2 gap-2"
+                  className="grid grid-cols-2 gap-3"
                 >
                   {roleOptions.map((option, idx) => (
                     <div key={`${option.value}-${idx}`}>
@@ -196,50 +196,55 @@ export function ProviderSignUpForm() {
                           setSelectedLabel(option.label);
                         }}
                         className={cn(
-                          "flex flex-col items-center gap-1 rounded-lg border-2 border-muted bg-popover p-3 cursor-pointer transition-all text-center",
-                          "hover:bg-accent hover:text-accent-foreground",
-                          field.value === option.value && selectedLabel === option.label && "border-primary bg-primary/5"
+                          "flex flex-col items-center gap-2 rounded-2xl border-2 border-muted bg-card p-4 cursor-pointer transition-all text-center h-full",
+                          "hover:bg-primary/5 hover:border-primary/20",
+                          field.value === option.value && selectedLabel === option.label && "border-primary bg-primary/5 shadow-soft scale-[1.02]"
                         )}
                       >
-                        <div className="text-primary">{option.icon}</div>
-                        <div className="text-sm font-medium">{option.label}</div>
+                        <div className={cn(
+                          "p-2 rounded-xl transition-colors",
+                          field.value === option.value && selectedLabel === option.label ? "bg-primary text-white shadow-glow" : "bg-primary/10 text-primary"
+                        )}>{option.icon}</div>
+                        <div className="text-xs font-black uppercase tracking-tight">{option.label}</div>
                       </Label>
                     </div>
                   ))}
                 </RadioGroup>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="businessName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Business Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Your clinic or business name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="businessName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Entity Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Clinic or Brand Name" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
+                </FormControl>
+                <FormMessage className="font-bold text-xs" />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Lagos, Nigeria" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Primary Base</FormLabel>
+                <FormControl>
+                  <Input placeholder="City, State" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
+                </FormControl>
+                <FormMessage className="font-bold text-xs" />
+              </FormItem>
+            )}
+          />
+        </div>
 
         {watchRole === 'veterinarian' && (
           <FormField
@@ -247,87 +252,92 @@ export function ProviderSignUpForm() {
             name="licenseNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>License Number</FormLabel>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">VCN License ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="VCN license number" {...field} />
+                  <Input placeholder="VET-XXXX-XXXX" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
                 </FormControl>
-                <FormMessage />
+                <FormMessage className="font-bold text-xs" />
               </FormItem>
             )}
           />
         )}
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    {...field}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                  </Button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Secure Key</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
+                      {...field}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-primary transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage className="font-bold text-xs" />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    autoComplete="new-password"
-                    {...field}
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                  </Button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Confirm Key</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
+                      {...field}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-primary transition-colors"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage className="font-bold text-xs" />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" size="xl" className="w-full rounded-full font-black shadow-glow hover:scale-[1.02] transition-all" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating account...
+              <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+              Processing...
             </>
           ) : (
-            'Join as Provider'
+            'Finalize Registration'
           )}
         </Button>
       </form>
     </Form>
   );
+}
 }

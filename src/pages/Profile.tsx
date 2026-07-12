@@ -230,10 +230,10 @@ export default function Profile() {
   const VerificationIcon = verificationStatus.icon;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       
-      <main className="container-wide py-8 pt-24">
+      <main className="container-wide py-12 pt-28 md:pt-32 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -241,40 +241,48 @@ export default function Profile() {
           className="max-w-3xl mx-auto"
         >
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-display font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage your personal information and preferences
+          <div className="mb-10 text-center sm:text-left">
+            <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
+              Settings
+            </Badge>
+            <h1 className="text-4xl font-black text-foreground tracking-tight mb-2">Profile Settings</h1>
+            <p className="text-muted-foreground font-medium">
+              Update your presence and professional identity on the platform.
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Avatar Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Profile Photo
+            <Card className="glass-card overflow-hidden">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center gap-2 font-bold">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <User className="h-5 w-5" />
+                  </div>
+                  Professional Identity
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-6">
+              <CardContent className="pt-2">
+                <div className="flex flex-col sm:flex-row items-center gap-8 p-4 rounded-[2rem] bg-primary/5 border border-primary/10">
                   <div className="relative group">
-                    <Avatar className="h-24 w-24 border-4 border-primary/20">
-                      <AvatarImage src={profile?.avatar_url || undefined} alt={formData.first_name} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-semibold">
+                    <Avatar className="h-32 w-32 border-4 border-background shadow-elevated transition-transform duration-500 group-hover:scale-105">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={formData.first_name} className="object-cover" />
+                      <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-black">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <button
                       onClick={() => avatarInputRef.current?.click()}
                       disabled={isUploadingAvatar}
-                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300"
                     >
                       {isUploadingAvatar ? (
-                        <Loader2 className="h-6 w-6 text-white animate-spin" />
+                        <Loader2 className="h-8 w-8 text-white animate-spin" />
                       ) : (
-                        <Camera className="h-6 w-6 text-white" />
+                        <div className="flex flex-col items-center gap-1">
+                          <Camera className="h-6 w-6 text-white" />
+                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Update</span>
+                        </div>
                       )}
                     </button>
                     <input
@@ -285,73 +293,80 @@ export default function Profile() {
                       className="hidden"
                     />
                   </div>
-                  <div>
-                    <p className="font-medium">{formData.first_name} {formData.last_name}</p>
-                    <p className="text-sm text-muted-foreground">{user?.email}</p>
-                    <Badge className="mt-2 capitalize">{role?.replace('_', ' ')}</Badge>
+                  <div className="text-center sm:text-left">
+                    <p className="text-2xl font-black text-foreground tracking-tight">{formData.first_name} {formData.last_name}</p>
+                    <p className="text-sm font-bold text-muted-foreground mb-4 uppercase tracking-widest">{user?.email}</p>
+                    <Badge className="rounded-full px-5 py-1.5 font-black uppercase tracking-widest text-[10px] shadow-soft">{role?.replace('_', ' ')}</Badge>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Personal Information */}
-            <Card>
+            <Card className="glass-card">
               <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Your basic profile details</CardDescription>
+                <CardTitle className="font-bold tracking-tight">Core Information</CardTitle>
+                <CardDescription className="font-medium">Public and contact details.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="first_name">First Name</Label>
+                    <Label htmlFor="first_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">First Name</Label>
                     <Input
                       id="first_name"
                       name="first_name"
                       value={formData.first_name}
                       onChange={handleInputChange}
                       placeholder="John"
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="last_name">Last Name</Label>
+                    <Label htmlFor="last_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name</Label>
                     <Input
                       id="last_name"
                       name="last_name"
                       value={formData.last_name}
                       onChange={handleInputChange}
                       placeholder="Doe"
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="+234 XXX XXX XXXX"
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Location</Label>
+                    <Input
+                      id="location"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      placeholder="Lagos, Nigeria"
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="+234 XXX XXX XXXX"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleInputChange}
-                    placeholder="Lagos, Nigeria"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                  <Label htmlFor="bio" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Professional Bio</Label>
                   <Textarea
                     id="bio"
                     name="bio"
                     value={formData.bio}
                     onChange={handleInputChange}
                     placeholder="Tell us about yourself..."
-                    rows={3}
+                    rows={4}
+                    className="rounded-2xl bg-muted/30 border-border/50 focus:bg-background transition-all resize-none"
                   />
                 </div>
               </CardContent>
@@ -359,70 +374,79 @@ export default function Profile() {
 
             {/* Vet-specific: License Verification */}
             {isVet && (
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Shield className="h-5 w-5" />
-                        License Verification
+              <Card className="glass-card overflow-hidden">
+                <CardHeader className="bg-primary/5 pb-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-center sm:text-left">
+                      <CardTitle className="flex items-center justify-center sm:justify-start gap-2 font-bold tracking-tight">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                          <Shield className="h-5 w-5" />
+                        </div>
+                        Credential Verification
                       </CardTitle>
-                      <CardDescription>
-                        Upload your veterinary license for verification
+                      <CardDescription className="font-medium mt-1">
+                        Professional licenses must be verified before consultations.
                       </CardDescription>
                     </div>
-                    <Badge variant={verificationStatus.color} className="gap-1">
-                      <VerificationIcon className="h-3 w-3" />
+                    <Badge variant={verificationStatus.color} className="gap-2 rounded-full px-4 py-1.5 font-bold shadow-sm">
+                      <VerificationIcon className="h-3.5 w-3.5" />
                       {verificationStatus.label}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="specialty">Specialty</Label>
-                    <Input
-                      id="specialty"
-                      name="specialty"
-                      value={formData.specialty}
-                      onChange={handleInputChange}
-                      placeholder="e.g., Small Animals, Livestock, Exotic"
-                    />
+                <CardContent className="space-y-8 pt-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="specialty" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Medical Specialty</Label>
+                      <Input
+                        id="specialty"
+                        name="specialty"
+                        value={formData.specialty}
+                        onChange={handleInputChange}
+                        placeholder="e.g., Small Animals, Livestock"
+                        className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="license_number" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">License ID (VCN)</Label>
+                      <Input
+                        id="license_number"
+                        name="license_number"
+                        value={formData.license_number}
+                        onChange={handleInputChange}
+                        placeholder="VET-XXXX-XXXX"
+                        className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="license_number">License Number</Label>
-                    <Input
-                      id="license_number"
-                      name="license_number"
-                      value={formData.license_number}
-                      onChange={handleInputChange}
-                      placeholder="VET-XXXX-XXXX"
-                    />
-                  </div>
-                  <Separator />
-                  <div className="space-y-3">
-                    <Label>License Document</Label>
+
+                  <div className="space-y-4">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">License Documentation</Label>
                     {(profile as any)?.license_url ? (
-                      <div className="p-4 rounded-lg border bg-muted/50">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <FileText className="h-8 w-8 text-primary" />
+                      <div className="p-6 rounded-3xl border border-primary/20 bg-primary/5 shadow-soft">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
+                          <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <div className="p-3 rounded-2xl bg-primary text-white shadow-glow">
+                              <FileText className="h-8 w-8" />
+                            </div>
                             <div>
-                              <p className="font-medium">License document uploaded</p>
-                              <p className="text-sm text-muted-foreground">
-                                Click to replace with a new document
+                              <p className="font-bold text-foreground">Active File Uploaded</p>
+                              <p className="text-sm text-muted-foreground font-medium">
+                                Your current license is being processed.
                               </p>
                             </div>
                           </div>
                           <Button
                             variant="outline"
-                            size="sm"
+                            size="lg"
                             onClick={() => licenseInputRef.current?.click()}
                             disabled={isUploadingLicense}
+                            className="rounded-full font-bold px-8 border-2"
                           >
                             {isUploadingLicense ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                              'Replace'
+                              'Replace File'
                             )}
                           </Button>
                         </div>
@@ -430,18 +454,25 @@ export default function Profile() {
                     ) : (
                       <div
                         onClick={() => licenseInputRef.current?.click()}
-                        className="p-8 rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-primary/50 transition-colors cursor-pointer text-center"
+                        className="p-12 rounded-[2rem] border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer text-center group"
                       >
                         {isUploadingLicense ? (
-                          <Loader2 className="h-8 w-8 mx-auto text-primary animate-spin" />
+                          <div className="flex flex-col items-center gap-3">
+                            <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                            <p className="font-black text-sm uppercase tracking-widest text-primary">Uploading...</p>
+                          </div>
                         ) : (
-                          <>
-                            <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                            <p className="font-medium">Upload License Document</p>
-                            <p className="text-sm text-muted-foreground">
-                              PDF, JPG, or PNG up to 10MB
-                            </p>
-                          </>
+                          <div className="flex flex-col items-center gap-4">
+                            <div className="p-5 rounded-[2rem] bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-soft group-hover:shadow-glow group-hover:-translate-y-1">
+                              <Upload className="h-10 w-10" />
+                            </div>
+                            <div>
+                              <p className="font-black text-lg tracking-tight">Upload Digital License</p>
+                              <p className="text-sm text-muted-foreground font-medium">
+                                High-quality PDF or JPG recommended (Max 10MB)
+                              </p>
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
@@ -459,31 +490,33 @@ export default function Profile() {
 
             {/* Service Provider-specific */}
             {isServiceProvider && (
-              <Card>
+              <Card className="glass-card">
                 <CardHeader>
-                  <CardTitle>Business Information</CardTitle>
-                  <CardDescription>Details about your pet service business</CardDescription>
+                  <CardTitle className="font-bold tracking-tight">Professional Services</CardTitle>
+                  <CardDescription className="font-medium">Information about your establishment.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="business_name">Business Name</Label>
+                    <Label htmlFor="business_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Facility / Business Name</Label>
                     <Input
                       id="business_name"
                       name="business_name"
                       value={formData.business_name}
                       onChange={handleInputChange}
-                      placeholder="Your Business Name"
+                      placeholder="e.g., Lagos Pet Haven"
+                      className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="business_address">Business Address</Label>
+                    <Label htmlFor="business_address" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Physical Address</Label>
                     <Textarea
                       id="business_address"
                       name="business_address"
                       value={formData.business_address}
                       onChange={handleInputChange}
-                      placeholder="Full business address"
-                      rows={2}
+                      placeholder="Complete street address, City, State"
+                      rows={3}
+                      className="rounded-2xl bg-muted/30 border-border/50 focus:bg-background transition-all resize-none"
                     />
                   </div>
                 </CardContent>
@@ -491,17 +524,17 @@ export default function Profile() {
             )}
 
             {/* Save Button */}
-            <div className="flex justify-end">
-              <Button onClick={handleSaveProfile} disabled={isSaving} size="lg">
+            <div className="flex justify-center sm:justify-end pt-4">
+              <Button onClick={handleSaveProfile} disabled={isSaving} size="xl" className="rounded-full font-black px-12 shadow-glow hover:scale-105 transition-all">
                 {isSaving ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                    Saving Changes
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Changes
+                    <Save className="mr-3 h-6 w-6" />
+                    Synchronize Profile
                   </>
                 )}
               </Button>

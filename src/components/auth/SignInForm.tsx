@@ -57,22 +57,23 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Account Email</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="name@company.com"
                   autoComplete="email"
+                  className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                   {...field}
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
@@ -82,54 +83,54 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <div className="flex justify-between items-center mb-1">
+                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Security Key</FormLabel>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="px-0 h-auto text-[10px] font-black uppercase tracking-widest text-primary hover:text-secondary transition-colors"
+                  onClick={onForgotPassword}
+                >
+                  Lost Access?
+                </Button>
+              </div>
               <FormControl>
                 <div className="relative">
                   <Input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
+                    placeholder="••••••••••••"
                     autoComplete="current-password"
+                    className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all pr-12"
                     {...field}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-4 hover:bg-transparent text-muted-foreground hover:text-primary transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
               </FormControl>
-              <FormMessage />
+              <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="link"
-            className="px-0 text-sm text-primary"
-            onClick={onForgotPassword}
-          >
-            Forgot password?
-          </Button>
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" size="xl" className="w-full rounded-full font-black shadow-glow hover:scale-[1.02] transition-all" disabled={isLoading}>
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Signing in...
+              <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+              Verifying...
             </>
           ) : (
-            'Sign In'
+            'Authorize Entry'
           )}
         </Button>
       </form>

@@ -12,75 +12,67 @@ const stats = [
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-hero">
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            mixBlendMode: 'overlay',
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/50 to-primary" />
-      </div>
+    <section className="relative min-h-[90vh] flex items-center pt-24 md:pt-32 pb-16 overflow-hidden bg-mesh-gradient">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-secondary/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
       {/* Content */}
-      <div className="container-wide relative z-10 py-16 md:py-24">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="container-wide relative z-10">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Text Content */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-center lg:text-left"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground text-sm font-medium mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase mb-8"
+            >
               <Shield className="w-4 h-4" />
-              Trusted by thousands of pet owners in Nigeria
-            </div>
+              Licensed Veterinary Network • Nigeria
+            </motion.div>
 
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-primary-foreground leading-tight mb-6">
-              Talk to a Vet{' '}
-              <span className="text-secondary">Anytime,</span>{' '}
-              Anywhere.
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold text-foreground leading-[1.1] mb-8 tracking-tighter">
+              Exceptional care for your <span className="text-gradient-brand">best friend.</span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-primary-foreground/80 mb-8 max-w-xl mx-auto lg:mx-0">
-              Connect with licensed veterinarians instantly. Get professional advice for your pets and livestock from the comfort of your home.
+            <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+              Connect with Nigeria's leading veterinarians instantly. Professional healthcare and wellness services for your pets and livestock, right at your fingertips.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
-              <Button variant="hero" size="xl" asChild>
-                <Link to="/auth?mode=signup">
+              <Button size="xl" className="font-bold shadow-glow hover:scale-105 transition-all rounded-full px-8" asChild>
+                <Link to="/consultations/new">
                   <MessageCircle className="w-5 h-5 mr-2" />
-                  Talk to a Vet
+                  Talk to a Vet Now
                 </Link>
               </Button>
-              <Button variant="outline-light" size="xl" asChild>
+              <Button variant="outline" size="xl" className="font-bold border-2 rounded-full px-8 hover:bg-muted/50 transition-all" asChild>
                 <Link to="/auth?mode=signup">
-                  Create Free Account
+                  Explore Services
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
               </Button>
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap justify-center lg:justify-start gap-8">
+            <div className="flex flex-wrap justify-center lg:justify-start gap-10 md:gap-16 pt-4 border-t border-border/40">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
-                  className="text-center"
+                  transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
                 >
-                  <div className="font-display text-3xl font-bold text-primary-foreground">
+                  <div className="font-display text-3xl font-extrabold text-foreground tracking-tight">
                     {stat.value}
                   </div>
-                  <div className="text-sm text-primary-foreground/70">
+                  <div className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
                     {stat.label}
                   </div>
                 </motion.div>
@@ -90,38 +82,58 @@ export function Hero() {
 
           {/* Image/Visual */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={{ duration: 1, ease: "easeOut" }}
             className="relative hidden lg:block"
           >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative rounded-[2.5rem] overflow-hidden shadow-elevated border-[8px] border-background aspect-[4/5] max-h-[600px]">
               <img
-                src={heroImage}
-                alt="Veterinarian with a happy dog"
-                className="w-full h-auto object-cover aspect-[4/3]"
+                src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?q=80&w=2070&auto=format&fit=crop"
+                alt="Veterinarian examining a dog"
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
               />
-              {/* Floating Card */}
+              {/* Floating Cards */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl glass-strong"
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="absolute top-12 -left-12 p-5 rounded-3xl glass-card flex items-center gap-4 animate-bounce-soft"
               >
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-success text-success-foreground">
-                    <Clock className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-foreground">Available Now</div>
-                    <div className="text-sm text-muted-foreground">12 vets online ready to help</div>
+                <div className="p-3 rounded-2xl bg-success text-success-foreground shadow-glow">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="font-bold text-foreground">Available 24/7</div>
+                  <div className="text-xs font-semibold text-muted-foreground">Response in &lt; 5 mins</div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1 }}
+                className="absolute bottom-12 -right-8 p-5 rounded-3xl glass-card flex flex-col gap-3 w-48 shadow-elevated"
+              >
+                <div className="flex -space-x-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-background overflow-hidden bg-muted">
+                      <img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="Vet" />
+                    </div>
+                  ))}
+                  <div className="w-10 h-10 rounded-full border-2 border-background bg-primary flex items-center justify-center text-[10px] font-bold text-white">
+                    +500
                   </div>
                 </div>
+                <div className="font-bold text-sm">Verified Doctors</div>
               </motion.div>
             </div>
           </motion.div>
         </div>
       </div>
+    </section>
+  );
+}
 
       {/* Wave Divider */}
       <div className="absolute bottom-0 left-0 right-0">

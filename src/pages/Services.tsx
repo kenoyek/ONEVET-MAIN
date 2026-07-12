@@ -92,33 +92,42 @@ const faqs = [
 
 const Services = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       <main>
         {/* Hero Section */}
-        <section className="relative py-20 lg:py-28 bg-gradient-hero overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5" />
+        <section className="relative py-24 md:py-32 lg:py-40 bg-gradient-premium overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+          </div>
+
           <div className="container-wide relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-3xl mx-auto"
+              className="text-center max-w-4xl mx-auto"
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6">
-                Complete Pet Care Services, All in One Place
+              <Badge variant="outline" className="mb-6 border-white/30 text-white px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">
+                Premium Ecosystem
+              </Badge>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-primary-foreground mb-8 tracking-tighter leading-tight">
+                Complete care for your <span className="text-secondary">animal family.</span>
               </h1>
-              <p className="text-lg md:text-xl text-primary-foreground/80 mb-8">
-                From 24/7 vet consultations to grooming and boarding, we've got your furry and feathered friends covered.
+              <p className="text-xl md:text-2xl text-primary-foreground/90 mb-10 font-medium leading-relaxed">
+                From immediate 24/7 medical support to professional lifestyle services, we've built the ultimate platform for animal health.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="xl" variant="hero" asChild>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center">
+                <Button size="xl" className="bg-white text-primary hover:bg-white/90 font-black shadow-soft rounded-full px-10 hover:scale-105 transition-all" asChild>
                   <Link to="/consultations/new">
-                    Start Consultation <ArrowRight className="ml-2" />
+                    <MessageCircle className="w-5 h-5 mr-3" />
+                    Consult a Vet Now
                   </Link>
                 </Button>
-                <Button size="xl" variant="outline-light" asChild>
-                  <Link to="/auth">Create Account</Link>
+                <Button variant="outline" size="xl" className="border-white/30 text-white hover:bg-white/10 font-black rounded-full px-10 hover:scale-105 transition-all" asChild>
+                  <Link to="/auth">Register Facility</Link>
                 </Button>
               </div>
             </motion.div>
@@ -126,58 +135,65 @@ const Services = () => {
         </section>
 
         {/* Featured Service */}
-        <section className="section-padding bg-muted/30">
+        <section className="section-padding">
           <div className="container-wide">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-card rounded-2xl p-8 md:p-12 shadow-lg border"
+              transition={{ duration: 0.8 }}
+              className="glass-card rounded-[3rem] p-8 md:p-16 overflow-hidden relative"
             >
-              <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+              <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
                 <div>
-                  <div className="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full text-sm font-medium mb-4">
+                  <div className="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-6 border border-success/20">
                     <Clock className="w-4 h-4" />
-                    Available Now
+                    Active Availability
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    24/7 Veterinary Consultations
+                  <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">
+                    24/7 Digital Veterinary Consultations
                   </h2>
-                  <p className="text-muted-foreground text-lg mb-6">
+                  <p className="text-muted-foreground text-lg mb-8 font-medium leading-relaxed">
                     Speak with a licensed veterinarian in minutes. Day or night, we're here for your pets. 
                     Get expert advice, treatment recommendations, and peace of mind from the comfort of your home.
                   </p>
-                  <ul className="space-y-3 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
                     {[
-                      "Licensed Nigerian veterinarians",
-                      "Average response time under 5 minutes",
-                      "Support for pets and livestock",
-                      "Prescription recommendations when needed",
+                      "Council-verified Vets",
+                      "Sub-5min wait times",
+                      "Pets & Livestock",
+                      "Digital Prescriptions",
                     ].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <Shield className="w-5 h-5 text-primary" />
-                        <span>{item}</span>
-                      </li>
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="p-1 rounded-full bg-primary/10 text-primary">
+                          <Check className="w-4 h-4" />
+                        </div>
+                        <span className="font-bold text-sm text-foreground/80">{item}</span>
+                      </div>
                     ))}
-                  </ul>
-                  <Button size="lg" asChild>
+                  </div>
+                  <Button size="xl" className="rounded-full font-black px-10 shadow-glow" asChild>
                     <Link to="/consultations/new">
-                      Get Expert Help Now <ArrowRight className="ml-2" />
+                      Initialize Consultation <ArrowRight className="ml-2 w-5 h-5" />
                     </Link>
                   </Button>
                 </div>
-                <div className="hidden md:block">
-                  <img 
-                    src="/placeholder.svg" 
-                    alt="Vet consultation" 
-                    className="rounded-xl shadow-md w-full h-80 object-cover"
-                  />
+                <div className="hidden md:block relative">
+                  <div className="rounded-[2.5rem] overflow-hidden shadow-elevated border-8 border-background aspect-square">
+                    <img
+                      src="https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?q=80&w=2070&auto=format&fit=crop"
+                      alt="Veterinary professional on tablet"
+                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>
           </div>
         </section>
-
+...
         {/* Services Grid */}
         <section className="section-padding">
           <div className="container-wide">
