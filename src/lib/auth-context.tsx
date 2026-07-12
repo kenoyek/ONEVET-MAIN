@@ -28,7 +28,21 @@ interface AuthContextType {
   profile: Profile | null;
   role: AppRole | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string, lastName: string, role: AppRole, customerType?: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    role: AppRole,
+    metaData?: {
+      customerType?: string;
+      businessName?: string;
+      location?: string;
+      licenseNumber?: string;
+      specialty?: string;
+      vendorType?: string;
+    }
+  ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -107,6 +121,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         if (!mounted) return;
 
+        if (event === 'PASSWORD_RECOVERY') {
+          window.location.href = '/auth?mode=reset';
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -127,8 +146,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, selectedRole: AppRole, customerType?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    selectedRole: AppRole,
+    metaData?: {
+      customerType?: string;
+      businessName?: string;
+      location?: string;
+      licenseNumber?: string;
+      specialty?: string;
+      vendorType?: string;
+    }
+  ) => {
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -139,7 +172,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           first_name: firstName,
           last_name: lastName,
           role: selectedRole,
-          customer_type: customerType,
+          customer_type: metaData?.customerType,
+          business_name: metaData?.businessName,
+          location: metaData?.location,
+          license_number: metaData?.licenseNumber,
+          specialty: metaData?.specialty,
+          vendor_type: metaData?.vendorType,
         },
       },
     });

@@ -46,7 +46,7 @@ export function SignUpForm() {
         values.firstName,
         values.lastName,
         values.role,
-        values.customerType
+        { customerType: values.customerType }
       );
       if (error) {
         if (error.message.includes('already registered') || error.message.includes('already exists')) {

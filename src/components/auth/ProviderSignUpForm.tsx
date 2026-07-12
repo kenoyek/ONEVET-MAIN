@@ -81,7 +81,14 @@ export function ProviderSignUpForm() {
         values.password,
         values.firstName,
         values.lastName,
-        values.role
+        values.role,
+        {
+          businessName: values.businessName || undefined,
+          location: values.location || undefined,
+          licenseNumber: values.licenseNumber || undefined,
+          specialty: selectedLabel || undefined,
+          vendorType: selectedLabel ? selectedLabel.toLowerCase().replace(/\s+/g, '_') : undefined
+        }
       );
       if (error) {
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
@@ -90,23 +97,6 @@ export function ProviderSignUpForm() {
           toast.error(error.message || 'Failed to create account. Please try again.');
         }
         return;
-      }
-
-      // Update profile with business details after signup
-      // The profile is created by the handle_new_user trigger
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('profiles')
-          .update({
-            business_name: values.businessName || null,
-            location: values.location || null,
-            license_number: values.licenseNumber || null,
-            specialty: selectedLabel || null,
-            vendor_type: selectedLabel ? selectedLabel.toLowerCase().replace(/\s+/g, '_') : null,
-            verification_status: values.role === 'veterinarian' ? 'pending' : 'approved'
-          })
-          .eq('user_id', user.id);
       }
 
       toast.success('Account created! Please check your email to verify your account.');
