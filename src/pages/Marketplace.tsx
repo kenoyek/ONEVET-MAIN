@@ -3,268 +3,253 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useCart } from "@/hooks/use-cart";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   ShoppingBag, 
-  Bone, 
-  Pill, 
-  Tractor,
-  Bell,
+  Search,
+  Filter,
+  Plus,
+  ShoppingCart,
   ArrowRight,
-  Store,
-  Truck,
-  Shield,
-  Clock
+  Loader2,
+  Package,
+  CheckCircle2
 } from "lucide-react";
 
-const categories = [
-  {
-    icon: Bone,
-    title: "Pet Food & Treats",
-    description: "Premium nutrition for dogs, cats, birds, and more",
-    color: "bg-secondary/10 text-secondary",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Pet Supplies",
-    description: "Beds, toys, grooming tools, and accessories",
-    color: "bg-primary/10 text-primary",
-  },
-  {
-    icon: Pill,
-    title: "Pet Health",
-    description: "Vet-approved medications and supplements",
-    color: "bg-accent/10 text-accent",
-  },
-  {
-    icon: Tractor,
-    title: "Livestock Equipment",
-    description: "Farm supplies for cattle, poultry, and more",
-    color: "bg-success/10 text-success",
-  },
-];
-
-const features = [
-  {
-    icon: Shield,
-    title: "Verified Sellers",
-    description: "All sellers are vetted for quality and authenticity",
-  },
-  {
-    icon: Truck,
-    title: "Nationwide Delivery",
-    description: "Fast delivery across Nigeria to your doorstep",
-  },
-  {
-    icon: Clock,
-    title: "Easy Returns",
-    description: "Hassle-free returns within 7 days",
-  },
+const CATEGORIES = [
+  "All",
+  "Pet Food",
+  "Pet Health",
+  "Pet Supplies",
+  "Livestock",
+  "Accessories"
 ];
 
 const Marketplace = () => {
-  const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const { addItem } = useCart();
 
-  const handleNotifyMe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    
-    setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast.success("You're on the list! We'll notify you when we launch.");
-    setEmail("");
-    setIsSubmitting(false);
+  const { data: listings, isLoading } = useQuery({
+    queryKey: ['marketplace-listings', selectedCategory],
+    queryFn: async () => {
+      let query = supabase
+        .from('marketplace_listings')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_approved', true);
+
+      if (selectedCategory !== "All") {
+        query = query.eq('category', selectedCategory);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const filteredListings = listings?.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAddToCart = (listing: any) => {
+    addItem({
+      id: listing.id,
+      title: listing.title,
+      price: listing.price,
+      image: listing.images?.[0] || '/placeholder.svg',
+      quantity: 1,
+      seller_id: listing.seller_id
+    });
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main>
-        {/* Hero Section */}
-        <section className="relative py-20 lg:py-28 bg-gradient-hero overflow-hidden">
-          <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-5" />
-          <div className="container-wide relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center max-w-3xl mx-auto"
-            >
-              <div className="inline-flex items-center gap-2 bg-accent/20 text-accent-foreground px-4 py-2 rounded-full text-sm font-medium mb-6 border border-accent/30">
-                <Clock className="w-4 h-4" />
-                Coming Soon
-              </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6">
-                Your One-Stop Pet Shop is Coming Soon
-              </h1>
-              <p className="text-lg md:text-xl text-primary-foreground/80 mb-8">
-                We're building Nigeria's largest marketplace for pet supplies, livestock equipment, and more. Be the first to know when we launch.
+      <main className="pt-24 pb-16">
+        <div className="container-wide">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">1Vet Marketplace</h1>
+              <p className="text-muted-foreground mt-1">
+                Quality veterinary supplies and pet products from verified sellers.
               </p>
-              <form onSubmit={handleNotifyMe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            </div>
+            <div className="flex w-full md:w-auto gap-2">
+              <div className="relative flex-1 md:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 h-12 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60"
-                  required
+                  placeholder="Search products..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <Button type="submit" size="lg" variant="hero" disabled={isSubmitting}>
-                  {isSubmitting ? "Joining..." : "Notify Me"}
-                  <Bell className="ml-2 w-4 h-4" />
-                </Button>
-              </form>
-            </motion.div>
+              </div>
+              <Button variant="outline" size="icon">
+                <Filter className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
-        </section>
 
-        {/* Categories Preview */}
-        <section className="section-padding">
-          <div className="container-wide">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">What's Coming</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Shop from verified sellers across Nigeria. Quality products for pets and livestock.
-              </p>
-            </motion.div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {categories.map((category, index) => (
+          {/* Categories */}
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-8 scrollbar-hide">
+            {CATEGORIES.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                className="rounded-full whitespace-nowrap"
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+
+          {/* Product Grid */}
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Loading marketplace...</p>
+            </div>
+          ) : filteredListings && filteredListings.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredListings.map((item) => (
                 <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <Card className="h-full text-center hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                      <div className={`w-16 h-16 rounded-xl ${category.color} flex items-center justify-center mx-auto mb-4`}>
-                        <category.icon className="w-8 h-8" />
+                  <Card className="h-full flex flex-col group overflow-hidden border-border/50 hover:border-primary/30 transition-colors shadow-sm hover:shadow-md">
+                    <div className="relative aspect-square overflow-hidden bg-muted">
+                      <img
+                        src={item.images?.[0] || '/placeholder.svg'}
+                        alt={item.title}
+                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <Badge className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm text-foreground hover:bg-background/90">
+                        {item.category}
+                      </Badge>
+                    </div>
+                    <CardHeader className="p-4 pb-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <CardTitle className="text-lg line-clamp-1">{item.title}</CardTitle>
                       </div>
-                      <CardTitle className="text-xl">{category.title}</CardTitle>
+                      <div className="text-2xl font-bold text-primary">
+                        ₦{item.price.toLocaleString()}
+                      </div>
                     </CardHeader>
-                    <CardContent>
-                      <CardDescription className="text-base">{category.description}</CardDescription>
+                    <CardContent className="p-4 pt-0 flex-grow">
+                      <CardDescription className="line-clamp-2 text-sm">
+                        {item.description || "No description provided."}
+                      </CardDescription>
+                      {item.location && (
+                        <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                          <Package className="w-3 h-3" />
+                          {item.location}
+                        </div>
+                      )}
                     </CardContent>
+                    <CardFooter className="p-4 pt-0">
+                      <Button
+                        className="w-full gap-2"
+                        onClick={() => handleAddToCart(item)}
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        Add to Cart
+                      </Button>
+                    </CardFooter>
                   </Card>
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
-
-        {/* Features */}
-        <section className="section-padding bg-muted/30">
-          <div className="container-wide">
-            <div className="grid md:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="text-center"
-                >
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <feature.icon className="w-7 h-7 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
-                </motion.div>
-              ))}
+          ) : (
+            <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
+              <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+              <h3 className="text-xl font-semibold">No products found</h3>
+              <p className="text-muted-foreground mt-2">
+                Try adjusting your search or category filter.
+              </p>
+              <Button
+                variant="link"
+                className="mt-4"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("All");
+                }}
+              >
+                Clear all filters
+              </Button>
             </div>
-          </div>
-        </section>
+          )}
 
-        {/* Become a Seller */}
-        <section className="section-padding">
-          <div className="container-wide">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-primary rounded-2xl p-8 md:p-12 text-primary-foreground"
-            >
-              <div className="grid md:grid-cols-2 gap-8 items-center">
+          {/* Seller CTA */}
+          <section className="mt-20">
+            <div className="bg-primary rounded-3xl p-8 md:p-12 text-primary-foreground overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
+
+              <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
                 <div>
-                  <div className="w-16 h-16 rounded-xl bg-primary-foreground/10 flex items-center justify-center mb-6">
-                    <Store className="w-8 h-8" />
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                    Want to Sell on 1vet?
+                  <Badge className="mb-4 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-none">
+                    Merchant Program
+                  </Badge>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                    Start Selling on 1Vet Today
                   </h2>
-                  <p className="text-primary-foreground/80 text-lg mb-6">
-                    Join Nigeria's growing pet and livestock marketplace. Reach thousands of customers and grow your business with us.
+                  <p className="text-primary-foreground/80 text-lg mb-8">
+                    Join Nigeria's fastest-growing veterinary marketplace. Reach pet owners and farmers across the country.
                   </p>
-                  <ul className="space-y-3 mb-8">
+
+                  <div className="grid sm:grid-cols-2 gap-4 mb-8">
                     {[
-                      "Easy seller onboarding",
-                      "Competitive commission rates",
-                      "Built-in payment processing",
-                      "Marketing support",
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-secondary" />
-                        <span>{item}</span>
-                      </li>
+                      "Low commission fees",
+                      "Instant payments",
+                      "Secure logistics",
+                      "Seller dashboard"
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5 text-secondary" />
+                        <span className="font-medium">{feature}</span>
+                      </div>
                     ))}
-                  </ul>
-                  <Button size="lg" variant="hero" asChild>
-                    <Link to="/auth">
-                      Register as Seller <ArrowRight className="ml-2" />
-                    </Link>
+                  </div>
+
+                  <Button size="lg" variant="secondary" className="font-bold" asChild>
+                    <a href="/auth?mode=signup&role=service_provider">
+                      Register as Merchant <ArrowRight className="ml-2 w-5 h-5" />
+                    </a>
                   </Button>
                 </div>
                 <div className="hidden md:block">
-                  <img 
-                    src="/placeholder.svg" 
-                    alt="Become a seller" 
-                    className="rounded-xl w-full h-80 object-cover opacity-90"
-                  />
+                  <div className="relative">
+                    <img
+                      src="https://images.unsplash.com/photo-1578496479914-7ef3b0193be3?q=80&w=1000&auto=format&fit=crop"
+                      alt="Veterinary supplies"
+                      className="rounded-2xl shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"
+                    />
+                    <div className="absolute -bottom-6 -left-6 bg-background p-4 rounded-xl shadow-lg text-foreground animate-bounce">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full" />
+                        <span className="font-bold">Verified Seller</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="section-padding bg-muted/30">
-          <div className="container-tight text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Can't Wait? Get Started Today
-              </h2>
-              <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-                While our marketplace is under construction, you can already access our 24/7 veterinary consultation service.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" asChild>
-                  <Link to="/consultations/new">
-                    Start Vet Consultation <ArrowRight className="ml-2" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link to="/services">View All Services</Link>
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </section>
+            </div>
+          </section>
+        </div>
       </main>
       <Footer />
     </div>

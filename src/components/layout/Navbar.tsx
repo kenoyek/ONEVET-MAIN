@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Stethoscope, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Stethoscope, User, LogOut, LayoutDashboard, ShoppingCart } from 'lucide-react';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
+import { useCart } from '@/hooks/use-cart';
 import { NotificationBadge } from '@/components/shared/NotificationBadge';
 import {
   DropdownMenu,
@@ -12,18 +13,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 const navLinks = [
   { href: '/', label: 'Home' },
+  { href: '/marketplace', label: 'Shop' },
   { href: '/services', label: 'Services' },
   { href: '/education', label: 'Education' },
   { href: '/about', label: 'About' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/contact', label: 'Contact' },
 ];
 
 export function Navbar() {
   const { user, profile, role, signOut, loading } = useAuth();
+  const { totalItems } = useCart();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -66,12 +69,28 @@ export function Navbar() {
           </div>
 
           {/* Theme Toggle (visible on mobile too) */}
-          <div className="md:hidden">
+          <div className="flex items-center gap-2 md:hidden">
+            <Link to="/marketplace" className="relative p-2 text-muted-foreground hover:text-foreground">
+              <ShoppingCart className="w-5 h-5" />
+              {totalItems > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]" variant="destructive">
+                  {totalItems}
+                </Badge>
+              )}
+            </Link>
             <ThemeToggle />
           </div>
 
           {/* Auth Buttons / User Menu */}
           <div className="hidden md:flex items-center gap-3">
+            <Link to="/marketplace" className="relative p-2 text-muted-foreground hover:text-foreground mr-2">
+              <ShoppingCart className="w-6 h-6" />
+              {totalItems > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]" variant="destructive">
+                  {totalItems}
+                </Badge>
+              )}
+            </Link>
             <ThemeToggle />
             {loading ? (
               <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />

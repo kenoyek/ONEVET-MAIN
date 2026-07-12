@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
+import { CartProvider } from "@/hooks/use-cart";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -29,6 +30,8 @@ import Groomers from "./pages/services/Groomers";
 import PetSitting from "./pages/services/PetSitting";
 import VetClinics from "./pages/services/VetClinics";
 import Marketplace from "./pages/Marketplace";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
@@ -41,11 +44,12 @@ const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
+        <CartProvider>
+          <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={
@@ -140,8 +144,18 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/marketplace" element={
-              <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin']}>
+              <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
                 <Marketplace />
+              </ProtectedRoute>
+            } />
+            <Route path="/cart" element={
+              <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
+                <Cart />
+              </ProtectedRoute>
+            } />
+            <Route path="/checkout" element={
+              <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
+                <Checkout />
               </ProtectedRoute>
             } />
             <Route path="/about" element={<About />} />
@@ -158,6 +172,7 @@ const App = () => (
           <MobileBottomNav />
         </BrowserRouter>
         </TooltipProvider>
+        </CartProvider>
       </AuthProvider>
     </QueryClientProvider>
   </ThemeProvider>
