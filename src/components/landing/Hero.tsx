@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { MessageCircle, Shield, Clock, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import heroImage from '@/assets/hero-vet.jpg';
 
 const stats = [
   { value: '24/7', label: 'Vet Availability' },
@@ -131,9 +130,6 @@ export function Hero() {
           </motion.div>
         </div>
       </div>
-    </section>
-  );
-}
 
       {/* Wave Divider */}
       <div className="absolute bottom-0 left-0 right-0">
