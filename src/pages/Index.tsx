@@ -6,10 +6,12 @@ import { FeaturedProducts } from '@/components/marketplace/FeaturedProducts';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { Testimonials } from '@/components/landing/Testimonials';
 import { CTA } from '@/components/landing/CTA';
+import { SEO } from '@/components/shared/SEO';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEO />
       <Navbar />
       <main>
         <Hero />

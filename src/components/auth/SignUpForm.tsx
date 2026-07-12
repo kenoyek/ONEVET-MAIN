@@ -14,6 +14,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export function SignUpForm() {
@@ -31,6 +33,7 @@ export function SignUpForm() {
       password: '',
       confirmPassword: '',
       role: 'pet_owner',
+      customerType: 'pet_owner',
     },
   });
 
@@ -53,6 +56,14 @@ export function SignUpForm() {
           toast.error(error.message || 'Failed to create account. Please try again.');
         }
       } else {
+        // Update profile with customer type
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('profiles')
+            .update({ customer_type: values.customerType })
+            .eq('user_id', user.id);
+        }
         toast.success('Account created successfully! Please check your email to verify your account.');
       }
     } catch {
@@ -65,6 +76,28 @@ export function SignUpForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="customerType"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>I am a...</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="pet_owner">Pet Owner</SelectItem>
+                  <SelectItem value="farm_owner">Farm Owner</SelectItem>
+                  <SelectItem value="livestock_owner">Livestock Owner</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}

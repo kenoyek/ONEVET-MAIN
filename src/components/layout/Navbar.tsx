@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/hooks/use-cart';
 import { NotificationBadge } from '@/components/shared/NotificationBadge';
+import { NotificationPopover } from '@/components/shared/NotificationPopover';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,6 +79,7 @@ export function Navbar() {
                 </Badge>
               )}
             </Link>
+            <NotificationPopover />
             <ThemeToggle />
           </div>
 
@@ -91,6 +93,7 @@ export function Navbar() {
                 </Badge>
               )}
             </Link>
+            <NotificationPopover />
             <ThemeToggle />
             {loading ? (
               <div className="w-10 h-10 rounded-full bg-muted animate-pulse" />

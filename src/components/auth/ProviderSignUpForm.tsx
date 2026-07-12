@@ -103,6 +103,8 @@ export function ProviderSignUpForm() {
             location: values.location || null,
             license_number: values.licenseNumber || null,
             specialty: selectedLabel || null,
+            vendor_type: selectedLabel ? selectedLabel.toLowerCase().replace(/\s+/g, '_') : null,
+            verification_status: values.role === 'veterinarian' ? 'pending' : 'approved'
           })
           .eq('user_id', user.id);
       }

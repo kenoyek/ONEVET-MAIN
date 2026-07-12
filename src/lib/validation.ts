@@ -16,6 +16,7 @@ export const signUpSchema = z.object({
     .regex(/[0-9]/, { message: "Password must contain at least one number" }),
   confirmPassword: z.string(),
   role: z.enum(['pet_owner', 'veterinarian', 'service_provider'] as const),
+  customerType: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -85,6 +86,7 @@ export const providerSignUpSchema = z.object({
   businessName: z.string().trim().max(200).optional(),
   location: z.string().trim().max(200).optional(),
   licenseNumber: z.string().trim().max(100).optional(),
+  vendorType: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],

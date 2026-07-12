@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Stethoscope, MessageCircle, Clock, CheckCircle, XCircle,
@@ -38,6 +38,7 @@ interface Stats {
 
 const VetDashboard = () => {
   const { profile, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [pendingConsultations, setPendingConsultations] = useState<Consultation[]>([]);
   const [activeConsultations, setActiveConsultations] = useState<Consultation[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -191,7 +192,7 @@ const VetDashboard = () => {
       if (error) throw error;
 
       toast.success('Consultation accepted! Opening chat...');
-      // Navigate to chat would happen here
+      navigate(`/consultations/${consultationId}`);
     } catch (error) {
       console.error('Error accepting consultation:', error);
       toast.error('Failed to accept consultation');

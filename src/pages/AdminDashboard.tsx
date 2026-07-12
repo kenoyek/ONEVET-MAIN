@@ -34,6 +34,7 @@ interface PendingVet {
   license_number: string | null;
   license_url: string | null;
   created_at: string;
+  vendor_type: string | null;
 }
 
 const AdminDashboard = () => {
@@ -70,12 +71,11 @@ const AdminDashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('role', 'veterinarian');
 
-      // Fetch pending vets (unverified)
+      // Fetch pending vendors
       const { data: pendingVetsData } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, license_number, license_url, created_at')
-        .eq('license_verified', false)
-        .not('license_number', 'is', null);
+        .select('id, first_name, last_name, email, license_number, license_url, created_at, vendor_type')
+        .eq('verification_status', 'pending');
 
       // Fetch active subscriptions
       const { count: activeSubsCount } = await supabase
@@ -115,23 +115,27 @@ const AdminDashboard = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ license_verified: approve })
+        .update({
+          verification_status: approve ? 'approved' : 'rejected',
+          license_verified: approve
+        })
         .eq('id', vetId);
 
       if (error) throw error;
 
       // Log the action
       await supabase.from('audit_logs').insert({
-        action: approve ? 'vet_approved' : 'vet_rejected',
+        action: approve ? 'vendor_approved' : 'vendor_rejected',
         entity_type: 'profile',
         entity_id: vetId,
         details: { approved: approve },
+        user_id: profile?.user_id
       });
 
-      toast.success(approve ? 'Veterinarian approved!' : 'Veterinarian rejected');
+      toast.success(approve ? 'Vendor approved!' : 'Vendor rejected');
       fetchDashboardData();
     } catch (error) {
-      console.error('Error verifying vet:', error);
+      console.error('Error verifying vendor:', error);
       toast.error('Failed to update verification status');
     }
   };
@@ -305,9 +309,14 @@ const AdminDashboard = () => {
                           className="p-4 rounded-lg border bg-card flex items-start justify-between gap-4"
                         >
                           <div className="flex-1">
-                            <p className="font-medium">
-                              Dr. {vet.first_name} {vet.last_name}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">
+                                {vet.first_name} {vet.last_name}
+                              </p>
+                              <Badge variant="outline" className="capitalize text-[10px]">
+                                {vet.vendor_type || 'provider'}
+                              </Badge>
+                            </div>
                             <p className="text-sm text-muted-foreground">{vet.email}</p>
                             <p className="text-sm mt-1">
                               License: {vet.license_number || 'Not provided'}
