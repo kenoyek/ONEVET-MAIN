@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Users, Stethoscope, MessageCircle, FileText, CreditCard,
   Shield, TrendingUp, Search, ChevronRight, AlertCircle,
-  CheckCircle, Clock, XCircle
+  CheckCircle, Clock, XCircle, RefreshCcw
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,49 +51,57 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
 
   const fetchDashboardData = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       // Fetch user counts
-      const { count: usersCount } = await supabase
+      const { count: usersCount, error: usersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
+      if (usersError) throw new Error(`Profiles: ${usersError.message}`);
 
       // Fetch vet counts
-      const { count: vetsCount } = await supabase
+      const { count: vetsCount, error: vetsError } = await supabase
         .from('user_roles')
         .select('*', { count: 'exact', head: true })
         .eq('role', 'veterinarian');
+      if (vetsError) throw new Error(`User Roles: ${vetsError.message}`);
 
       // Fetch pending vendors
       const { data: pendingVetsData, error: pendingError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, license_number, license_url, created_at, vendor_type')
         .eq('verification_status', 'pending');
-
-      if (pendingError) throw pendingError;
+      if (pendingError) throw new Error(`Pending Vendors: ${pendingError.message}`);
 
       // Fetch active subscriptions
-      const { count: activeSubsCount } = await supabase
+      const { count: activeSubsCount, error: subsError } = await supabase
         .from('subscriptions')
         .select('*', { count: 'exact', head: true })
         .in('status', ['active', 'trial']);
+      if (subsError) throw new Error(`Subscriptions: ${subsError.message}`);
 
       // Fetch consultation counts
-      const { count: consultationsCount } = await supabase
+      const { count: consultationsCount, error: consError } = await supabase
         .from('consultations')
         .select('*', { count: 'exact', head: true });
+      if (consError) throw new Error(`Consultations: ${consError.message}`);
 
-      const { count: consultationsTodayCount } = await supabase
+      const { count: consultationsTodayCount, error: todayError } = await supabase
         .from('consultations')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today.toISOString());
+      if (todayError) throw new Error(`Today's Consultations: ${todayError.message}`);
 
       setStats({
         totalUsers: usersCount || 0,
@@ -105,8 +113,9 @@ const AdminDashboard = () => {
       });
 
       setPendingVets(pendingVetsData || []);
-    } catch (error) {
-      console.error('Error fetching admin dashboard data:', error);
+    } catch (err: any) {
+      console.error('Error fetching admin dashboard data:', err);
+      setError(err.message || 'An unexpected error occurred');
       toast.error('Failed to load dashboard data');
     } finally {
       setIsLoading(false);
@@ -146,10 +155,35 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container-wide py-20 flex flex-col items-center justify-center">
+        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground font-medium">Loading dashboard data...</p>
-          <p className="text-xs text-muted-foreground mt-2 italic">This may take a moment if you haven't run the latest database migrations.</p>
+          <h2 className="text-xl font-bold mb-2">Loading Admin Panel</h2>
+          <p className="text-muted-foreground font-medium">Fetching platform statistics...</p>
+          <p className="text-xs text-muted-foreground mt-2 italic max-w-xs">
+            If this takes too long, ensure you have executed the master migration in your Supabase SQL Editor.
+          </p>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Dashboard Error</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
+          <div className="flex gap-4">
+            <Button onClick={() => fetchDashboardData()}>
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/">Back to Home</Link>
+            </Button>
+          </div>
         </main>
       </div>
     );

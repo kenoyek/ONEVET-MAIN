@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import {
   Users, Stethoscope, ShoppingBag, Landmark, TrendingUp,
   ArrowUpRight, ArrowDownRight, Calendar, Filter, Download,
-  MapPin, CheckCircle, Clock, AlertCircle, UserPlus, Search
+  MapPin, CheckCircle, Clock, AlertCircle, UserPlus, Search,
+  RefreshCcw
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +33,7 @@ const Analytics = () => {
 
   const [registrationTrend, setRegistrationTrend] = useState<any[]>([]);
   const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -39,31 +41,36 @@ const Analytics = () => {
 
   const fetchAnalyticsData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const now = new Date();
       const today = new Date(now.setHours(0, 0, 0, 0)).toISOString();
 
       // Fetch total users
-      const { count: totalUsers } = await supabase
+      const { count: totalUsers, error: usersError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true });
+      if (usersError) throw new Error(`Profiles: ${usersError.message}`);
 
       // Fetch new users today
-      const { count: newToday } = await supabase
+      const { count: newToday, error: todayError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
         .gte('created_at', today);
+      if (todayError) throw new Error(`Today's registrations: ${todayError.message}`);
 
       // Fetch vendor breakdown
-      const { data: vendors } = await supabase
+      const { data: vendors, error: rolesError } = await supabase
         .from('user_roles')
         .select('role, user_id')
         .in('role', ['veterinarian', 'service_provider']);
+      if (rolesError) throw new Error(`User Roles: ${rolesError.message}`);
 
       // Fetch customer breakdown
-      const { data: customerData } = await supabase
+      const { data: customerData, error: breakdownError } = await supabase
         .from('profiles')
         .select('customer_type, vendor_type, license_verified');
+      if (breakdownError) throw new Error(`Customer Breakdown: ${breakdownError.message}`);
 
       const vetCount = customerData?.filter(p => p.vendor_type === 'veterinarian' || p.vendor_type === 'vet').length || 0;
       const groomerCount = customerData?.filter(p => p.vendor_type === 'groomer').length || 0;
@@ -101,16 +108,18 @@ const Analytics = () => {
       setRegistrationTrend(trend);
 
       // Fetch recent registrations
-      const { data: recent } = await supabase
+      const { data: recent, error: recentError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, created_at, vendor_type, customer_type')
         .order('created_at', { ascending: false })
         .limit(5);
+      if (recentError) throw new Error(`Recent users: ${recentError.message}`);
 
       setRecentUsers(recent || []);
 
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
+    } catch (err: any) {
+      console.error('Error fetching analytics:', err);
+      setError(err.message || 'An unexpected error occurred');
       toast.error('Failed to load analytics data');
     } finally {
       setLoading(false);
@@ -129,6 +138,28 @@ const Analytics = () => {
           <TrendingUp className="h-12 w-12 text-primary animate-pulse mb-4" />
           <h2 className="text-xl font-bold mb-2">Preparing Analytics</h2>
           <p className="text-muted-foreground max-w-xs">Aggregating platform data for your review. This may take a few seconds...</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Analytics Error</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
+          <div className="flex gap-4">
+            <Button onClick={() => fetchAnalyticsData()}>
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/">Back to Home</Link>
+            </Button>
+          </div>
         </main>
       </div>
     );

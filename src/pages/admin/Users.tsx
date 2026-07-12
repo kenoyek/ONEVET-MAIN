@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import {
   ArrowLeft, Users, Search, Filter, Loader2,
   MoreVertical, Edit, Shield, ShieldOff, Trash2,
-  CheckCircle, XCircle, Mail, Phone, MapPin
+  CheckCircle, XCircle, Mail, Phone, MapPin, RefreshCcw, AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Navbar } from '@/components/layout/Navbar';
@@ -70,6 +70,7 @@ export default function AdminUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [error, setError] = useState<string | null>(null);
 
   // Dialog states
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
@@ -81,6 +82,7 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       // Fetch profiles
       const { data: profiles, error: profileError } = await supabase
@@ -88,14 +90,14 @@ export default function AdminUsers() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (profileError) throw profileError;
+      if (profileError) throw new Error(`Profiles: ${profileError.message}`);
 
       // Fetch roles
       const { data: roles, error: roleError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
-      if (roleError) throw roleError;
+      if (roleError) throw new Error(`Roles: ${roleError.message}`);
 
       // Merge data
       const mergedUsers: UserProfile[] = profiles.map(profile => ({
@@ -104,8 +106,9 @@ export default function AdminUsers() {
       })) as any;
 
       setUsers(mergedUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+    } catch (err: any) {
+      console.error('Error fetching users:', err);
+      setError(err.message || 'An unexpected error occurred');
       toast.error('Failed to load users');
     } finally {
       setIsLoading(false);
@@ -180,6 +183,28 @@ export default function AdminUsers() {
       default: return <Badge variant="secondary">User</Badge>;
     }
   };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+          <h2 className="text-2xl font-bold mb-2">User Management Error</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
+          <div className="flex gap-4">
+            <Button onClick={() => fetchUsers()}>
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/admin">Back to Dashboard</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
