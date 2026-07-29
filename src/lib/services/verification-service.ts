@@ -165,11 +165,24 @@ export const verificationService = {
    * Helper: Update organization verification status
    */
   async updateOrganizationVerificationStatus(providerId: string, status: ProviderVerificationStatus) {
-    const { error } = await supabase
+    const { data: org, error } = await supabase
       .from('provider_organizations')
       .update({ verification_status: status, updated_at: new Date().toISOString() })
-      .eq('id', providerId);
+      .eq('id', providerId)
+      .select('created_by')
+      .maybeSingle();
 
     if (error) console.error('[VerificationService] Failed to update org verification status:', error.message);
+
+    if (org?.created_by) {
+      const isApproved = status === 'approved';
+      await supabase
+        .from('profiles')
+        .update({
+          verification_status: status,
+          license_verified: isApproved
+        })
+        .eq('user_id', org.created_by);
+    }
   },
 };

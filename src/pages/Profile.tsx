@@ -194,6 +194,7 @@ export default function Profile() {
         .update({ 
           license_url: signedData?.signedUrl || filePath,
           license_verified: false, // Reset verification on new upload
+          verification_status: 'pending',
         })
         .eq('id', profile.id);
 
