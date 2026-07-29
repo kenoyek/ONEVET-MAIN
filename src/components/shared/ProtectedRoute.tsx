@@ -1,9 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, AppRole } from '@/lib/auth-context';
 import { Loader2 } from 'lucide-react';
-
-type AppRole = 'pet_owner' | 'veterinarian' | 'service_provider' | 'admin';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -16,7 +14,7 @@ export function ProtectedRoute({
   allowedRoles,
   redirectTo = '/auth' 
 }: ProtectedRouteProps) {
-  const { user, role, loading } = useAuth();
+  const { user, role, roles, loading } = useAuth();
   const location = useLocation();
 
   // 1. Wait for Auth metadata (Vite/Supabase session)
@@ -38,7 +36,7 @@ export function ProtectedRoute({
 
   // 3. User exists but Role is still fetching from DB? Wait for it.
   // This prevents redirect loops while database queries are in flight.
-  if (allowedRoles && role === null) {
+  if (allowedRoles && role === null && (!roles || roles.length === 0)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -49,11 +47,15 @@ export function ProtectedRoute({
     );
   }
 
-  // 4. Role exists but is not allowed? Send to their respective home
-  if (allowedRoles && !allowedRoles.includes(role)) {
-    const dashboardPath = role === 'admin' 
+  // 4. Role exists but is not allowed? Check if any of the user's active roles match
+  const hasAccess = allowedRoles
+    ? allowedRoles.some((allowed) => role === allowed || (roles && roles.includes(allowed)))
+    : true;
+
+  if (allowedRoles && !hasAccess) {
+    const dashboardPath = role === 'admin' || (roles && roles.includes('admin'))
       ? '/admin' 
-      : role === 'veterinarian' 
+      : role === 'veterinarian' || (roles && roles.includes('veterinarian'))
         ? '/vet-dashboard' 
         : '/dashboard';
     return <Navigate to={dashboardPath} replace />;

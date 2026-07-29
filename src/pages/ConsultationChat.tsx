@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChatWindow } from '@/components/chat/ChatWindow';
 import { ConsultationHeader } from '@/components/chat/ConsultationHeader';
 import { ConsultationSummary } from '@/components/chat/ConsultationSummary';
+import { ClinicalSOAPWorkspace } from '@/components/clinical/ClinicalSOAPWorkspace';
 import { useAuth } from '@/lib/auth-context';
 import { useRealTimeMessages } from '@/hooks/useRealTimeMessages';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -330,6 +331,17 @@ export default function ConsultationChat() {
                   <p className="text-sm text-muted-foreground">{consultation.prescription}</p>
                 </div>
               )}
+            </div>
+          )}
+
+          {isVet && profile?.id && (
+            <div className="p-4 border-b bg-background">
+              <ClinicalSOAPWorkspace
+                consultation={consultation}
+                vetProfileId={profile.id}
+                currentUserId={user?.id || ''}
+                onRefresh={fetchConsultation}
+              />
             </div>
           )}
 

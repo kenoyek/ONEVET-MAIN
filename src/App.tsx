@@ -40,6 +40,12 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
+import ProviderOnboarding from "./pages/provider/ProviderOnboarding";
+import OrganizationSettings from "./pages/provider/OrganizationSettings";
+import PublicProviderProfile from "./pages/provider/PublicProviderProfile";
+import ProviderVerificationQueue from "./pages/admin/ProviderVerificationQueue";
+import ProviderMarketplace from "./pages/marketplace/ProviderMarketplace";
+import NewBooking from "./pages/booking/NewBooking";
 import { LiveChatWidget } from "./components/chat/LiveChatWidget";
 import { MobileBottomNav } from "./components/layout/MobileBottomNav";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
@@ -82,6 +88,11 @@ const App = () => (
                 <Route path="/admin/users" element={
                   <ProtectedRoute allowedRoles={['admin']}>
                     <AdminUsers />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/verifications" element={
+                  <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                    <ProviderVerificationQueue />
                   </ProtectedRoute>
                 } />
                 <Route path="/consultations" element={
@@ -187,6 +198,23 @@ const App = () => (
                 <Route path="/articles" element={<Articles />} />
                 <Route path="/education" element={<Articles />} />
                 <Route path="/articles/:slug" element={<ArticleDetail />} />
+                <Route path="/provider/register" element={
+                  <ProtectedRoute allowedRoles={['service_provider', 'veterinarian', 'pet_owner', 'admin', 'clinic_admin', 'groomer', 'laboratory', 'pharmacy', 'vendor', 'trainer']}>
+                    <ProviderOnboarding />
+                  </ProtectedRoute>
+                } />
+                <Route path="/provider/organization/:slug" element={
+                  <ProtectedRoute allowedRoles={['service_provider', 'veterinarian', 'pet_owner', 'admin', 'clinic_admin', 'groomer', 'laboratory', 'pharmacy', 'vendor', 'trainer']}>
+                    <OrganizationSettings />
+                  </ProtectedRoute>
+                } />
+                <Route path="/provider-marketplace" element={<ProviderMarketplace />} />
+                <Route path="/provider/public/:slug" element={<PublicProviderProfile />} />
+                <Route path="/booking/new" element={
+                  <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin']}>
+                    <NewBooking />
+                  </ProtectedRoute>
+                } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

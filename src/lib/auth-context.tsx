@@ -3,9 +3,11 @@ import { User, Session } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+import { CoreRole, LegacyAppRole } from '@/types/platform';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type AppRole = 'pet_owner' | 'veterinarian' | 'service_provider' | 'admin';
+export type AppRole = CoreRole | LegacyAppRole;
 
 export interface Profile {
   id: string;
@@ -30,6 +32,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
+  roles: AppRole[];
   /**
    * TRUE only while we haven't yet received the first auth event from Supabase.
    * Once loading is false, `user` is the single source of truth for "is logged in".
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [roles, setRoles] = useState<AppRole[]>([]);
 
   // loading = true until we get the FIRST auth response (session or null).
   // This prevents any flash of "logged out" on page load.
@@ -131,23 +135,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted.current) setProfile((newProfile as Profile) ?? null);
       }
 
-      // ── Role ──────────────────────────────────────────────────────────────
+      // ── Roles ──────────────────────────────────────────────────────────────
       if (!mounted.current) return;
 
-      const { data: roleData, error: roleError } = await supabase
+      const { data: rolesData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', authUser.id)
-        .maybeSingle();
+        .eq('user_id', authUser.id);
 
       if (roleError) {
-        console.warn('[Auth] Role query failed (non-fatal):', roleError.message);
+        console.warn('[Auth] Roles query failed (non-fatal):', roleError.message);
       }
 
       if (!mounted.current) return;
 
-      if (roleData) {
-        setRole(roleData.role as AppRole);
+      if (rolesData && rolesData.length > 0) {
+        const fetchedRoles = rolesData.map((r) => r.role as AppRole);
+        setRoles(fetchedRoles);
+        setRole(fetchedRoles[0]);
       } else if (!roleError) {
         // No role row — create from metadata
         const requestedRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
@@ -158,18 +163,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .maybeSingle();
 
         if (mounted.current) {
-          setRole(newRole ? (newRole.role as AppRole) : requestedRole);
+          const activeRole = newRole ? (newRole.role as AppRole) : requestedRole;
+          setRoles([activeRole]);
+          setRole(activeRole);
         }
       } else {
         // Role query errored — derive from metadata so UI isn't stuck
         const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
-        if (mounted.current) setRole(fallbackRole);
+        if (mounted.current) {
+          setRoles([fallbackRole]);
+          setRole(fallbackRole);
+        }
       }
     } catch (err) {
       console.warn('[Auth] fetchProfile error (non-fatal):', err);
       if (mounted.current) {
-        // Derive role from JWT metadata as a fallback so redirects still work
         const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
+        setRoles([fallbackRole]);
         setRole(fallbackRole);
       }
     }
@@ -307,12 +317,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null);
       setProfile(null);
       setRole(null);
+      setRoles([]);
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, role, loading, signUp, signIn, signOut, refreshProfile }}
+      value={{ user, session, profile, role, roles, loading, signUp, signIn, signOut, refreshProfile }}
     >
       {children}
     </AuthContext.Provider>
