@@ -1,25 +1,47 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/auth-context';
 import { verificationService } from '@/lib/services/verification-service';
 import { ProviderVerificationStatus } from '@/types/platform';
 import { toast } from 'sonner';
-import { ShieldCheck, ShieldAlert, CheckCircle2, XCircle, AlertCircle, FileText, Clock, Loader2, Eye } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, CheckCircle2, XCircle, AlertCircle, FileText, Loader2, Eye } from 'lucide-react';
+
+export interface VerificationCaseItem {
+  id: string;
+  provider_id: string;
+  submitted_at: string;
+  risk_level: string;
+  organization?: {
+    name?: string | null;
+    provider_type?: string | null;
+    email?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } | null;
+  [key: string]: unknown;
+}
+
+export interface VerificationDocumentItem {
+  id: string;
+  document_type: string;
+  document_number?: string | null;
+  issuing_authority?: string | null;
+  verification_status: string;
+  [key: string]: unknown;
+}
 
 export default function ProviderVerificationQueue() {
   const { user } = useAuth();
-  const [queue, setQueue] = useState<any[]>([]);
+  const [queue, setQueue] = useState<VerificationCaseItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCase, setSelectedCase] = useState<any>(null);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [selectedCase, setSelectedCase] = useState<VerificationCaseItem | null>(null);
+  const [documents, setDocuments] = useState<VerificationDocumentItem[]>([]);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewAction, setReviewAction] = useState<ProviderVerificationStatus | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -30,8 +52,8 @@ export default function ProviderVerificationQueue() {
     setLoading(true);
     try {
       const data = await verificationService.getVerificationQueue();
-      setQueue(data || []);
-    } catch (err: any) {
+      setQueue((data || []) as unknown as VerificationCaseItem[]);
+    } catch (err: unknown) {
       console.error('Failed to fetch verification queue:', err);
       toast.error('Failed to load verification queue');
     } finally {
@@ -43,13 +65,13 @@ export default function ProviderVerificationQueue() {
     fetchQueue();
   }, []);
 
-  const handleOpenReview = async (item: any) => {
+  const handleOpenReview = async (item: VerificationCaseItem) => {
     setSelectedCase(item);
     setReviewOpen(true);
     try {
       const docs = await verificationService.getProviderDocuments(item.provider_id);
-      setDocuments(docs || []);
-    } catch (err) {
+      setDocuments((docs || []) as unknown as VerificationDocumentItem[]);
+    } catch {
       setDocuments([]);
     }
   };
@@ -78,8 +100,8 @@ export default function ProviderVerificationQueue() {
       setRejectionReason('');
       setInternalNotes('');
       fetchQueue();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to update verification status');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to update verification status');
     } finally {
       setProcessing(false);
     }

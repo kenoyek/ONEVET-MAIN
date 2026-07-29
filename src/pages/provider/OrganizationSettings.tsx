@@ -33,7 +33,11 @@ const PERMISSION_OPTIONS = [
 export default function OrganizationSettings() {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
-  const [organization, setOrganization] = useState<any>(null);
+  const [organization, setOrganization] = useState<ProviderOrganization & {
+    locations?: ProviderLocation[];
+    services?: Record<string, unknown>[];
+    members?: { id: string; member_role: string; status: string; user?: { first_name?: string | null; last_name?: string | null; email?: string | null } }[];
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
 
@@ -47,7 +51,7 @@ export default function OrganizationSettings() {
   const [submittingInvite, setSubmittingInvite] = useState(false);
 
   // Product inventory state
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<{ id: string; price: number; stock: number; [key: string]: unknown }[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
@@ -59,49 +63,53 @@ export default function OrganizationSettings() {
   const [submittingProduct, setSubmittingProduct] = useState(false);
 
   // Financial commissions state
-  const [commissions, setCommissions] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<Record<string, unknown>[]>([]);
 
-  const fetchOrganization = async () => {
-    if (!slug) return;
-    try {
-      const data = await providerService.getOrganizationBySlug(slug);
-      setOrganization(data);
-      if (data?.id) {
-        fetchVendorProducts(data.id);
-        fetchVendorCommissions(data.id);
-      }
-    } catch (err: any) {
-      console.error('Failed to load organization:', err);
-      toast.error('Failed to load organization details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchVendorProducts = async (vendorId: string) => {
+  const fetchVendorProducts = useCallback(async (vendorId: string) => {
     setLoadingProducts(true);
     try {
       const data = await vendorProductService.getVendorProducts(vendorId);
-      setProducts(data || []);
+      setProducts((data || []) as { id: string; price: number; stock: number; [key: string]: unknown }[]);
     } catch (err) {
       console.error('Failed to fetch vendor products:', err);
     } finally {
       setLoadingProducts(false);
     }
-  };
+  }, []);
 
-  const fetchVendorCommissions = async (vendorId: string) => {
+  const fetchVendorCommissions = useCallback(async (vendorId: string) => {
     try {
       const data = await vendorProductService.getVendorCommissions(vendorId);
-      setCommissions(data || []);
+      setCommissions((data || []) as Record<string, unknown>[]);
     } catch (err) {
       console.error('Failed to fetch vendor commissions:', err);
     }
-  };
+  }, []);
+
+  const fetchOrganization = useCallback(async () => {
+    if (!slug) return;
+    try {
+      const data = await providerService.getOrganizationBySlug(slug);
+      setOrganization(data as unknown as ProviderOrganization & {
+        locations?: ProviderLocation[];
+        services?: Record<string, unknown>[];
+        members?: { id: string; member_role: string; status: string; user?: { first_name?: string | null; last_name?: string | null; email?: string | null } }[];
+      });
+      if (data?.id) {
+        fetchVendorProducts(data.id);
+        fetchVendorCommissions(data.id);
+      }
+    } catch (err: unknown) {
+      console.error('Failed to load organization:', err);
+      toast.error('Failed to load organization details');
+    } finally {
+      setLoading(false);
+    }
+  }, [slug, fetchVendorProducts, fetchVendorCommissions]);
 
   useEffect(() => {
     fetchOrganization();
-  }, [slug]);
+  }, [fetchOrganization]);
 
   const togglePermission = (permId: string) => {
     setSelectedPermissions((prev) =>
@@ -123,8 +131,8 @@ export default function OrganizationSettings() {
       setInviteOpen(false);
       setInviteEmail('');
       fetchOrganization();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to send staff invitation');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to send staff invitation');
     } finally {
       setSubmittingInvite(false);
     }
@@ -158,8 +166,8 @@ export default function OrganizationSettings() {
       setNewProductBrand('');
       setNewProductSku('');
       fetchVendorProducts(organization.id);
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to create product');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to create product');
     } finally {
       setSubmittingProduct(false);
     }
@@ -242,7 +250,7 @@ export default function OrganizationSettings() {
                     <Label htmlFor="role">Member Role *</Label>
                     <Select
                       value={inviteRole}
-                      onValueChange={(val: any) => setInviteRole(val)}
+                      onValueChange={(val: string) => setInviteRole(val)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
@@ -559,7 +567,7 @@ export default function OrganizationSettings() {
               <CardContent>
                 <div className="space-y-4">
                   {organization.members && organization.members.length > 0 ? (
-                    organization.members.map((member: any) => (
+                    organization.members.map((member: { id: string; role: string; user?: { first_name?: string; last_name?: string; email?: string } }) => (
                       <div
                         key={member.id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -613,7 +621,7 @@ export default function OrganizationSettings() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {organization.locations && organization.locations.length > 0 ? (
-                    organization.locations.map((loc: any) => (
+                    organization.locations.map((loc: { id: string; name: string; address?: string; city?: string; state?: string; phone?: string; timezone?: string; is_primary?: boolean }) => (
                       <Card key={loc.id} className="border">
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">

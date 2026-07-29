@@ -104,12 +104,12 @@ export default function AdminUsers() {
       const mergedUsers: UserProfile[] = profiles.map(profile => ({
         ...profile,
         role: roles.find(r => r.user_id === profile.user_id)?.role || 'pet_owner',
-      })) as any;
+      })) as unknown as UserProfile[];
 
       setUsers(mergedUsers);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching users:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError((err as Error).message || 'An unexpected error occurred');
       toast.error('Failed to load users');
     } finally {
       setIsLoading(false);
@@ -135,9 +135,9 @@ export default function AdminUsers() {
 
       toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error toggling user status:', error);
-      toast.error(error.message || 'Failed to update user status');
+      toast.error((error as Error).message || 'Failed to update user status');
     } finally {
       setToggleStatusUserId(null);
     }
@@ -164,9 +164,9 @@ export default function AdminUsers() {
 
       toast.success('User deleted successfully');
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting user:', error);
-      toast.error(error.message || 'Failed to delete user');
+      toast.error((error as Error).message || 'Failed to delete user');
     } finally {
       setDeleteUserId(null);
     }

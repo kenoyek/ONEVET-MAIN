@@ -23,17 +23,23 @@ import { toast } from 'sonner';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
+interface AnalyticsStats {
+  users: { total: number; today: number; week: number; month: number; growth: number };
+  customers: { pet: number; farm: number; livestock: number };
+  vendors: { vets: number; groomers: number; pharmacies: number; stores: number; pending: number };
+}
+
 const Analytics = () => {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('30d');
-  const [stats, setStats] = useState<any>({
+  const [stats, setStats] = useState<AnalyticsStats>({
     users: { total: 0, today: 0, week: 0, month: 0, growth: 0 },
     customers: { pet: 0, farm: 0, livestock: 0 },
     vendors: { vets: 0, groomers: 0, pharmacies: 0, stores: 0, pending: 0 },
   });
 
-  const [registrationTrend, setRegistrationTrend] = useState<any[]>([]);
-  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [registrationTrend, setRegistrationTrend] = useState<Record<string, unknown>[]>([]);
+  const [recentUsers, setRecentUsers] = useState<Record<string, unknown>[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,9 +124,9 @@ const Analytics = () => {
 
       setRecentUsers(recent || []);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching analytics:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError((err as Error).message || 'An unexpected error occurred');
       toast.error('Failed to load analytics data');
     } finally {
       setLoading(false);

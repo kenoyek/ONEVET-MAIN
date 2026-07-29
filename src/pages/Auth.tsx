@@ -53,7 +53,7 @@ const Auth = () => {
         navigate('/dashboard');
       }
     }
-  }, [user, loading, navigate, mode]); // role intentionally excluded — redirect must not block on it
+  }, [user, loading, role, navigate, mode]);
 
   if (loading) {
     return (

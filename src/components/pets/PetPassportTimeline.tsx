@@ -16,7 +16,7 @@ interface PetPassportTimelineProps {
   timeline: TimelineEvent[];
 }
 
-const EVENT_ICONS: Record<string, { icon: any; color: string; badge: string }> = {
+const EVENT_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; badge: string }> = {
   consultation: { icon: Stethoscope, color: 'text-blue-500 bg-blue-50 border-blue-200', badge: 'Consultation' },
   diagnosis: { icon: Activity, color: 'text-amber-500 bg-amber-50 border-amber-200', badge: 'Diagnosis' },
   vaccination: { icon: Syringe, color: 'text-emerald-500 bg-emerald-50 border-emerald-200', badge: 'Vaccination' },

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -57,13 +57,8 @@ export default function ArticleDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (slug) {
-      fetchArticle();
-    }
-  }, [slug]);
-
-  const fetchArticle = async () => {
+  const fetchArticle = useCallback(async () => {
+    if (!slug) return;
     try {
       const { data: articleData, error: articleError } = await supabase
         .from('articles')
@@ -109,7 +104,11 @@ export default function ArticleDetail() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [slug, navigate]);
+
+  useEffect(() => {
+    fetchArticle();
+  }, [fetchArticle]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);

@@ -9,9 +9,40 @@ import { marketplaceService } from '@/lib/services/marketplace-service';
 import { ShieldCheck, MapPin, Phone, Mail, Globe, Clock, Stethoscope, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+interface ProviderProfileData {
+  id: string;
+  name: string;
+  provider_type: string;
+  verification_status?: string | null;
+  city?: string | null;
+  country?: string | null;
+  description?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  services?: {
+    id: string;
+    name: string;
+    description?: string | null;
+    delivery_mode: string;
+    base_price: number | string;
+    currency: string;
+    duration_minutes: number;
+  }[];
+  locations?: {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    state?: string | null;
+    country: string;
+    phone?: string | null;
+  }[];
+}
+
 export default function PublicProviderProfile() {
   const { slug } = useParams<{ slug: string }>();
-  const [provider, setProvider] = useState<any | null>(null);
+  const [provider, setProvider] = useState<ProviderProfileData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,8 +50,8 @@ export default function PublicProviderProfile() {
     const fetchProfile = async () => {
       try {
         const data = await marketplaceService.getPublicProviderProfile(slug);
-        setProvider(data);
-      } catch (err: any) {
+        setProvider((data || null) as unknown as ProviderProfileData | null);
+      } catch (err: unknown) {
         console.error('Failed to load provider profile:', err);
         toast.error('Provider profile not found');
       } finally {
@@ -121,7 +152,7 @@ export default function PublicProviderProfile() {
           <TabsContent value="services">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {provider.services && provider.services.length > 0 ? (
-                provider.services.map((service: any) => (
+                provider.services.map((service) => (
                   <Card key={service.id} className="flex flex-col justify-between">
                     <CardHeader>
                       <div className="flex items-center justify-between gap-2 mb-1">
@@ -157,7 +188,7 @@ export default function PublicProviderProfile() {
           <TabsContent value="locations">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {provider.locations && provider.locations.length > 0 ? (
-                provider.locations.map((loc: any) => (
+                provider.locations.map((loc) => (
                   <Card key={loc.id}>
                     <CardHeader>
                       <CardTitle className="text-base">{loc.name}</CardTitle>

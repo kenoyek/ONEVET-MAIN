@@ -106,7 +106,7 @@ export const emergencyService = {
    * Update emergency dispatch status
    */
   async updateDispatchStatus(dispatchId: string, status: string, notes?: string) {
-    const timestampUpdates: any = { status, updated_at: new Date().toISOString() };
+    const timestampUpdates: Record<string, string> = { status, updated_at: new Date().toISOString() };
     if (status === 'dispatched') timestampUpdates.dispatched_at = new Date().toISOString();
     if (status === 'arrived') timestampUpdates.arrived_at = new Date().toISOString();
     if (status === 'resolved') timestampUpdates.resolved_at = new Date().toISOString();

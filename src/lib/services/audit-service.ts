@@ -6,8 +6,8 @@ export interface LogActionInput {
   action: string; // e.g. VERIFICATION_APPROVED, PRESCRIPTION_ISSUED, ESCROW_RELEASED
   target_entity: string; // e.g. provider_organizations, prescriptions
   target_id: string;
-  old_values?: any;
-  new_values?: any;
+  old_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
 }
 
 export const auditService = {

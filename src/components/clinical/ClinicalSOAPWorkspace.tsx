@@ -9,10 +9,25 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { clinicalService, PrescriptionItemInput } from '@/lib/services/clinical-service';
 import { toast } from 'sonner';
-import { Stethoscope, FileText, Pill, CheckCircle2, Lock, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Stethoscope, Pill, CheckCircle2, Lock, Plus, Trash2 } from 'lucide-react';
+
+export interface SOAPConsultationRecord {
+  id: string;
+  pet_id?: string | null;
+  chief_complaint?: string | null;
+  subjective_notes?: string | null;
+  objective_notes?: string | null;
+  assessment?: string | null;
+  treatment_plan?: string | null;
+  diagnosis?: string | null;
+  follow_up_required?: boolean | null;
+  follow_up_date?: string | null;
+  signed_at?: string | null;
+  [key: string]: unknown;
+}
 
 interface ClinicalSOAPWorkspaceProps {
-  consultation: any;
+  consultation: SOAPConsultationRecord;
   vetProfileId: string;
   currentUserId: string;
   onRefresh: () => void;
@@ -55,7 +70,7 @@ export const ClinicalSOAPWorkspace: React.FC<ClinicalSOAPWorkspaceProps> = ({
     try {
       await clinicalService.updateSOAPNotes({
         consultation_id: consultation.id,
-        chief_complaint: consultation.chief_complaint,
+        chief_complaint: consultation.chief_complaint || '',
         subjective_notes: subjective,
         objective_notes: objective,
         assessment,
@@ -68,8 +83,8 @@ export const ClinicalSOAPWorkspace: React.FC<ClinicalSOAPWorkspaceProps> = ({
 
       toast.success('Clinical SOAP notes saved');
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save notes');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to save notes');
     } finally {
       setSavingNotes(false);
     }
@@ -81,8 +96,8 @@ export const ClinicalSOAPWorkspace: React.FC<ClinicalSOAPWorkspaceProps> = ({
       await clinicalService.signClinicalSummary(consultation.id, currentUserId);
       toast.success('Clinical consultation signed and locked');
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to sign consultation');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to sign consultation');
     } finally {
       setSigning(false);
     }
@@ -142,8 +157,8 @@ export const ClinicalSOAPWorkspace: React.FC<ClinicalSOAPWorkspaceProps> = ({
       setRxOpen(false);
       setRxItems([]);
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to issue prescription');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to issue prescription');
     } finally {
       setSubmittingRx(false);
     }

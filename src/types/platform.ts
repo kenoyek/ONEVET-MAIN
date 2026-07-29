@@ -155,3 +155,47 @@ export interface ProviderLocation {
   is_primary: boolean;
   is_active: boolean;
 }
+
+// ── Admin Analytics & Reporting Types ─────────────────────────────────────────
+
+export interface ChartDataPoint {
+  date?: string;
+  month?: string;
+  name?: string;
+  value?: number;
+  count?: number;
+  amount?: number;
+  consultations?: number;
+  revenue?: number;
+  users?: number;
+  [key: string]: string | number | undefined;
+}
+
+export interface VerificationRequestItem {
+  id: string;
+  user_id: string;
+  business_name?: string | null;
+  license_number?: string | null;
+  verification_status: string;
+  created_at: string;
+  profiles?: {
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
+  } | null;
+  [key: string]: unknown;
+}
+
+export interface PaystackTransactionResponse {
+  reference: string;
+  status?: string;
+  trans?: string;
+  transaction?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface GenericRecord {
+  id: string;
+  [key: string]: unknown;
+}

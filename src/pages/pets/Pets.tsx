@@ -1,27 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, PawPrint, Search } from 'lucide-react';
-import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/integrations/supabase/client';
+import { usePets } from '@/hooks/usePets';
 import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PetCard } from '@/components/pets/PetCard';
-import { toast } from 'sonner';
-
-interface Pet {
-  id: string;
-  name: string;
-  species: string;
-  breed: string | null;
-  avatar_url: string | null;
-  is_livestock: boolean | null;
-  livestock_count: number | null;
-  created_at: string;
-}
 
 const SPECIES_FILTER_OPTIONS = [
   { value: 'all', label: 'All Species' },
@@ -34,35 +21,9 @@ const SPECIES_FILTER_OPTIONS = [
 ];
 
 const Pets = () => {
-  const { profile } = useAuth();
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { pets, isLoading } = usePets();
   const [searchQuery, setSearchQuery] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState('all');
-
-  useEffect(() => {
-    if (profile?.id) {
-      fetchPets();
-    }
-  }, [profile?.id]);
-
-  const fetchPets = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('pets')
-        .select('id, name, species, breed, avatar_url, is_livestock, livestock_count, created_at')
-        .eq('owner_id', profile!.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setPets(data || []);
-    } catch (error) {
-      console.error('Error fetching pets:', error);
-      toast.error('Failed to load pets');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const filteredPets = pets.filter((pet) => {
     const matchesSearch = pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

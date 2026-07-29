@@ -218,7 +218,7 @@ export default function Profile() {
   };
 
   const getVerificationStatus = () => {
-    if (!profile?.license_number && !(profile as any)?.license_url) {
+    if (!profile?.license_number && !profile?.license_url) {
       return { status: 'none', label: 'Not Submitted', color: 'secondary' as const, icon: Clock };
     }
     if (profile?.license_verified) {
@@ -423,7 +423,7 @@ export default function Profile() {
 
                   <div className="space-y-4">
                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">License Documentation</Label>
-                    {(profile as any)?.license_url ? (
+                    {profile?.license_url ? (
                       <div className="p-6 rounded-3xl border border-primary/20 bg-primary/5 shadow-soft">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
                           <div className="flex flex-col sm:flex-row items-center gap-4">

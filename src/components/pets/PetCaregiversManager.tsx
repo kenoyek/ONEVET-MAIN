@@ -6,9 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { petPassportService } from '@/lib/services/pet-passport-service';
 import { toast } from 'sonner';
-import { Users, UserPlus, Shield, Trash2 } from 'lucide-react';
+import { Users, UserPlus } from 'lucide-react';
 
 interface Caregiver {
   id: string;
@@ -32,8 +31,6 @@ interface PetCaregiversManagerProps {
 }
 
 export const PetCaregiversManager: React.FC<PetCaregiversManagerProps> = ({
-  petId,
-  currentUserId,
   caregivers,
   onRefresh,
 }) => {
@@ -56,8 +53,8 @@ export const PetCaregiversManager: React.FC<PetCaregiversManagerProps> = ({
       setDialogOpen(false);
       setInviteEmail('');
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to invite caregiver');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to invite caregiver');
     } finally {
       setSubmitting(false);
     }
@@ -106,7 +103,7 @@ export const PetCaregiversManager: React.FC<PetCaregiversManagerProps> = ({
                 <Label htmlFor="permLevel">Permission Level *</Label>
                 <Select
                   value={permissionLevel}
-                  onValueChange={(val: any) => setPermissionLevel(val)}
+                  onValueChange={(val) => setPermissionLevel(val as 'view_only' | 'manage_bookings' | 'manage_health_records' | 'full_owner_access')}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select permission level" />

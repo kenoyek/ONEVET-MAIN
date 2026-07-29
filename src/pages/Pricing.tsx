@@ -124,9 +124,9 @@ export default function Pricing() {
 
           toast.success(`Successfully subscribed to ${plan.name}!`);
           await refetch();
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Subscription error:', error);
-          toast.error(error.message || 'Payment successful but failed to activate subscription. Please contact support.');
+          toast.error((error as Error).message || 'Payment successful but failed to activate subscription. Please contact support.');
         } finally {
           setIsProcessing(null);
         }
@@ -172,7 +172,7 @@ export default function Pricing() {
                     </div>
                     <div className="flex-1">
                       <p className="text-2xl font-black text-foreground tracking-tight mb-1">
-                        You're a <span className="text-primary">{(subscription as any).plan?.name || 'Valued'}</span> Member
+                        You're a <span className="text-primary">{subscription.plan?.name || 'Valued'}</span> Member
                       </p>
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-sm font-bold text-muted-foreground uppercase tracking-widest">
                         <Badge variant="default" className="rounded-full px-3">{subscription.status}</Badge>

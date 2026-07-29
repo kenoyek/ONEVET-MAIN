@@ -7,7 +7,7 @@ export interface InitiatePaymentInput {
   amount: number;
   currency?: string;
   payment_gateway?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface HoldEscrowInput {

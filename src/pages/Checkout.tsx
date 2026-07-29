@@ -116,9 +116,9 @@ const Checkout = () => {
             setIsSuccess(true);
             clearCart();
             toast.success("Order placed successfully!");
-          } catch (err: any) {
+          } catch (err: unknown) {
             console.error('Payment verification error:', err);
-            toast.error(err.message || "Payment verified by Paystack but failed to update order. Please contact support.");
+            toast.error((err as Error).message || "Payment verified by Paystack but failed to update order. Please contact support.");
             setIsProcessing(false);
           }
         },
@@ -127,9 +127,9 @@ const Checkout = () => {
           toast.error("Payment cancelled");
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Checkout error:', error);
-      toast.error(error.message || "Failed to initialize checkout. Please try again.");
+      toast.error((error as Error).message || "Failed to initialize checkout. Please try again.");
       setIsProcessing(false);
     }
   };

@@ -62,7 +62,7 @@ export function useLiveChat() {
           filter: `id=eq.${consultationId}`,
         },
         (payload) => {
-          const updated = payload.new as any;
+          const updated = payload.new as Consultation;
           setConsultation((prev) => prev ? { ...prev, ...updated } : null);
 
           if (['accepted', 'in_progress'].includes(updated.status)) {

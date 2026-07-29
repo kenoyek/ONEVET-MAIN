@@ -19,6 +19,7 @@ export interface Profile {
   avatar_url: string | null;
   bio: string | null;
   license_number: string | null;
+  license_url?: string | null;
   license_verified: boolean;
   is_available: boolean;
   specialty: string | null;
@@ -183,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRole(fallbackRole);
       }
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const refreshProfile = useCallback(async () => {
     if (user) await fetchProfile(user);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -8,9 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { marketplaceService, SearchProvidersFilter } from '@/lib/services/marketplace-service';
-import { Search, MapPin, ShieldCheck, Stethoscope, Scissors, TestTube, GraduationCap, Video, Home, Building2, Clock, Zap, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { SearchProvidersFilter, ServiceDeliveryMode } from '@/lib/services/marketplace-service';
+import { useProviderMarketplace } from '@/hooks/useProviderMarketplace';
+import { Search, MapPin, ShieldCheck, Video, Home, Building2, Clock, Zap, Loader2 } from 'lucide-react';
 
 const CATEGORIES = [
   { value: 'all', label: 'All Services' },
@@ -21,9 +21,6 @@ const CATEGORIES = [
 ];
 
 export default function ProviderMarketplace() {
-  const [services, setServices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -31,34 +28,19 @@ export default function ProviderMarketplace() {
   const [cityQuery, setCityQuery] = useState('');
   const [emergencyOnly, setEmergencyOnly] = useState(false);
 
-  const fetchMarketplace = async () => {
-    setLoading(true);
-    try {
-      const filter: SearchProvidersFilter = {
-        category: selectedCategory !== 'all' ? selectedCategory : undefined,
-        delivery_mode: selectedDeliveryMode !== 'all' ? (selectedDeliveryMode as any) : undefined,
-        is_emergency_service: emergencyOnly ? true : undefined,
-        query: searchQuery.trim() || undefined,
-        city: cityQuery.trim() || undefined,
-      };
-
-      const data = await marketplaceService.searchMarketplace(filter);
-      setServices(data || []);
-    } catch (err: any) {
-      console.error('Failed to search marketplace:', err);
-      toast.error('Failed to load marketplace listings');
-    } finally {
-      setLoading(false);
-    }
+  const filter: SearchProvidersFilter = {
+    category: selectedCategory !== 'all' ? selectedCategory : undefined,
+    delivery_mode: selectedDeliveryMode !== 'all' ? (selectedDeliveryMode as ServiceDeliveryMode) : undefined,
+    is_emergency_service: emergencyOnly ? true : undefined,
+    query: searchQuery.trim() || undefined,
+    city: cityQuery.trim() || undefined,
   };
 
-  useEffect(() => {
-    fetchMarketplace();
-  }, [selectedCategory, selectedDeliveryMode, emergencyOnly]);
+  const { marketplaceItems: services, isLoading: loading, refetch } = useProviderMarketplace(filter);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchMarketplace();
+    refetch();
   };
 
   const getDeliveryIcon = (mode: string) => {

@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { groomingService } from '@/lib/services/grooming-service';
 import { toast } from 'sonner';
-import { Scissors, AlertTriangle, Stethoscope, Camera, CheckCircle2 } from 'lucide-react';
+import { Scissors, AlertTriangle, Stethoscope } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface GroomingRecordFormProps {
@@ -45,7 +45,7 @@ export const GroomingRecordForm: React.FC<GroomingRecordFormProps> = ({
   const [hasHealthIssue, setHasHealthIssue] = useState(false);
   const [nextDate, setNextDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [completedRecord, setCompletedRecord] = useState<any | null>(null);
+  const [completedRecord, setCompletedRecord] = useState<Record<string, unknown> | null>(null);
 
   const toggleService = (svcId: string) => {
     setSelectedServices((prev) =>
@@ -77,10 +77,10 @@ export const GroomingRecordForm: React.FC<GroomingRecordFormProps> = ({
       });
 
       toast.success('Grooming record saved to pet health passport');
-      setCompletedRecord(record);
+      setCompletedRecord(record as unknown as Record<string, unknown>);
       if (onSuccess) onSuccess();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to save grooming record');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to save grooming record');
     } finally {
       setSubmitting(false);
     }
@@ -200,7 +200,7 @@ export const GroomingRecordForm: React.FC<GroomingRecordFormProps> = ({
               <Checkbox
                 id="healthEsc"
                 checked={hasHealthIssue}
-                onCheckedChange={(checked: any) => setHasHealthIssue(!!checked)}
+                onCheckedChange={(checked) => setHasHealthIssue(!!checked)}
               />
               <label htmlFor="healthEsc" className="text-sm font-semibold text-amber-800 cursor-pointer flex items-center gap-1">
                 <AlertTriangle className="h-4 w-4 text-amber-500" /> Record Non-Diagnostic Health Observation

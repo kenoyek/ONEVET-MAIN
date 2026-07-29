@@ -109,7 +109,7 @@ export default function ConsultationChat() {
         tag: `consultation-${id}`,
       });
     }
-  }, [messages.length]);
+  }, [messages, profile?.id, isVet, sendNotification, id]);
 
   const handleAcceptConsultation = async () => {
     if (!consultation || !profile?.id) return;

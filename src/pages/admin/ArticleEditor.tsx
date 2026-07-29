@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -81,13 +81,7 @@ export default function ArticleEditor() {
     },
   });
 
-  useEffect(() => {
-    if (id) {
-      fetchArticle();
-    }
-  }, [id]);
-
-  const fetchArticle = async () => {
+  const fetchArticle = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('articles')
@@ -114,7 +108,14 @@ export default function ArticleEditor() {
     } finally {
       setIsFetching(false);
     }
-  };
+  }, [id, form, navigate]);
+
+  useEffect(() => {
+    if (id) {
+      fetchArticle();
+    }
+  }, [id, fetchArticle]);
+
 
   const generateSlug = (title: string) => {
     return title
@@ -161,9 +162,10 @@ export default function ArticleEditor() {
       }
 
       navigate('/admin/articles');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving article:', error);
-      if (error.code === '23505') {
+      const err = error as { code?: string; message?: string };
+      if (err.code === '23505') {
         toast.error('An article with this slug already exists');
       } else {
         toast.error('Failed to save article');

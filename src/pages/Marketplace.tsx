@@ -64,7 +64,7 @@ const Marketplace = () => {
     item.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddToCart = (e: React.MouseEvent, listing: any) => {
+  const handleAddToCart = (e: React.MouseEvent, listing: { id: string; title: string; price: number; image_url?: string | null; stock_quantity: number; seller_id?: string }) => {
     e.preventDefault();
     e.stopPropagation();
 

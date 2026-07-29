@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,8 +12,35 @@ import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/integrations/supabase/client';
 import { bookingService } from '@/lib/services/booking-service';
 import { toast } from 'sonner';
-import { Calendar as CalendarIcon, Clock, PawPrint, CheckCircle2, ShieldCheck, ArrowLeft, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+
+interface ServiceRecord {
+  id: string;
+  provider_id: string;
+  location_id?: string | null;
+  name: string;
+  description?: string | null;
+  category: string;
+  delivery_mode: string;
+  base_price: number | string;
+  currency: string;
+  duration_minutes: number;
+  organization?: {
+    name?: string | null;
+    address?: string | null;
+    city?: string | null;
+  } | null;
+  location?: {
+    address?: string | null;
+  } | null;
+}
+
+interface PetRecordItem {
+  id: string;
+  name: string;
+  species: string;
+  avatar_url?: string | null;
+}
 
 export default function NewBooking() {
   const [searchParams] = useSearchParams();
@@ -21,8 +48,8 @@ export default function NewBooking() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  const [service, setService] = useState<any | null>(null);
-  const [pets, setPets] = useState<any[]>([]);
+  const [service, setService] = useState<ServiceRecord | null>(null);
+  const [pets, setPets] = useState<PetRecordItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,12 +76,13 @@ export default function NewBooking() {
         ]);
 
         if (sErr) throw sErr;
-        setService(serviceData);
-        setPets(petsData || []);
+        if (pErr) throw pErr;
+        setService(serviceData as unknown as ServiceRecord);
+        setPets((petsData || []) as PetRecordItem[]);
         if (petsData && petsData.length > 0) {
           setSelectedPetId(petsData[0].id);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Failed to load booking service details:', err);
         toast.error('Failed to load service details');
       } finally {
@@ -83,7 +111,7 @@ export default function NewBooking() {
 
     setSubmitting(true);
     try {
-      const booking = await bookingService.createBooking({
+      await bookingService.createBooking({
         client_id: profile.id,
         user_id: user.id,
         pet_id: selectedPetId || undefined,
@@ -98,9 +126,9 @@ export default function NewBooking() {
 
       toast.success('Appointment booked successfully!');
       navigate(`/consultations`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Booking creation error:', err);
-      toast.error(err.message || 'Failed to complete booking');
+      toast.error((err as Error).message || 'Failed to complete booking');
     } finally {
       setSubmitting(false);
     }

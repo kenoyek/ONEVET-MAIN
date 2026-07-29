@@ -111,7 +111,7 @@ export const bookingService = {
         tax_amount: pricing.taxAmount,
         total_amount: pricing.totalAmount,
         currency: service.currency || 'NGN',
-        status: initialStatus as any,
+        status: initialStatus,
         payment_status: 'pending',
       })
       .select()
@@ -200,7 +200,7 @@ export const bookingService = {
 
     const { data: updated, error } = await supabase
       .from('bookings')
-      .update({ status: newStatus as any, updated_at: new Date().toISOString() })
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', bookingId)
       .select()
       .single();

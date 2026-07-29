@@ -1,7 +1,7 @@
 export interface OfflineAction {
   id: string;
   type: string; // e.g. LOG_WEIGHT, LOG_FLOCK_HEALTH, LOG_GROOMING
-  payload: any;
+  payload: unknown;
   queued_at: string;
 }
 
@@ -24,7 +24,7 @@ export const offlineSyncService = {
   /**
    * Queue an action when offline
    */
-  queueAction(type: string, payload: any) {
+  queueAction(type: string, payload: unknown) {
     const queue = this.getQueue();
     const action: OfflineAction = {
       id: `off-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,

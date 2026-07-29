@@ -13,7 +13,7 @@ import { ProviderType } from '@/types/platform';
 import { toast } from 'sonner';
 import { Building2, Stethoscope, Scissors, TestTube, Pill, Store, GraduationCap, Truck, CheckCircle2 } from 'lucide-react';
 
-const PROVIDER_TYPES: { type: ProviderType; label: string; description: string; icon: any }[] = [
+const PROVIDER_TYPES: { type: ProviderType; label: string; description: string; icon: React.ComponentType<{ className?: string }> }[] = [
   {
     type: 'veterinary_clinic',
     label: 'Veterinary Clinic',
@@ -125,9 +125,9 @@ export default function ProviderOnboarding() {
       const result = await providerService.createOrganization(formData, user.id);
       toast.success('Provider organization registered successfully!');
       navigate(`/provider/organization/${result.organization.slug}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Organization registration failed:', err);
-      toast.error(err.message || 'Failed to register provider organization');
+      toast.error((err as Error).message || 'Failed to register provider organization');
     } finally {
       setLoading(false);
     }

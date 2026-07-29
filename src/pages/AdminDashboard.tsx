@@ -113,9 +113,9 @@ const AdminDashboard = () => {
       });
 
       setPendingVets(pendingVetsData || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching admin dashboard data:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError((err as Error).message || 'An unexpected error occurred');
       toast.error('Failed to load dashboard data');
     } finally {
       setIsLoading(false);
@@ -169,9 +169,9 @@ const AdminDashboard = () => {
 
       toast.success(approve ? 'Vendor approved!' : 'Vendor rejected');
       fetchDashboardData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error verifying vendor:', error);
-      toast.error(error.message || 'Failed to update verification status');
+      toast.error((error as Error).message || 'Failed to update verification status');
     }
   };
 

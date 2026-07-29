@@ -54,19 +54,14 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (profile?.id) {
-      fetchData();
-    }
-  }, [profile?.id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!profile?.id) return;
     try {
       // Fetch pets
       const { data: petsData, error: petsError } = await supabase
         .from('pets')
         .select('id, name, species, breed, avatar_url')
-        .eq('owner_id', profile!.id)
+        .eq('owner_id', profile.id)
         .limit(4);
 
       if (petsError) throw petsError;
@@ -75,34 +70,39 @@ const Dashboard = () => {
       // Fetch recent consultations
       const { data: consultationsData, error: consultationsError } = await supabase
         .from('consultations')
-        .select('id, status, chief_complaint, created_at, veterinarian_id')
-        .eq('pet_owner_id', profile!.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (consultationsError) throw consultationsError;
-      setConsultations(consultationsData || []);
-
-      // Fetch subscription
-      const { data: subData, error: subError } = await supabase
-        .from('subscriptions')
-        .select('id, status, expires_at, plan:subscription_plans(name)')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-
-      if (subError) throw subError;
-      setSubscription(subData as unknown as Subscription);
-
-      // Fetch recent orders
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('id, total_amount, status, created_at')
-        .eq('customer_id', profile!.id)
+        .select('id, status, chief_complaint, created_at')
+        .eq('pet_owner_id', profile.id)
         .order('created_at', { ascending: false })
         .limit(3);
 
-      if (!ordersError) {
-        setOrders(ordersData || []);
+      if (consultationsError) throw consultationsError;
+      setConsultations(consultationsData as unknown as Consultation[]);
+
+      // Fetch active subscription
+      const { data: subData } = await supabase
+        .from('user_subscriptions')
+        .select(`
+          status, expires_at,
+          plan:subscription_plans(name, price)
+        `)
+        .eq('user_id', profile.user_id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (subData) {
+        setSubscription(subData as unknown as Subscription);
+      }
+
+      // Fetch recent marketplace orders
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('id, order_number, total_amount, status, created_at')
+        .eq('user_id', profile.user_id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (ordersData) {
+        setOrders(ordersData as unknown as Order[]);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -110,7 +110,13 @@ const Dashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profile?.id, profile?.user_id]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchData();
+    }
+  }, [profile?.id, fetchData]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

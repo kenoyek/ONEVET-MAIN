@@ -61,7 +61,7 @@ const VetClinics = () => {
                   className="pl-10"
                 />
               </div>
-              <Select value={sortBy || ''} onValueChange={v => setSortBy(v as any || undefined)}>
+              <Select value={sortBy || ''} onValueChange={v => setSortBy((v as 'price_asc' | 'price_desc' | 'rating') || undefined)}>
                 <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>

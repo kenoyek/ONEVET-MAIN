@@ -28,6 +28,31 @@ export interface CreateServiceInput {
   requires_pet_profile?: boolean;
 }
 
+export interface MarketplaceServiceItem {
+  id: string;
+  name: string;
+  category: string;
+  description?: string | null;
+  base_price: number;
+  currency: string;
+  delivery_mode: string;
+  is_emergency_service?: boolean;
+  is_active?: boolean;
+  organization?: {
+    id: string;
+    name: string;
+    status: string;
+    city?: string | null;
+    [key: string]: unknown;
+  } | null;
+  location?: {
+    id: string;
+    city?: string | null;
+    [key: string]: unknown;
+  } | null;
+  [key: string]: unknown;
+}
+
 export const marketplaceService = {
   /**
    * Search published services & approved providers across the marketplace
@@ -66,16 +91,16 @@ export const marketplaceService = {
     if (error) throw error;
 
     // Filter by provider status and search query if provided
-    let results = (data || []).filter(
-      (item: any) => item.organization && item.organization.status === 'active'
+    let results = (data || []).map((item) => item as unknown as MarketplaceServiceItem).filter(
+      (item) => item.organization && item.organization.status === 'active'
     );
 
     if (filter.query) {
       const q = filter.query.toLowerCase();
       results = results.filter(
-        (item: any) =>
+        (item) =>
           item.name.toLowerCase().includes(q) ||
-          item.organization.name.toLowerCase().includes(q) ||
+          (item.organization?.name && item.organization.name.toLowerCase().includes(q)) ||
           (item.description && item.description.toLowerCase().includes(q))
       );
     }
@@ -83,9 +108,9 @@ export const marketplaceService = {
     if (filter.city) {
       const cityQ = filter.city.toLowerCase();
       results = results.filter(
-        (item: any) =>
-          (item.location && item.location.city.toLowerCase().includes(cityQ)) ||
-          (item.organization.city && item.organization.city.toLowerCase().includes(cityQ))
+        (item) =>
+          (item.location?.city && item.location.city.toLowerCase().includes(cityQ)) ||
+          (item.organization?.city && item.organization.city.toLowerCase().includes(cityQ))
       );
     }
 

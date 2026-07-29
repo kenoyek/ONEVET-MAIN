@@ -28,9 +28,9 @@ const PetDetail = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   
-  const [pet, setPet] = useState<any | null>(null);
-  const [passportData, setPassportData] = useState<any | null>(null);
-  const [consultations, setConsultations] = useState<any[]>([]);
+  const [pet, setPet] = useState<Record<string, unknown> | null>(null);
+  const [passportData, setPassportData] = useState<Record<string, unknown> | null>(null);
+  const [consultations, setConsultations] = useState<Record<string, unknown>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,7 +97,7 @@ const PetDetail = () => {
         .from('pets')
         .update({
           name: values.name,
-          species: values.species as any,
+          species: values.species as string,
           breed: values.breed || null,
           date_of_birth: values.dateOfBirth || null,
           weight: values.weight || null,
@@ -175,8 +175,8 @@ const PetDetail = () => {
       setAdminDate('');
       setNextDueDate('');
       fetchPetAndPassport();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to record vaccination');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to record vaccination');
     }
   };
 
@@ -194,8 +194,8 @@ const PetDetail = () => {
       setWeightOpen(false);
       setWeightInput('');
       fetchPetAndPassport();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to log weight');
+    } catch (err: unknown) {
+      toast.error((err as Error).message || 'Failed to log weight');
     }
   };
 
@@ -450,7 +450,7 @@ const PetDetail = () => {
                     <CardContent>
                       {passportData?.vaccinations?.length > 0 ? (
                         <div className="space-y-3">
-                          {passportData.vaccinations.map((vac: any) => (
+                          {passportData.vaccinations.map((vac: { id: string; vaccine_name: string; administered_date: string; next_due_date?: string }) => (
                             <div key={vac.id} className="p-3 border rounded-lg flex justify-between items-center">
                               <div>
                                 <p className="font-semibold text-sm">{vac.vaccine_name}</p>
@@ -513,7 +513,7 @@ const PetDetail = () => {
                     <CardContent>
                       {passportData?.weightRecords?.length > 0 ? (
                         <div className="space-y-3">
-                          {passportData.weightRecords.map((w: any) => (
+                          {passportData.weightRecords.map((w: { id: string; weight: number; unit?: string; recorded_at: string }) => (
                             <div key={w.id} className="p-3 border rounded-lg flex justify-between items-center">
                               <div>
                                 <p className="font-bold text-base">{w.weight} {w.unit || 'kg'}</p>

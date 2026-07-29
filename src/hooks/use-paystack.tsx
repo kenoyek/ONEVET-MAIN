@@ -1,16 +1,37 @@
 import { useCallback } from 'react';
-import { toast } from 'sonner';
+
+export interface PaystackResponse {
+  reference: string;
+  status?: string;
+  trans?: string;
+  transaction?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export interface PaystackPopHandler {
+  setup: (options: {
+    key: string;
+    email: string;
+    amount: number;
+    currency?: string;
+    ref?: string;
+    metadata?: Record<string, unknown>;
+    callback: (response: PaystackResponse) => void;
+    onClose: () => void;
+  }) => { openIframe: () => void };
+}
 
 declare global {
   interface Window {
-    PaystackPop: any;
+    PaystackPop: PaystackPopHandler;
   }
 }
 
 interface PaystackProps {
   email: string;
   amount: number;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   onSuccess: (reference: string) => void;
   onClose: () => void;
 }
@@ -31,7 +52,7 @@ export const usePaystack = () => {
       currency: 'NGN',
       ref: `OV-${Math.floor(Math.random() * 1000000000 + 1)}`,
       metadata: metadata,
-      callback: function(response: any) {
+      callback: function(response: PaystackResponse) {
         onSuccess(response.reference);
       },
       onClose: function() {

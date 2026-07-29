@@ -55,14 +55,8 @@ const VetDashboard = () => {
     setIsAvailable(profile?.is_available || false);
   }, [profile?.is_available]);
 
-  useEffect(() => {
-    if (profile?.id) {
-      fetchData();
-      subscribeToConsultations();
-    }
-  }, [profile?.id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!profile?.id) return;
     try {
       // Fetch pending consultation requests (unassigned)
       const { data: pendingData, error: pendingError } = await supabase
@@ -88,7 +82,7 @@ const VetDashboard = () => {
           pet_owner:profiles!consultations_pet_owner_id_fkey(first_name, last_name),
           pet:pets(name, species)
         `)
-        .eq('veterinarian_id', profile!.id)
+        .eq('veterinarian_id', profile.id)
         .in('status', ['accepted', 'in_progress'])
         .order('created_at', { ascending: false })
         .limit(10);
@@ -103,19 +97,19 @@ const VetDashboard = () => {
       const { count: totalCount } = await supabase
         .from('consultations')
         .select('*', { count: 'exact', head: true })
-        .eq('veterinarian_id', profile!.id);
+        .eq('veterinarian_id', profile.id);
 
       const { count: todayCount } = await supabase
         .from('consultations')
         .select('*', { count: 'exact', head: true })
-        .eq('veterinarian_id', profile!.id)
+        .eq('veterinarian_id', profile.id)
         .eq('status', 'completed')
         .gte('completed_at', today.toISOString());
 
       const { data: reviewsData } = await supabase
         .from('reviews')
         .select('rating')
-        .eq('reviewed_id', profile!.id);
+        .eq('reviewed_id', profile.id);
 
       const avgRating = reviewsData && reviewsData.length > 0
         ? reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length
@@ -133,9 +127,9 @@ const VetDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profile?.id]);
 
-  const subscribeToConsultations = () => {
+  const subscribeToConsultations = useCallback(() => {
     const channel = supabase
       .channel('vet-consultations')
       .on(
@@ -154,7 +148,17 @@ const VetDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  };
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      fetchData();
+      const unsubscribe = subscribeToConsultations();
+      return () => {
+        unsubscribe();
+      };
+    }
+  }, [profile?.id, fetchData, subscribeToConsultations]);
 
   const toggleAvailability = async () => {
     setIsTogglingAvailability(true);

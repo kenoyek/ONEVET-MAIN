@@ -166,7 +166,7 @@ export const pharmacyService = {
       order.pet_id,
       'prescription',
       `Prescription Dispensed (#${order.order_number})`,
-      `Medications dispensed: ${order.items.map((i: any) => `${i.medication_name} (x${i.quantity})`).join(', ')}. Batch: ${input.batch_number || 'N/A'}`,
+      `Medications dispensed: ${order.items.map((i: { medication_name: string; quantity: number }) => `${i.medication_name} (x${i.quantity})`).join(', ')}. Batch: ${input.batch_number || 'N/A'}`,
       input.user_id,
       dispense.id
     );

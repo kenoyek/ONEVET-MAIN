@@ -189,7 +189,7 @@ export default function AdminSubscriptions() {
     const matchesSearch = searchQuery === '' || 
       sub.profile?.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.profile?.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (sub.profile as any)?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      sub.profile?.email?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
 
@@ -293,7 +293,7 @@ export default function AdminSubscriptions() {
                                   {sub.profile?.first_name} {sub.profile?.last_name}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
-                                  {(sub.profile as any)?.email}
+                                  {sub.profile?.email}
                                 </p>
                               </div>
                             </TableCell>
