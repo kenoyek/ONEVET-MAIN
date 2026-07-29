@@ -14,7 +14,7 @@ interface EnvConfig {
 
 function validateEnv(): EnvConfig {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
   const paystackPublicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '';
   const appUrl = import.meta.env.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
@@ -28,7 +28,7 @@ function validateEnv(): EnvConfig {
   }
 
   if (!supabaseAnonKey || supabaseAnonKey === 'your_supabase_anon_key') {
-    missing.push('VITE_SUPABASE_ANON_KEY');
+    missing.push('VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY');
   }
 
   if (missing.length > 0) {
