@@ -640,7 +640,8 @@ CREATE POLICY "Admins can manage all roles" ON public.user_roles FOR ALL USING (
 GRANT SELECT ON public.public_profiles TO anon, authenticated;
 CREATE POLICY "Users can view their own profile or admins can view all" ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = user_id OR public.has_role(auth.uid(), 'admin'));
 CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own profile or admins can update all" ON public.profiles FOR UPDATE USING (auth.uid() = user_id OR public.has_role(auth.uid(), 'admin'));
+CREATE POLICY "Admins can delete profiles" ON public.profiles FOR DELETE USING (public.has_role(auth.uid(), 'admin'));
 
 -- Policies for pets
 CREATE POLICY "Owners and Vets can view pets" ON public.pets FOR SELECT USING (owner_id = public.get_profile_id(auth.uid()) OR public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'veterinarian'));

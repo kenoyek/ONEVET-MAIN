@@ -121,18 +121,23 @@ export default function AdminUsers() {
 
     try {
       const newStatus = !toggleStatusUserId.is_active;
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({ is_active: newStatus })
-        .eq('id', toggleStatusUserId.id);
+        .eq('id', toggleStatusUserId.id)
+        .select();
 
       if (error) throw error;
 
+      if (!data || data.length === 0) {
+        throw new Error('Failed to update user status. Permission denied or profile not found.');
+      }
+
       toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error toggling user status:', error);
-      toast.error('Failed to update user status');
+      toast.error(error.message || 'Failed to update user status');
     } finally {
       setToggleStatusUserId(null);
     }
@@ -145,18 +150,23 @@ export default function AdminUsers() {
       // Note: In production, you might want to delete from auth.users too,
       // but that requires an edge function or service role.
       // For now, we'll just delete the profile and roles.
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', deleteUserId);
+        .eq('id', deleteUserId)
+        .select();
 
       if (error) throw error;
 
+      if (!data || data.length === 0) {
+        throw new Error('Failed to delete user. Permission denied or profile not found.');
+      }
+
       toast.success('User deleted successfully');
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
-      toast.error('Failed to delete user');
+      toast.error(error.message || 'Failed to delete user');
     } finally {
       setDeleteUserId(null);
     }

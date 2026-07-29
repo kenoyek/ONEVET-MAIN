@@ -124,15 +124,20 @@ const AdminDashboard = () => {
 
   const verifyVet = async (vetId: string, approve: boolean) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update({
           verification_status: approve ? 'approved' : 'rejected',
           license_verified: approve
         })
-        .eq('id', vetId);
+        .eq('id', vetId)
+        .select();
 
       if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error('Failed to update verification status. Database RLS permission denied or profile not found.');
+      }
 
       // Log the action
       await supabase.from('audit_logs').insert({
@@ -145,9 +150,9 @@ const AdminDashboard = () => {
 
       toast.success(approve ? 'Vendor approved!' : 'Vendor rejected');
       fetchDashboardData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error verifying vendor:', error);
-      toast.error('Failed to update verification status');
+      toast.error(error.message || 'Failed to update verification status');
     }
   };
 
