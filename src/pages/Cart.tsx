@@ -1,0 +1,178 @@
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/use-cart";
+import { Link } from "react-router-dom";
+import {
+  Trash2,
+  Minus,
+  Plus,
+  ArrowLeft,
+  ShoppingCart,
+  ArrowRight,
+  ShieldCheck
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+const Cart = () => {
+  const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-background bg-mesh-gradient">
+        <Navbar />
+        <main className="pt-40 pb-16">
+          <div className="container-tight text-center">
+            <div className="w-32 h-32 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-soft animate-float">
+              <ShoppingCart className="w-12 h-12 text-primary" />
+            </div>
+            <h1 className="text-4xl font-black mb-4 tracking-tighter">Your cart is empty</h1>
+            <p className="text-muted-foreground mb-10 text-lg font-medium">
+              Explore our marketplace for premium veterinary supplies and pet products.
+            </p>
+            <Button size="xl" className="rounded-full font-black px-10 shadow-glow" asChild>
+              <Link to="/marketplace">
+                <ArrowLeft className="mr-3 w-5 h-5" />
+                Go to Marketplace
+              </Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background bg-mesh-gradient">
+      <Navbar />
+      <main className="pt-28 md:pt-32 pb-20">
+        <div className="container-wide">
+          <div className="flex items-center gap-2 mb-10">
+            <Button variant="ghost" size="sm" className="rounded-full font-bold hover:bg-primary/5 group" asChild>
+              <Link to="/marketplace">
+                <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
+                Continue Shopping
+              </Link>
+            </Button>
+          </div>
+
+          <h1 className="text-4xl font-black mb-10 tracking-tighter">Shopping Cart <span className="text-primary/40 ml-2">({totalItems})</span></h1>
+
+          <div className="grid lg:grid-cols-3 gap-12">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 space-y-6">
+              {items.map((item) => (
+                <Card key={item.id} className="overflow-hidden glass-card rounded-[2rem] group hover:shadow-elevated transition-all duration-500">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row gap-6">
+                      <div className="w-full sm:w-32 h-32 rounded-2xl overflow-hidden bg-muted flex-shrink-0 shadow-soft">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      </div>
+                      <div className="flex-grow flex flex-col justify-between">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="font-black text-xl tracking-tight mb-1">{item.title}</h3>
+                            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                              <ShieldCheck className="w-3.5 h-3.5 text-success" />
+                              Verified Seller
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full h-10 w-10 transition-colors"
+                            onClick={() => removeItem(item.id)}
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap justify-between items-end gap-4 pt-4 border-t border-border/40">
+                          <div className="flex items-center bg-muted/50 rounded-full p-1 border border-border/40 shadow-inner">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </Button>
+                            <span className="w-12 text-center text-sm font-black">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          <div className="text-2xl font-black text-primary tracking-tighter">
+                            ₦{(item.price * item.quantity).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-28 glass-card rounded-[2.5rem] p-4 sm:p-6 overflow-hidden border-primary/20 bg-primary/[0.02]">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <CardContent className="p-4 relative z-10">
+                  <h2 className="text-2xl font-black mb-8 tracking-tight">Order Summary</h2>
+                  <div className="space-y-4 mb-8">
+                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                      <span>Subtotal</span>
+                      <span className="text-foreground">₦{totalPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                      <span>Shipping</span>
+                      <span className="text-success">Complimentary</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
+                      <span>Service Fee</span>
+                      <span className="text-foreground">₦0.00</span>
+                    </div>
+                    <Separator className="bg-border/60" />
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="text-lg font-black tracking-tight uppercase tracking-widest">Total</span>
+                      <span className="text-3xl font-black text-primary tracking-tighter">₦{totalPrice.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <Button className="w-full h-16 text-lg font-black gap-3 rounded-full shadow-glow hover:scale-[1.02] transition-all" asChild>
+                    <Link to="/checkout">
+                      Confirm & Checkout
+                      <ArrowRight className="w-6 h-6" />
+                    </Link>
+                  </Button>
+
+                  <div className="mt-8 space-y-4">
+                    <div className="flex items-start gap-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-relaxed p-4 rounded-2xl bg-background/50 border border-border/40">
+                      <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                      Secure high-encryption transaction powered by Paystack.
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default Cart;
