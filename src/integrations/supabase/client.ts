@@ -4,8 +4,10 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY ||
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) as string;
-const effectiveSupabaseUrl = SUPABASE_URL || 'https://placeholder.supabase.co';
-const effectiveSupabaseKey = SUPABASE_ANON_KEY || 'sb_publishable_placeholder';
+const FALLBACK_SUPABASE_URL = 'https://fxvctkfhitpgfyaztqor.supabase.co';
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_faCoot0rMDedxYC163rpFQ_lRRJesg5';
+const effectiveSupabaseUrl = SUPABASE_URL || FALLBACK_SUPABASE_URL;
+const effectiveSupabaseKey = SUPABASE_ANON_KEY || FALLBACK_SUPABASE_PUBLISHABLE_KEY;
 
 // --- Startup validation ---
 // The anon key MUST be a full JWT (starts with "eyJ") or a valid new-format
@@ -13,9 +15,9 @@ const effectiveSupabaseKey = SUPABASE_ANON_KEY || 'sb_publishable_placeholder';
 // supabase-js v2.46+. However a blank value or a short placeholder will cause
 // every API call to return 401 silently, making it look like no user is logged in.
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error(
+  console.warn(
     '[Supabase] VITE_SUPABASE_URL and either VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY must be set. ' +
-    'Authentication will not work.'
+    'Using bundled public Supabase fallback config.'
   );
 }
 

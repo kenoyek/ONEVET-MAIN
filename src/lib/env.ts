@@ -13,8 +13,8 @@ interface EnvConfig {
 }
 
 function validateEnv(): EnvConfig {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://fxvctkfhitpgfyaztqor.supabase.co';
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_faCoot0rMDedxYC163rpFQ_lRRJesg5';
   const paystackPublicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '';
   const appUrl = import.meta.env.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
@@ -32,12 +32,7 @@ function validateEnv(): EnvConfig {
   }
 
   if (missing.length > 0) {
-    const errorMsg = `[1vet Env Validation Error] Missing or unconfigured environment variables: ${missing.join(', ')}. Please configure .env file.`;
-    if (isProd) {
-      console.error(errorMsg);
-    } else {
-      console.warn(errorMsg);
-    }
+    console.warn(`[1vet Env Validation Warning] Missing or unconfigured environment variables: ${missing.join(', ')}. Using bundled public fallback config.`);
   }
 
   if (!paystackPublicKey || paystackPublicKey === 'your_paystack_public_key') {
