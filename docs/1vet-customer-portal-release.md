@@ -47,7 +47,7 @@ The runner creates a temporary PostgreSQL container with no network or published
 The farm portal is **off by default**. `VITE_FEATURE_CUSTOMER_FARMS_ENABLED=false` is documented in `.env.example`.
 
 1. Back up the target database and inspect existing farm policies, helpers, grants, row counts, and schema compatibility. Review the narrower vet/admin access and deletion behavior with operations.
-2. Rehearse the migration on a disposable Supabase project restored from reviewed migrations. Test through PostgREST with two real test customers, assigned/unassigned vets and an admin. The local PostgreSQL fixture does not replace this gate.
+2. The user has selected the main Supabase project as the remote target; no staging project is required. Run the local PostgreSQL tests, then inspect the main schema, policies, helper definitions and migration history read-only. Validate deployed PostgREST permissions with designated test identities and synthetic records only. Local policy tests alone do not establish main-project compatibility; resolve differences before applying the migration.
 3. Apply the reviewed migration using the normal controlled deployment process. Do not drop unknown policies blindly; the migration deliberately stops for their review. Review historical invalid rows before separately validating the `NOT VALID` constraints.
 4. Only then set `VITE_FEATURE_CUSTOMER_FARMS_ENABLED=true` and rebuild/deploy the frontend. Production builds ignore localStorage attempts to override this gate. The gate is a rollout control, not an authorization boundary; RLS is mandatory.
 5. Smoke-test owner creation, cross-owner denial, failed requests and WAT display on that target before promoting the release.
