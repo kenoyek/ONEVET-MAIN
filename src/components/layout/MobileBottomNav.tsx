@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  Home, Briefcase, ShoppingBag, Tag, MoreHorizontal, GraduationCap, Info, Phone, 
+  Stethoscope, Home, Briefcase, ShoppingBag, Tag, MoreHorizontal, GraduationCap, Info, Phone,
   LayoutDashboard, User, MessageCircle, LogOut, LogIn, UserPlus,
   Calendar, Package, Settings, HelpCircle, PhoneCall
 } from 'lucide-react';
@@ -14,7 +14,7 @@ import { NotificationBadge } from '@/components/shared/NotificationBadge';
 const primaryTabs = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/services', label: 'Services', icon: Briefcase },
-  { href: '/marketplace', label: 'Market', icon: ShoppingBag },
+  { href: '/find-a-vet', label: 'Find a vet', icon: Stethoscope },
   { href: '/pricing', label: 'Pricing', icon: Tag },
 ];
 
@@ -54,7 +54,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden glass-strong border-t border-border pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="Quick navigation" className="fixed bottom-0 left-0 right-0 z-50 md:hidden glass-strong border-t border-border pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-around h-16">
           {primaryTabs.map((tab) => {
             const active = isActive(tab.href);

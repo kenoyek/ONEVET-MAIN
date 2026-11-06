@@ -25,7 +25,7 @@ export interface BookingPricing {
 
 export const bookingService = {
   /**
-   * Calculate pricing server-side
+   * Calculate a client-side pricing estimate; final pricing must be enforced by the server
    */
   calculatePricing(basePrice: number, travelFee = 0, platformFeeRate = 0.05, taxRate = 0.075): BookingPricing {
     const subtotal = Math.max(0, basePrice);
@@ -55,8 +55,7 @@ export const bookingService = {
     });
 
     if (error) {
-      console.warn('[BookingService] Slot availability check notice:', error.message);
-      return true; // Fallback to client validation
+      throw new Error('We could not confirm this appointment slot. Please try again before booking.');
     }
     return !!data;
   },

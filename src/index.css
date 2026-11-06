@@ -10,8 +10,8 @@
 @layer base {
   :root {
     /* Core Brand Colors */
-    --background: 150 20% 99%;
-    --foreground: 170 30% 12%;
+    --background: 80 27% 98%;
+    --foreground: 160 21% 11%;
 
     --card: 0 0% 100%;
     --card-foreground: 170 30% 12%;
@@ -20,27 +20,27 @@
     --popover-foreground: 170 30% 12%;
 
     /* Primary: Deep Teal - Trust & Health */
-    --primary: 168 65% 28%;
+    --primary: 166 54% 15%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary: Warm Coral - Energy & Warmth */
-    --secondary: 16 85% 60%;
+    --secondary: 161 63% 30%;
     --secondary-foreground: 0 0% 100%;
 
     /* Muted: Soft sage backgrounds */
     --muted: 150 15% 95%;
-    --muted-foreground: 170 15% 40%;
+    --muted-foreground: 145 8% 38%;
 
     /* Accent: Amber for CTAs */
-    --accent: 35 92% 55%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 150 55% 91%;
+    --accent-foreground: 166 54% 15%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 150 15% 88%;
     --input: 150 15% 88%;
-    --ring: 168 65% 28%;
+    --ring: 166 54% 15%;
 
     --radius: 0.75rem;
 
@@ -83,10 +83,10 @@
     --popover: 170 22% 12%;
     --popover-foreground: 150 15% 95%;
 
-    --primary: 168 55% 45%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 154 52% 68%;
+    --primary-foreground: 166 54% 10%;
 
-    --secondary: 16 75% 55%;
+    --secondary: 161 50% 55%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 170 18% 14%;
@@ -332,5 +332,19 @@
   /* Focus ring */
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background;
+  }
+}
+
+/* Shared care surfaces, keyboard access and motion preferences. */
+@layer components {
+  .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.16em] text-primary; }
+  .care-path { @apply block rounded-2xl border bg-card p-7 md:p-10 transition-colors hover:border-primary/40; }
+}
+@layer base {
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
+  [id] { scroll-margin-top: 6rem; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   }
 }

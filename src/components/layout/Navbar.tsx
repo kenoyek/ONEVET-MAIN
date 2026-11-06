@@ -1,7 +1,8 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Stethoscope, User, LogOut, LayoutDashboard, ShoppingCart, MessageCircle,
-  ChevronDown, Calendar, Package, Settings, Sun, Moon, Laptop, HelpCircle, PhoneCall
+  Menu, ChevronDown, Calendar, Package, Settings, Sun, Moon, Laptop, HelpCircle, PhoneCall
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -18,19 +19,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/marketplace', label: 'Shop' },
+  { href: '/find-a-vet', label: 'Find a vet' },
+  { href: '/pet-care', label: 'Pet care' },
+  { href: '/farm-care', label: 'Farm & livestock' },
   { href: '/services', label: 'Services' },
-  { href: '/education', label: 'Education' },
-  { href: '/about', label: 'About' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/articles', label: 'Resources' },
 ];
 
 export function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
   const { user, profile, role, signOut, loading } = useAuth();
   const { theme, setTheme } = useTheme();
   const { totalItems } = useCart();
@@ -51,12 +53,12 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass-strong h-16 md:h-20 flex items-center transition-all duration-300">
+    <nav aria-label="Main navigation" className="fixed top-0 left-0 right-0 z-50 glass-strong h-16 md:h-20 flex items-center transition-all duration-300">
       <div className="container-wide w-full">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group shrink-0">
-            <div className="p-2 rounded-xl bg-primary text-primary-foreground transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-glow">
+            <div className="p-2 rounded-xl bg-primary text-primary-foreground transition-all duration-300  ">
               <Stethoscope className="w-5 h-5 md:w-6 md:h-6" />
             </div>
             <span className="font-display text-xl md:text-2xl font-extrabold tracking-tighter text-foreground">
@@ -65,12 +67,12 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1 bg-muted/50 p-1 rounded-full border border-border/40">
+          <div className="hidden xl:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className="px-5 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-all rounded-full hover:bg-background hover:shadow-soft"
+                className="px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-all rounded-full hover:bg-background hover:shadow-soft"
               >
                 {link.label}
               </Link>
@@ -79,8 +81,12 @@ export function Navbar() {
 
           {/* Right Section */}
           <div className="flex items-center gap-2 md:gap-3">
+            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+              <SheetTrigger asChild><Button size="icon" variant="ghost" className="xl:hidden" aria-label="Open navigation"><Menu size={22} /></Button></SheetTrigger>
+              <SheetContent className="overflow-y-auto"><SheetHeader><SheetTitle>Explore 1Vet</SheetTitle></SheetHeader><div className="flex flex-col gap-1 mt-6">{[{href:'/',label:'Home'}, ...navLinks, {href:'/pricing',label:'Pricing'}, {href:'/about',label:'About 1Vet'}, {href:'/provider/register',label:'Join as a veterinarian'}, {href:'/urgent-care',label:'Urgent care guidance'}, {href:'/contact',label:'Contact & support'}].map(link=><Link key={link.href} to={link.href} onClick={()=>setMenuOpen(false)} className="py-3 px-3 rounded-lg hover:bg-muted font-medium">{link.label}</Link>)}</div></SheetContent>
+            </Sheet>
             {/* Cart Link (Desktop) */}
-            <Link to="/cart" className="relative p-2.5 text-muted-foreground hover:text-primary transition-colors group hidden md:flex">
+            <Link to="/cart" aria-label="Shopping cart" className="relative p-2.5 text-muted-foreground hover:text-primary transition-colors group hidden md:flex">
               <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
               {totalItems > 0 && (
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-secondary text-secondary-foreground border-2 border-background animate-scale-in" variant="default">
@@ -89,7 +95,7 @@ export function Navbar() {
               )}
             </Link>
 
-            <NotificationPopover />
+            {user && <NotificationPopover />}
             <ThemeToggle />
 
             <Separator orientation="vertical" className="h-6 hidden md:block mx-1" />
@@ -102,7 +108,7 @@ export function Navbar() {
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative flex items-center gap-1.5 p-1 h-auto rounded-full border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all">
+                  <Button aria-label="Account menu" variant="ghost" className="relative flex items-center gap-1.5 p-1 h-auto rounded-full border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.first_name || 'User'} className="object-cover" />
                       <AvatarFallback className="bg-primary text-primary-foreground font-bold text-xs">
@@ -231,8 +237,8 @@ export function Navbar() {
                 <Button variant="ghost" asChild className="hidden sm:flex font-semibold hover:bg-primary/5">
                   <Link to="/auth">Sign In</Link>
                 </Button>
-                <Button variant="default" asChild className="font-bold shadow-soft px-6 rounded-full hover:scale-105 transition-transform">
-                  <Link to="/auth?mode=signup">Get Started</Link>
+                <Button variant="default" asChild className="font-semibold px-4">
+                  <Link to="/find-a-vet">Talk to a vet</Link>
                 </Button>
               </div>
             )}

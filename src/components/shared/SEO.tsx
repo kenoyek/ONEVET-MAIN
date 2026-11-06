@@ -10,12 +10,12 @@ interface SEOProps {
 
 export function SEO({
   title,
-  description = "Connect with licensed veterinarians online, 24/7. Get expert pet care advice, book services, and access Nigeria's leading vet platform.",
+  description = "Explore veterinary services for pets and livestock in Nigeria. Find providers, review care options, and manage your animal’s health journey.",
   ogType = "website",
   ogImage = "/favicon.png",
   twitterCard = "summary_large_image",
 }: SEOProps) {
-  const fullTitle = title ? `${title} | 1Vet` : "1Vet - 24/7 Online Veterinary Care";
+  const fullTitle = title ? `${title} | 1Vet` : "1Vet — Veterinary care for pets & livestock";
 
   useEffect(() => {
     document.title = fullTitle;

@@ -14,6 +14,7 @@ import { LiveChatWidget } from "./components/chat/LiveChatWidget";
 import { MobileBottomNav } from "./components/layout/MobileBottomNav";
 
 // Route-level code splitting using React.lazy()
+const CareGuide = lazy(() => import("./pages/CareGuide"));
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
@@ -36,7 +37,6 @@ const AdminArticles = lazy(() => import("./pages/admin/Articles"));
 const ArticleEditor = lazy(() => import("./pages/admin/ArticleEditor"));
 const Articles = lazy(() => import("./pages/Articles"));
 const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
-const Services = lazy(() => import("./pages/Services"));
 const Groomers = lazy(() => import("./pages/services/Groomers"));
 const PetSitting = lazy(() => import("./pages/services/PetSitting"));
 const VetClinics = lazy(() => import("./pages/services/VetClinics"));
@@ -65,6 +65,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <a href="#main-content" onClick={(event) => { const main = document.querySelector('main'); if (main) { event.preventDefault(); main.tabIndex = -1; main.focus(); main.scrollIntoView({ block: 'start' }); } }} className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-card focus:p-4 focus:rounded-lg">Skip to main content</a>
               <ErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
@@ -79,7 +80,11 @@ const App = () => (
                     <Route path="/articles" element={<Articles />} />
                     <Route path="/education" element={<Articles />} />
                     <Route path="/articles/:slug" element={<ArticleDetail />} />
-                    <Route path="/services" element={<Services />} />
+                    <Route path="/services" element={<CareGuide />} />
+                    <Route path="/pet-care" element={<CareGuide />} />
+                    <Route path="/farm-care" element={<CareGuide />} />
+                    <Route path="/urgent-care" element={<CareGuide />} />
+                    <Route path="/find-a-vet" element={<ProviderMarketplace />} />
 
                     {/* Core Portals & Dashboards */}
                     <Route path="/dashboard" element={

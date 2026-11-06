@@ -24,14 +24,7 @@ interface Plan {
   is_active: boolean | null;
 }
 
-const defaultFeatures = [
-  '24/7 access to licensed veterinarians',
-  'Unlimited text consultations',
-  'Pet health records management',
-  'Priority urgent care chat',
-  'Prescription guidance',
-  'Follow-up consultations',
-];
+const defaultFeatures = ['Confirm included services and availability before paying'];
 
 import { usePaystack } from '@/hooks/use-paystack';
 import { toast } from 'sonner';
@@ -39,7 +32,7 @@ import { toast } from 'sonner';
 const faqs = [
   {
     q: 'How does the subscription work?',
-    a: 'Choose a plan, complete your payment via Paystack, and your account will be activated instantly. You then get 24/7 access to licensed veterinarians and all premium features.',
+    a: 'Review the listed plan and confirm its inclusions before paying. Activation depends on successful payment verification; veterinary availability must be confirmed separately.',
   },
   {
     q: 'How do I make payment?',
@@ -47,7 +40,7 @@ const faqs = [
   },
   {
     q: 'Can I cancel my subscription?',
-    a: 'Yes, you can cancel at any time. Your access remains active until the end of your current billing period.',
+    a: 'Contact support to confirm the cancellation and refund terms for your plan before purchase.',
   },
   {
     q: 'What happens when my subscription expires?',
@@ -154,7 +147,7 @@ export default function Pricing() {
                 Healthcare without <span className="text-gradient-brand">boundaries.</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto font-medium">
-                Unlock 24/7 access to licensed veterinarians and premium pet care features with a flexible membership plan.
+                Review available membership plans and included services. Provider response times and consultation availability may vary.
               </p>
             </motion.div>
           </div>

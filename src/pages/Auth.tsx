@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Stethoscope, PawPrint, Briefcase, ArrowLeft, Loader2 } from 'lucide-react';
+import { getAuthReturnPath } from '@/lib/auth-navigation';
 import { useAuth } from '@/lib/auth-context';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
@@ -16,6 +17,8 @@ type SelectedRole = null | 'client' | 'provider';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnPath = getAuthReturnPath(location.state);
   const [searchParams] = useSearchParams();
   const { user, role, loading } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
@@ -44,7 +47,9 @@ const Auth = () => {
     if (!loading && user && mode !== 'reset') {
       // Use DB role if already loaded; otherwise fall back to JWT user_metadata.role
       const effectiveRole = role ?? (user.user_metadata?.role as string);
-      if (effectiveRole === 'admin') {
+      if (returnPath) {
+        navigate(returnPath, { replace: true });
+      } else if (effectiveRole === 'admin') {
         navigate('/admin');
       } else if (effectiveRole === 'veterinarian') {
         navigate('/vet-dashboard');
@@ -53,7 +58,7 @@ const Auth = () => {
         navigate('/dashboard');
       }
     }
-  }, [user, loading, role, navigate, mode]);
+  }, [user, loading, role, navigate, mode, returnPath]);
 
   if (loading) {
     return (
@@ -67,7 +72,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <main id="main-content" tabIndex={-1} className="min-h-screen flex bg-background">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-premium text-primary-foreground p-16 flex-col justify-between relative overflow-hidden">
           {/* Background patterns */}
@@ -104,31 +109,19 @@ const Auth = () => {
             </h1>
             <p className="text-xl text-primary-foreground/90 max-w-md font-medium leading-relaxed">
               {isProviderFlow
-                ? 'Join Nigeria\'s elite network of veterinary professionals. Access advanced tools and reach thousands of dedicated pet parents.'
-                : 'Connect with Nigeria\'s top licensed veterinarians instantly. Professional medical support for your animals, anytime.'}
+                ? 'Apply to join 1Vet and submit your professional details for review.'
+                : 'Explore veterinary services and keep your animal’s care connected. Provider availability varies.'}
             </p>
           </motion.div>
 
-          <div className="flex items-center gap-6 pt-10 border-t border-white/20">
-            <div className="flex -space-x-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-12 h-12 rounded-full border-4 border-primary bg-white/10 backdrop-blur-md overflow-hidden"
-                >
-                  <img src={`https://i.pravatar.cc/100?img=${i+20}`} alt="User" />
-                </div>
-              ))}
-            </div>
-            <div>
-              <div className="font-black text-lg tracking-tight leading-none mb-1">10,000+ Verified Users</div>
-              <div className="text-sm font-bold text-primary-foreground/70 uppercase tracking-widest">Trusting 1Vet Daily</div>
-            </div>
+          <div className="pt-10 border-t border-white/20">
+            <p className="font-semibold text-lg">For pet owners, farmers, and veterinary professionals.</p>
+            <p className="text-sm text-primary-foreground/80 mt-2">One place to start your animal’s care journey.</p>
           </div>
         </div>
 
         <p className="text-xs font-bold text-primary-foreground/40 uppercase tracking-[0.2em] relative z-10">
-          © 2026 1Vet Intelligence • All Systems Operational
+          © 2026 1Vet
         </p>
       </div>
 
@@ -310,7 +303,7 @@ const Auth = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

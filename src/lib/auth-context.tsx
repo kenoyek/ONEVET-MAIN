@@ -80,6 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const mounted = useRef(true);
+  const activeUserId = useRef<string | null>(null);
+  const profileGeneration = useRef(0);
   // Track whether we have resolved the initial session at least once.
   // This prevents the onAuthStateChange INITIAL_SESSION event from overriding
   // a successful getSession() result with a stale null value.
@@ -91,6 +93,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (authUser: User) => {
     if (!authUser?.id || !mounted.current) return;
 
+    const generation = ++profileGeneration.current;
+    const isCurrent = () => mounted.current && activeUserId.current === authUser.id && profileGeneration.current === generation;
     try {
       // ── Profile ───────────────────────────────────────────────────────────
       const { data: profileData, error: profileError } = await supabase
@@ -103,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('[Auth] Profile query failed (non-fatal):', profileError.message);
       }
 
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
 
       if (profileData) {
         setProfile(profileData as Profile);
@@ -133,11 +137,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .select()
           .maybeSingle();
 
-        if (mounted.current) setProfile((newProfile as Profile) ?? null);
+        if (isCurrent()) setProfile((newProfile as Profile) ?? null);
       }
 
       // ── Roles ──────────────────────────────────────────────────────────────
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
 
       const { data: rolesData, error: roleError } = await supabase
         .from('user_roles')
@@ -148,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('[Auth] Roles query failed (non-fatal):', roleError.message);
       }
 
-      if (!mounted.current) return;
+      if (!isCurrent()) return;
 
       if (rolesData && rolesData.length > 0) {
         const fetchedRoles = rolesData.map((r) => r.role as AppRole);
@@ -163,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .select()
           .maybeSingle();
 
-        if (mounted.current) {
+        if (isCurrent()) {
           const activeRole = newRole ? (newRole.role as AppRole) : requestedRole;
           setRoles([activeRole]);
           setRole(activeRole);
@@ -171,14 +175,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // Role query errored — derive from metadata so UI isn't stuck
         const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
-        if (mounted.current) {
+        if (isCurrent()) {
           setRoles([fallbackRole]);
           setRole(fallbackRole);
         }
       }
     } catch (err) {
       console.warn('[Auth] fetchProfile error (non-fatal):', err);
-      if (mounted.current) {
+      if (isCurrent()) {
         const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
         setRoles([fallbackRole]);
         setRole(fallbackRole);
@@ -209,6 +213,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        if (activeUserId.current !== (newSession?.user.id ?? null)) {
+          activeUserId.current = newSession?.user.id ?? null;
+          profileGeneration.current++;
+          queryClient.clear();
+          setProfile(null);
+          setRole(null);
+          setRoles([]);
+        }
+
         // ── Set user/session IMMEDIATELY ─────────────────────────────────────
         // This is what makes the Navbar re-render right away.
         setSession(newSession);
@@ -220,6 +233,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setProfile(null);
           setRole(null);
+          setRoles([]);
         }
 
         // Mark as no longer loading on the first event we receive
@@ -243,6 +257,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // want to overwrite a known user with a potentially delayed null result.
       if (!initialSessionResolved.current) {
         console.debug('[Auth] getSession fallback firing, INITIAL_SESSION was slow');
+        activeUserId.current = storedSession?.user.id ?? null;
         setSession(storedSession);
         setUser(storedSession?.user ?? null);
 
@@ -313,6 +328,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.warn('[Auth] signOut API call failed (non-fatal):', err);
     } finally {
       // Always clear locally regardless of API success
+      activeUserId.current = null;
+      profileGeneration.current++;
       queryClient.clear();
       setUser(null);
       setSession(null);

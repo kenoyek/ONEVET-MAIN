@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { Footer } from '@/components/layout/Footer';
+import { SEO } from '@/components/shared/SEO';
 import { Navbar } from '@/components/layout/Navbar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { SearchProvidersFilter, ServiceDeliveryMode } from '@/lib/services/marketplace-service';
+import { SearchProvidersFilter } from '@/lib/services/marketplace-service';
+import { ServiceDeliveryMode } from '@/types/platform';
 import { useProviderMarketplace } from '@/hooks/useProviderMarketplace';
 import { Search, MapPin, ShieldCheck, Video, Home, Building2, Clock, Zap, Loader2 } from 'lucide-react';
 
@@ -21,6 +24,8 @@ const CATEGORIES = [
 ];
 
 export default function ProviderMarketplace() {
+  const veterinaryOnly = useLocation().pathname === '/find-a-vet';
+  const [submittedSearch, setSubmittedSearch] = useState({query: '', city: ''});
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -29,18 +34,18 @@ export default function ProviderMarketplace() {
   const [emergencyOnly, setEmergencyOnly] = useState(false);
 
   const filter: SearchProvidersFilter = {
-    category: selectedCategory !== 'all' ? selectedCategory : undefined,
+    category: veterinaryOnly ? 'veterinary' : selectedCategory !== 'all' ? selectedCategory : undefined,
     delivery_mode: selectedDeliveryMode !== 'all' ? (selectedDeliveryMode as ServiceDeliveryMode) : undefined,
     is_emergency_service: emergencyOnly ? true : undefined,
-    query: searchQuery.trim() || undefined,
-    city: cityQuery.trim() || undefined,
+    query: submittedSearch.query || undefined,
+    city: submittedSearch.city || undefined,
   };
 
-  const { marketplaceItems: services, isLoading: loading, refetch } = useProviderMarketplace(filter);
+  const { marketplaceItems: services, isLoading: loading, isError, refetch } = useProviderMarketplace(filter);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    refetch();
+    setSubmittedSearch({query: searchQuery.trim(), city: cityQuery.trim()});
   };
 
   const getDeliveryIcon = (mode: string) => {
@@ -53,17 +58,19 @@ export default function ProviderMarketplace() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title={veterinaryOnly ? "Find a veterinarian" : "Find care services"} description="Browse veterinary and animal care services. Review provider details and fees, and confirm availability before booking." />
       <Navbar />
+      <main id="main-content" tabIndex={-1} className="pt-20">
       
       {/* Hero Banner */}
       <div className="bg-primary/5 border-b py-12 px-4">
         <div className="container max-w-6xl mx-auto text-center space-y-4">
           <Badge variant="outline" className="px-3 py-1 text-sm bg-background">
-            Multi-Provider Pet Healthcare Marketplace
+            Care for pets & livestock
           </Badge>
-          <h1 className="text-4xl font-bold tracking-tight">Find & Book Verified Pet Care Providers</h1>
+          <h1 className="text-4xl font-bold tracking-tight">{veterinaryOnly ? 'Find the right veterinary care.' : 'Find care for your animal.'}</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Connect with verified veterinary clinics, independent doctors, groomers, diagnostic labs, and trainers.
+            Explore provider services and listed fees. Confirm species expertise and availability directly with the provider.
           </p>
 
           {/* Search Bar */}
@@ -71,7 +78,8 @@ export default function ProviderMarketplace() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search services, clinics, or doctor specialties..."
+                aria-label="Search services or providers"
+                placeholder="Service or provider name"
                 className="pl-9 bg-background"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -80,7 +88,8 @@ export default function ProviderMarketplace() {
             <div className="relative sm:w-48">
               <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="City (e.g. Ikeja)"
+                aria-label="City"
+                placeholder="City (e.g. Lagos)"
                 className="pl-9 bg-background"
                 value={cityQuery}
                 onChange={(e) => setCityQuery(e.target.value)}
@@ -97,8 +106,8 @@ export default function ProviderMarketplace() {
         <div className="flex flex-wrap items-center justify-between gap-4 p-4 border rounded-xl bg-card mb-8">
           <div className="flex flex-wrap items-center gap-4">
             <div className="w-48">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
+              <Select disabled={veterinaryOnly} value={veterinaryOnly ? 'veterinary' : selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger aria-label="Service category">
                   <SelectValue placeholder="Service Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,7 +120,7 @@ export default function ProviderMarketplace() {
 
             <div className="w-48">
               <Select value={selectedDeliveryMode} onValueChange={setSelectedDeliveryMode}>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Consultation delivery mode">
                   <SelectValue placeholder="Delivery Mode" />
                 </SelectTrigger>
                 <SelectContent>
@@ -126,27 +135,29 @@ export default function ProviderMarketplace() {
             <div className="flex items-center space-x-2">
               <Switch id="emergency" checked={emergencyOnly} onCheckedChange={setEmergencyOnly} />
               <Label htmlFor="emergency" className="text-sm font-medium flex items-center gap-1 cursor-pointer">
-                <Zap className="h-4 w-4 text-amber-500" /> 24/7 Emergency Care
+                <Zap className="h-4 w-4 text-amber-500" /> Listed urgent-care services
               </Label>
             </div>
           </div>
 
           <p className="text-xs text-muted-foreground font-medium">
-            Showing {services.length} bookable services
+            {isError ? 'Service listings unavailable' : loading ? 'Loading service listings…' : `${services.length} listed services`}
           </p>
         </div>
 
         {/* Services Grid */}
-        {loading ? (
-          <div className="flex justify-center py-16">
+        {isError ? (
+          <Card role="alert" className="p-8 text-center"><h2 className="text-xl mb-3">We couldn’t load care services.</h2><p className="text-muted-foreground mb-5">Check your connection and try again. This does not mean there are no providers.</p><Button onClick={() => refetch()}>Try again</Button></Card>
+        ) : loading ? (
+          <div role="status" aria-label="Loading care services" className="flex justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : services.length === 0 ? (
           <Card className="text-center py-16">
             <CardContent className="space-y-3">
               <Search className="h-12 w-12 text-muted-foreground mx-auto" />
-              <h3 className="text-xl font-semibold">No Provider Services Found</h3>
-              <p className="text-muted-foreground">Try relaxing your search query or location filters.</p>
+              <h3 className="text-xl font-semibold">No services match your search</h3>
+              <p className="text-muted-foreground">Try another search or city. Availability must be confirmed with the provider.</p>
             </CardContent>
           </Card>
         ) : (
@@ -180,26 +191,26 @@ export default function ProviderMarketplace() {
                           to={`/provider/public/${item.organization?.slug}`}
                           className="font-semibold text-sm hover:underline"
                         >
-                          {item.organization?.name}
+                          {String(item.organization?.name ?? 'Provider')}
                         </Link>
                         {item.organization?.verification_status === 'approved' && (
-                          <ShieldCheck className="h-4 w-4 text-green-500" />
+                          <ShieldCheck aria-label="Provider verification approved" className="h-4 w-4 text-primary" />
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {item.location?.city || item.organization?.city}, {item.organization?.country}
+                        {item.location?.city || item.organization?.city}, {String(item.organization?.country ?? '')}
                       </p>
                     </div>
 
                     <Badge variant="secondary" className="capitalize text-xs">
-                      {item.organization?.provider_type?.replace(/_/g, ' ')}
+                      {String(item.organization?.provider_type ?? 'provider').replace(/_/g, ' ')}
                     </Badge>
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="h-4 w-4" />
-                      <span>{item.duration_minutes} mins</span>
+                      <span>{String(item.duration_minutes ?? '—')} mins</span>
                     </div>
 
                     <div className="text-right">
@@ -213,7 +224,7 @@ export default function ProviderMarketplace() {
 
                 <CardFooter>
                   <Link to={`/booking/new?service_id=${item.id}`} className="w-full">
-                    <Button className="w-full">Book Appointment</Button>
+                    <Button className="w-full">Request appointment</Button>
                   </Link>
                 </CardFooter>
               </Card>
@@ -221,6 +232,8 @@ export default function ProviderMarketplace() {
           </div>
         )}
       </div>
+      <div className="container-wide pb-12 text-sm text-muted-foreground"><Link to="/urgent-care" className="underline underline-offset-4">Need urgent care?</Link> Seek an in-person veterinarian if your animal is in distress. Online availability is not guaranteed.</div>
+      </main><Footer />
     </div>
   );
 }
