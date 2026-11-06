@@ -1,4 +1,7 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase as mainSupabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import type { PlannedRows } from '@/integrations/supabase/planned-types';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 
 export interface AddAllergyInput {
   pet_id: string;
@@ -43,11 +46,26 @@ export interface LogWeightInput {
   recorded_by?: string;
 }
 
+export type PetProfile = Database['public']['Tables']['pets']['Row'] & Partial<Omit<PlannedRows['pets'], keyof Database['public']['Tables']['pets']['Row']>>;
+export interface PassportRecord {
+ pet: PetProfile | null; advancedAvailable: boolean;
+ allergies: PlannedRows['pet_allergies'][]; conditions: PlannedRows['pet_conditions'][];
+ medications: PlannedRows['pet_medications'][]; vaccinations: PlannedRows['pet_vaccinations'][];
+ weightRecords: PlannedRows['pet_weight_records'][]; timeline: PlannedRows['pet_health_timeline'][];
+ caregivers: (PlannedRows['pet_caregivers'] & {user: PlannedRows['profiles'] | null})[];
+ documents: PlannedRows['pet_documents'][];
+}
+
 export const petPassportService = {
+  async getPetPassport(petId: string): Promise<PassportRecord> {
+    const {data:pet,error}=await mainSupabase.from('pets').select('*').eq('id',petId).maybeSingle();
+    if(error)throw error;
+    return {pet,advancedAvailable:false,allergies:[],conditions:[],medications:[],vaccinations:[],weightRecords:[],timeline:[],caregivers:[],documents:[]};
+  },
   /**
    * Fetch full digital medical passport for a pet
    */
-  async getPetPassport(petId: string) {
+  async getPlannedPetPassport(petId: string) {
     const [
       { data: pet },
       { data: allergies },

@@ -1,3 +1,4 @@
+import { plannedModulesAvailable } from '@/integrations/supabase/planned-client';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -99,6 +100,7 @@ export default function ConsultationChat() {
     if (messages.length === 0) return;
 
     const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) return;
     if (lastMessage.sender_id !== profile?.id) {
       const senderName = lastMessage.sender
         ? `${lastMessage.sender.first_name} ${lastMessage.sender.last_name}`
@@ -334,7 +336,7 @@ export default function ConsultationChat() {
             </div>
           )}
 
-          {isVet && profile?.id && (
+          {plannedModulesAvailable && isVet && profile?.id && (
             <div className="p-4 border-b bg-background">
               <ClinicalSOAPWorkspace
                 consultation={consultation}

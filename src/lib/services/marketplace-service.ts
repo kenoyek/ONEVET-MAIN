@@ -1,3 +1,4 @@
+import { plannedSupabase } from '@/integrations/supabase/planned-client';
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceDeliveryMode } from '@/types/platform';
 
@@ -133,7 +134,7 @@ export const marketplaceService = {
    * Create a new bookable service listing for a provider
    */
   async createService(input: CreateServiceInput) {
-    const { data, error } = await supabase
+    const { data, error } = await plannedSupabase
       .from('provider_services')
       .insert({
         provider_id: input.provider_id,
@@ -162,7 +163,7 @@ export const marketplaceService = {
    * Fetch services for a specific provider organization
    */
   async getProviderServices(providerId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await plannedSupabase
       .from('provider_services')
       .select('*, location:provider_locations(*)')
       .eq('provider_id', providerId)
@@ -176,7 +177,7 @@ export const marketplaceService = {
    * Fetch provider public profile with locations, services, and verification badge
    */
   async getPublicProviderProfile(slug: string) {
-    const { data: org, error: orgError } = await supabase
+    const { data: org, error: orgError } = await plannedSupabase
       .from('provider_organizations')
       .select(
         `

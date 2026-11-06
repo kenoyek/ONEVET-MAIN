@@ -1,3 +1,4 @@
+import { PlannedModuleGate } from '@/components/shared/PlannedModuleGate';
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -118,7 +119,7 @@ const App = () => (
                     } />
                     <Route path="/admin/verifications" element={
                       <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                        <ProviderVerificationQueue />
+                        <PlannedModuleGate><ProviderVerificationQueue /></PlannedModuleGate>
                       </ProtectedRoute>
                     } />
                     <Route path="/admin/subscriptions" element={
@@ -235,14 +236,14 @@ const App = () => (
                     } />
                     <Route path="/provider/organization/:slug" element={
                       <ProtectedRoute allowedRoles={['service_provider', 'veterinarian', 'pet_owner', 'admin', 'clinic_admin', 'groomer', 'laboratory', 'pharmacy', 'vendor', 'trainer']}>
-                        <OrganizationSettings />
+                        <PlannedModuleGate><OrganizationSettings /></PlannedModuleGate>
                       </ProtectedRoute>
                     } />
                     <Route path="/provider-marketplace" element={<ProviderMarketplace />} />
-                    <Route path="/provider/public/:slug" element={<PublicProviderProfile />} />
+                    <Route path="/provider/public/:slug" element={<PlannedModuleGate><PublicProviderProfile /></PlannedModuleGate>} />
                     <Route path="/booking/new" element={
                       <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin']}>
-                        <NewBooking />
+                        <PlannedModuleGate><NewBooking /></PlannedModuleGate>
                       </ProtectedRoute>
                     } />
 

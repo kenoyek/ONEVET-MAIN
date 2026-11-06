@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import { petPassportService } from '@/lib/services/pet-passport-service';
 
 export interface SubscribeHMOPetInput {
@@ -63,7 +63,7 @@ export const hmoService = {
     // Log to pet passport timeline
     await petPassportService.logTimelineEvent(
       input.pet_id,
-      'insurance',
+      'document_upload',
       `Pet Enrolled in HMO Plan (${sub.plan?.name || 'HMO Coverage'})`,
       `Subscription #${subRef}. Valid until ${new Date(expiresAt).toLocaleDateString()}`,
       input.user_id,

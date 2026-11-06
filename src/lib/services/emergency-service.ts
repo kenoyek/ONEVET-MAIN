@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import { petPassportService } from '@/lib/services/pet-passport-service';
 
 export interface TriageQuestionsInput {
@@ -91,7 +91,7 @@ export const emergencyService = {
     if (input.pet_id) {
       await petPassportService.logTimelineEvent(
         input.pet_id,
-        'emergency',
+        'consultation',
         `24/7 SOS Emergency Care Dispatched (#${sosRef})`,
         `Triage Priority: ${triageLevel.toUpperCase()}. Complaint: ${input.chief_complaint}. Location: ${input.location_address}`,
         input.user_id,

@@ -6,12 +6,14 @@ export interface PetRecord {
   id: string;
   name: string;
   species: string;
-  breed?: string | null;
+  breed: string | null;
   age?: number | null;
   gender?: string | null;
   weight?: number | null;
   microchip_number?: string | null;
-  avatar_url?: string | null;
+  avatar_url: string | null;
+  is_livestock: boolean | null;
+  livestock_count: number | null;
   owner_id?: string | null;
   created_at: string;
 }

@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import { petPassportService } from '@/lib/services/pet-passport-service';
 
 export interface CreateLabOrderItem {
@@ -71,7 +71,7 @@ export const labService = {
     // Log to pet passport timeline
     await petPassportService.logTimelineEvent(
       input.pet_id,
-      'lab_test',
+      'lab_result',
       `Laboratory Order Placed (#${orderNumber})`,
       `Tests: ${input.items.map((i) => i.test_name).join(', ')}. Collection: ${input.sample_collection_mode.replace('_', ' ')}`,
       input.user_id,
@@ -130,7 +130,7 @@ export const labService = {
 
       await petPassportService.logTimelineEvent(
         order.pet_id,
-        'lab_test',
+        'lab_result',
         eventTitle,
         `Findings: ${input.summary_findings}${input.is_critical ? ` [CRITICAL ALERT: ${input.critical_alert_notes}]` : ''}`,
         input.user_id,

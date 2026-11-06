@@ -23,7 +23,6 @@ export interface SOAPConsultationRecord {
   follow_up_required?: boolean | null;
   follow_up_date?: string | null;
   signed_at?: string | null;
-  [key: string]: unknown;
 }
 
 interface ClinicalSOAPWorkspaceProps {
@@ -61,7 +60,7 @@ export const ClinicalSOAPWorkspace: React.FC<ClinicalSOAPWorkspaceProps> = ({
   const [duration, setDuration] = useState('7 days');
   const [qty, setQty] = useState(1);
   const [validUntil, setValidUntil] = useState(
-    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0,10)
   );
   const [submittingRx, setSubmittingRx] = useState(false);
 
@@ -145,7 +144,7 @@ export const ClinicalSOAPWorkspace: React.FC<ClinicalSOAPWorkspaceProps> = ({
       await clinicalService.issuePrescription(
         {
           consultation_id: consultation.id,
-          pet_id: consultation.pet_id,
+          pet_id: consultation.pet_id ?? '',
           veterinarian_profile_id: vetProfileId,
           valid_until: validUntil,
           items: rxItems,

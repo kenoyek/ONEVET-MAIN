@@ -36,7 +36,7 @@ const ProductDetail = () => {
           *,
           seller:profiles!marketplace_listings_seller_id_fkey(id, first_name, last_name, business_name)
         `)
-        .eq('id', id)
+        .eq('id', id || '')
         .single();
 
       if (error) throw error;
@@ -174,9 +174,9 @@ const ProductDetail = () => {
                       <Package className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-bold text-xs uppercase tracking-wider">{product.stock_quantity > 0 ? 'In Stock' : 'Out of Stock'}</p>
+                      <p className="font-bold text-xs uppercase tracking-wider">{(product.stock_quantity ?? 0) > 0 ? 'In Stock' : 'Out of Stock'}</p>
                       <p className="text-[10px] font-bold text-muted-foreground">
-                        {product.stock_quantity > 0 ? `${product.stock_quantity} units available` : 'Check back later'}
+                        {(product.stock_quantity ?? 0) > 0 ? `${product.stock_quantity} units available` : 'Check back later'}
                       </p>
                     </div>
                   </div>
@@ -188,10 +188,10 @@ const ProductDetail = () => {
                   size="xl"
                   className="flex-grow h-16 text-lg font-black gap-3 rounded-full shadow-glow hover:scale-[1.02] transition-all"
                   onClick={handleAddToCart}
-                  disabled={product.stock_quantity <= 0}
+                  disabled={(product.stock_quantity ?? 0) <= 0}
                 >
                   <ShoppingCart className="w-6 h-6" />
-                  {product.stock_quantity > 0 ? 'Add to Cart' : 'Out of Stock'}
+                  {(product.stock_quantity ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
                 </Button>
                 <Button size="xl" variant="outline" className="h-16 w-16 p-0 rounded-full border-2 hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-all">
                   <Heart className="w-6 h-6" />

@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 
 export interface DispatchNotificationInput {
   recipient_user_id: string; // Auth User ID

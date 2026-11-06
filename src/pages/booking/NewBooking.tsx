@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
+import type { ServiceDeliveryMode } from '@/types/platform';
 import { bookingService } from '@/lib/services/booking-service';
 import { toast } from 'sonner';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -21,7 +22,7 @@ interface ServiceRecord {
   name: string;
   description?: string | null;
   category: string;
-  delivery_mode: string;
+  delivery_mode: ServiceDeliveryMode;
   base_price: number | string;
   currency: string;
   duration_minutes: number;
@@ -80,7 +81,7 @@ export default function NewBooking() {
         setService(serviceData as unknown as ServiceRecord);
         setPets((petsData || []) as PetRecordItem[]);
         if (petsData && petsData.length > 0) {
-          setSelectedPetId(petsData[0].id);
+          setSelectedPetId(petsData[0]?.id || '');
         }
       } catch (err: unknown) {
         console.error('Failed to load booking service details:', err);

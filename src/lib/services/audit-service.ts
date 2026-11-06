@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 
 export interface LogActionInput {
   actor_id?: string;
@@ -6,8 +7,8 @@ export interface LogActionInput {
   action: string; // e.g. VERIFICATION_APPROVED, PRESCRIPTION_ISSUED, ESCROW_RELEASED
   target_entity: string; // e.g. provider_organizations, prescriptions
   target_id: string;
-  old_values?: Record<string, unknown> | null;
-  new_values?: Record<string, unknown> | null;
+  old_values?: Record<string, Json | undefined> | null;
+  new_values?: Record<string, Json | undefined> | null;
 }
 
 export const auditService = {

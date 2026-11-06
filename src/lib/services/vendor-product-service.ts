@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 
 export interface CreateVendorProductInput {
   vendor_id: string; // Provider Organization ID

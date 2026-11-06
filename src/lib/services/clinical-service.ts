@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import { petPassportService } from '@/lib/services/pet-passport-service';
 
 export interface SOAPNotesInput {

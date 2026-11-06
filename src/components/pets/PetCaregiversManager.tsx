@@ -12,14 +12,14 @@ import { Users, UserPlus } from 'lucide-react';
 interface Caregiver {
   id: string;
   user_id: string;
-  relationship: string;
-  permission_level: 'view_only' | 'manage_bookings' | 'manage_health_records' | 'full_owner_access';
+  relationship: string | null;
+  permission_level: string;
   user?: {
     first_name: string | null;
     last_name: string | null;
     email: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface PetCaregiversManagerProps {
@@ -49,7 +49,7 @@ export const PetCaregiversManager: React.FC<PetCaregiversManagerProps> = ({
     setSubmitting(true);
     try {
       // In production, resolves user ID by email via RPC
-      toast.success(`Caregiver invitation sent to ${inviteEmail}`);
+      toast.error('Caregiver invitations are not deployed yet. No invitation was sent.');
       setDialogOpen(false);
       setInviteEmail('');
       onRefresh();

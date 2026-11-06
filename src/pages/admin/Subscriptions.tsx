@@ -52,11 +52,12 @@ interface Subscription {
   profile?: {
     first_name: string;
     last_name: string;
+    email: string | null;
   };
   plan?: {
     name: string;
     price: number;
-  };
+  } | null;
 }
 
 interface SubscriptionPlan {
@@ -140,7 +141,7 @@ export default function AdminSubscriptions() {
     setEditForm({
       status: subscription.status,
       plan_id: subscription.plan_id || '',
-      expires_at: subscription.expires_at ? subscription.expires_at.split('T')[0] : '',
+      expires_at: subscription.expires_at ? subscription.expires_at.slice(0,10) : '',
     });
   };
 
@@ -284,7 +285,7 @@ export default function AdminSubscriptions() {
                     </TableHeader>
                     <TableBody>
                       {filteredSubscriptions.map((sub) => {
-                        const status = statusConfig[sub.status] || statusConfig.expired;
+                        const status = statusConfig[sub.status] || {label:'Unknown',variant:'outline' as const};
                         return (
                           <TableRow key={sub.id}>
                             <TableCell>

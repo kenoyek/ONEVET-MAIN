@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { petSchema, PetValues } from '@/lib/validation';
@@ -47,7 +48,7 @@ export const PetForm = ({
   isSubmitting,
   submitLabel = 'Save Pet'
 }: PetFormProps) => {
-  const form = useForm<PetValues>({
+  const form = useForm<z.input<typeof petSchema>, unknown, PetValues>({
     resolver: zodResolver(petSchema),
     defaultValues: {
       name: '',

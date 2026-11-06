@@ -19,9 +19,9 @@ interface Article {
   slug: string;
   excerpt: string | null;
   category: string;
-  tags: string[];
+  tags: string[] | null;
   image_url: string | null;
-  view_count: number;
+  view_count: number | null;
   published_at: string | null;
   created_at: string;
 }
@@ -203,7 +203,7 @@ export default function Articles() {
                               </span>
                               <span className="flex items-center gap-1.5">
                                 <Eye className="h-3.5 w-3.5" />
-                                {article.view_count.toLocaleString()}
+                                {article.view_count == null ? '—' : article.view_count.toLocaleString()}
                               </span>
                             </div>
                             <div className="p-2 rounded-full bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">

@@ -27,3 +27,6 @@ The customer dashboard, audience preferences, account-scoped carts, and gated fa
 
 ## Main backend repair update
 Four repair migrations are now applied and tracked on main. Payment helpers are server-only, profile and clinical permissions are enforced, farm tables are provisioned, and discovery uses the actual legacy listing schema. Payments remain intentionally unavailable by user instruction. See `1vet-main-backend-repairs.md` for the 46 rollback-only main checks, 71 application tests, deployed function version and remaining scope.
+
+## Type-safety release update
+Strict TypeScript and the npm advisory backlog are now resolved; see `1vet-type-safety-release.md`. Main’s generated schema remains authoritative. Undeployed modules are compile-checked separately and blocked before network access; they are not enabled by type generation. Node 24 is the required runtime. No main-project migration or payment activation occurred in this phase.

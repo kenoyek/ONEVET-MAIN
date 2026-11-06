@@ -50,8 +50,8 @@ interface Article {
   title: string;
   slug: string;
   category: string;
-  is_published: boolean;
-  view_count: number;
+  is_published: boolean | null;
+  view_count: number | null;
   created_at: string;
   published_at: string | null;
 }
@@ -247,7 +247,7 @@ export default function AdminArticles() {
                               {article.is_published ? 'Published' : 'Draft'}
                             </Badge>
                           </TableCell>
-                          <TableCell>{article.view_count.toLocaleString()}</TableCell>
+                          <TableCell>{article.view_count == null ? '—' : article.view_count.toLocaleString()}</TableCell>
                           <TableCell>
                             {format(new Date(article.created_at), 'MMM d, yyyy')}
                           </TableCell>

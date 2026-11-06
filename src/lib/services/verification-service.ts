@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import { ProviderVerificationStatus, DocumentType } from '@/types/platform';
 
 export interface ProviderDocumentInput {
@@ -167,7 +167,7 @@ export const verificationService = {
   async updateOrganizationVerificationStatus(providerId: string, status: ProviderVerificationStatus) {
     const { data: org, error } = await supabase
       .from('provider_organizations')
-      .update({ verification_status: status, updated_at: new Date().toISOString() })
+      .update({ verification_status: status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : status === 'suspended' ? 'suspended' : 'pending', updated_at: new Date().toISOString() })
       .eq('id', providerId)
       .select('created_by')
       .maybeSingle();
@@ -179,7 +179,7 @@ export const verificationService = {
       await supabase
         .from('profiles')
         .update({
-          verification_status: status,
+          verification_status: status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : status === 'suspended' ? 'suspended' : 'pending',
           license_verified: isApproved
         })
         .eq('user_id', org.created_by);

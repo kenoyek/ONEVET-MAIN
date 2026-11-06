@@ -18,6 +18,8 @@ import { PetForm } from '@/components/pets/PetForm';
 import { PetPhotoUpload } from '@/components/pets/PetPhotoUpload';
 import { PetPassportTimeline } from '@/components/pets/PetPassportTimeline';
 import { PetCaregiversManager } from '@/components/pets/PetCaregiversManager';
+import type { PetProfile, PassportRecord } from '@/lib/services/pet-passport-service';
+import type { Database } from '@/integrations/supabase/types';
 import { petPassportService } from '@/lib/services/pet-passport-service';
 import { PetValues } from '@/lib/validation';
 import { toast } from 'sonner';
@@ -28,9 +30,9 @@ const PetDetail = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   
-  const [pet, setPet] = useState<Record<string, unknown> | null>(null);
-  const [passportData, setPassportData] = useState<Record<string, unknown> | null>(null);
-  const [consultations, setConsultations] = useState<Record<string, unknown>[]>([]);
+  const [pet, setPet] = useState<PetProfile | null>(null);
+  const [passportData, setPassportData] = useState<PassportRecord | null>(null);
+  const [consultations, setConsultations] = useState<Pick<Database['public']['Tables']['consultations']['Row'], 'id'|'status'|'chief_complaint'|'created_at'>[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,7 +99,7 @@ const PetDetail = () => {
         .from('pets')
         .update({
           name: values.name,
-          species: values.species as string,
+          species: values.species,
           breed: values.breed || null,
           date_of_birth: values.dateOfBirth || null,
           weight: values.weight || null,
@@ -203,7 +205,7 @@ const PetDetail = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container max-w-4xl py-8">
+        <main className="container max-w-4xl pt-28 pb-16">
           <Skeleton className="h-8 w-32 mb-6" />
           <Skeleton className="h-[600px]" />
         </main>
@@ -227,7 +229,7 @@ const PetDetail = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container max-w-5xl py-8 px-4">
+      <main className="container max-w-5xl pt-28 md:pt-36 pb-16 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -316,7 +318,7 @@ const PetDetail = () => {
                     </div>
                     <div>
                       <span className="text-xs text-muted-foreground block">Microchip #</span>
-                      <span className="font-semibold">{pet.microchip_number || 'Unregistered'}</span>
+                      <span className="font-semibold">{pet.microchip_number || 'Not recorded'}</span>
                     </div>
                   </div>
                 </div>
@@ -364,15 +366,17 @@ const PetDetail = () => {
               </CardContent>
             </Card>
           ) : (
-            <Tabs defaultValue="timeline" className="space-y-6">
+            <>
+            {!passportData?.advancedAvailable && <p role="status" className="rounded-xl border bg-muted p-4 mb-6 text-sm">Pet profile and consultations are available. Structured vaccination, caregiver, and passport records are not available yet.</p>}
+            <Tabs defaultValue="consultations" className="space-y-6">
               <TabsList className="grid w-full grid-cols-4 max-w-xl">
-                <TabsTrigger value="timeline" className="gap-2">
+                <TabsTrigger disabled={!passportData?.advancedAvailable} value="timeline" className="gap-2">
                   <Activity className="h-4 w-4" /> Timeline
                 </TabsTrigger>
-                <TabsTrigger value="vaccines" className="gap-2">
+                <TabsTrigger disabled={!passportData?.advancedAvailable} value="vaccines" className="gap-2">
                   <Syringe className="h-4 w-4" /> Vaccines
                 </TabsTrigger>
-                <TabsTrigger value="caregivers" className="gap-2">
+                <TabsTrigger disabled={!passportData?.advancedAvailable} value="caregivers" className="gap-2">
                   <Users className="h-4 w-4" /> Caregivers
                 </TabsTrigger>
                 <TabsTrigger value="consultations" className="gap-2">
@@ -448,9 +452,9 @@ const PetDetail = () => {
                       </Dialog>
                     </CardHeader>
                     <CardContent>
-                      {passportData?.vaccinations?.length > 0 ? (
+                      {(passportData?.vaccinations?.length ?? 0) > 0 ? (
                         <div className="space-y-3">
-                          {passportData.vaccinations.map((vac: { id: string; vaccine_name: string; administered_date: string; next_due_date?: string }) => (
+                          {(passportData?.vaccinations || []).map((vac) => (
                             <div key={vac.id} className="p-3 border rounded-lg flex justify-between items-center">
                               <div>
                                 <p className="font-semibold text-sm">{vac.vaccine_name}</p>
@@ -511,9 +515,9 @@ const PetDetail = () => {
                       </Dialog>
                     </CardHeader>
                     <CardContent>
-                      {passportData?.weightRecords?.length > 0 ? (
+                      {(passportData?.weightRecords?.length ?? 0) > 0 ? (
                         <div className="space-y-3">
-                          {passportData.weightRecords.map((w: { id: string; weight: number; unit?: string; recorded_at: string }) => (
+                          {(passportData?.weightRecords || []).map((w) => (
                             <div key={w.id} className="p-3 border rounded-lg flex justify-between items-center">
                               <div>
                                 <p className="font-bold text-base">{w.weight} {w.unit || 'kg'}</p>
@@ -583,6 +587,7 @@ const PetDetail = () => {
                 </Card>
               </TabsContent>
             </Tabs>
+            </>
           )}
         </motion.div>
       </main>

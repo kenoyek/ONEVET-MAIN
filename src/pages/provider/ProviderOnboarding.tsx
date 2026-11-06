@@ -1,3 +1,4 @@
+import { plannedModulesAvailable } from '@/integrations/supabase/planned-client';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -449,7 +450,7 @@ function OrganizationOnboarding() {
 
 export default function ProviderOnboarding() {
   const { role } = useAuth();
-  if (isFeatureEnabled('provider_marketplace_enabled'))
+  if (plannedModulesAvailable && isFeatureEnabled('provider_marketplace_enabled'))
     return <OrganizationOnboarding />;
   return (
     <div className="min-h-screen bg-background">

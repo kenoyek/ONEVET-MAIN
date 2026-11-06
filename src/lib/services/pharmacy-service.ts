@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import { petPassportService } from '@/lib/services/pet-passport-service';
 
 export interface CreateRxOrderItemInput {
@@ -52,7 +52,7 @@ export const pharmacyService = {
     const { data: rx, error } = await queryBuilder.single();
     if (error || !rx) throw new Error('Invalid or unverified prescription number');
 
-    const now = new Date().toISOString().split('T')[0];
+    const now = new Date().toISOString().slice(0,10);
     if (rx.status !== 'active') throw new Error(`Prescription status is ${rx.status}`);
     if (rx.valid_until < now) throw new Error(`Prescription expired on ${rx.valid_until}`);
 

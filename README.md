@@ -83,3 +83,7 @@ The customer dashboard includes care preferences and account-scoped carts. The r
 See [customer portal release and rollout](docs/1vet-customer-portal-release.md). Run `npm test -- --maxWorkers=2` for application regression tests and `bash scripts/test-farm-rls.sh` for isolated PostgreSQL authorization tests (Docker required). The latter never connects to a remote database.
 
 See [main backend repair evidence and rollout](docs/1vet-main-backend-repairs.md). Run `bash scripts/test-core-security.sh` for core security, settlement, and farm bootstrap regressions. Production repair deployment is restricted to the explicit reviewed manifest in `scripts/deploy-reviewed-repairs.py`; do not replay all historical migrations on the existing main database.
+
+## Runtime and release checks
+
+Use **Node 24** (`nvm use`). Run `npm ci`, `npm run typecheck`, `npm test -- --maxWorkers=2`, `npm run lint`, and `npm run build`. Strict TypeScript is required in CI. See [type-safety and dependency release notes](docs/1vet-type-safety-release.md) for the patched toolchain and the explicit boundary between deployed tables and unreleased modules. Payments remain disabled.

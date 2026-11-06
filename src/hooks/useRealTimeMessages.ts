@@ -7,7 +7,7 @@ interface Message {
   consultation_id: string;
   sender_id: string;
   content: string;
-  is_read: boolean;
+  is_read: boolean | null;
   created_at: string;
   sender?: {
     id: string;

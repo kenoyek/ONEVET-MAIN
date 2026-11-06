@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import { BookingStatus, ServiceDeliveryMode } from '@/types/platform';
 
 export interface CreateBookingInput {
@@ -51,7 +51,7 @@ export const bookingService = {
       _provider_id: providerId,
       _start_at: startAt,
       _end_at: endAt,
-      _exclude_booking_id: excludeBookingId || null,
+      _exclude_booking_id: excludeBookingId || undefined,
     });
 
     if (error) {
@@ -100,7 +100,7 @@ export const bookingService = {
         location_id: input.location_id || null,
         start_at: input.start_at,
         end_at: input.end_at,
-        scheduled_date: input.start_at.split('T')[0],
+        scheduled_date: input.start_at.split('T')[0] || '',
         scheduled_time: input.start_at.split('T')[1]?.substring(0, 5) || '09:00',
         delivery_mode: input.delivery_mode,
         client_notes: input.client_notes || null,

@@ -1,3 +1,4 @@
+import type { Database } from '@/integrations/supabase/types';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -39,7 +40,7 @@ const Analytics = () => {
   });
 
   const [registrationTrend, setRegistrationTrend] = useState<Record<string, unknown>[]>([]);
-  const [recentUsers, setRecentUsers] = useState<Record<string, unknown>[]>([]);
+  const [recentUsers, setRecentUsers] = useState<Pick<Database['public']['Tables']['profiles']['Row'],'id'|'first_name'|'last_name'|'email'|'created_at'|'vendor_type'|'customer_type'>[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -458,7 +459,7 @@ const Analytics = () => {
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline" className="text-[10px]">Verified</Badge>
+                          <Badge variant="outline" className="text-[10px]">Registered</Badge>
                         </td>
                       </tr>
                     ))}

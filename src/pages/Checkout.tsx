@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";

@@ -72,7 +72,7 @@ export function usePetSitters({ locationFilter, sortBy }: UsePetSittersOptions =
           description: listing.description,
           price: listing.price,
           price_unit: listing.price_unit,
-          location: listing.location || profile?.location,
+          location: listing.location || profile?.location || null,
           image_url: listing.image_url,
           category: listing.category as 'pet_sitting' | 'boarding',
           provider_id: listing.provider_id,

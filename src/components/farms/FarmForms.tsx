@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -114,7 +115,7 @@ export function BatchForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<BatchValues>({
+  } = useForm<z.input<typeof batchSchema>, unknown, BatchValues>({
     resolver: zodResolver(batchSchema),
     defaultValues: { species: 'poultry', head_count: 1 },
   });
@@ -179,7 +180,7 @@ export function ObservationForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ObservationValues>({
+  } = useForm<z.input<typeof observationSchema>, unknown, ObservationValues>({
     resolver: zodResolver(
       observationSchema.refine(
         (v) => {

@@ -74,7 +74,7 @@ export function useGroomers({ locationFilter, sortBy }: UseGroomersOptions = {})
           description: listing.description,
           price: listing.price,
           price_unit: listing.price_unit,
-          location: listing.location || profile?.location,
+          location: listing.location || profile?.location || null,
           image_url: listing.image_url,
           provider_id: listing.provider_id,
           provider: {

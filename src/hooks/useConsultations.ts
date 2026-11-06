@@ -19,8 +19,8 @@ interface Profile {
   last_name: string;
   avatar_url: string | null;
   specialty: string | null;
-  is_available: boolean;
-  license_verified: boolean;
+  is_available: boolean | null;
+  license_verified: boolean | null;
 }
 
 export interface Consultation {
@@ -37,8 +37,8 @@ export interface Consultation {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
-  pet?: Pet;
-  pet_owner?: Profile;
+  pet?: Pet | null;
+  pet_owner?: Profile | null;
   veterinarian?: Profile | null;
 }
 

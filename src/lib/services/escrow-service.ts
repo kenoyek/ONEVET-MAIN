@@ -1,4 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 
 export interface InitiatePaymentInput {
   user_id: string;
@@ -7,7 +8,7 @@ export interface InitiatePaymentInput {
   amount: number;
   currency?: string;
   payment_gateway?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, Json | undefined>;
 }
 
 export interface HoldEscrowInput {

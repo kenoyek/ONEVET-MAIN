@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { bookingService } from '@/lib/services/booking-service';
 const mocks = vi.hoisted(() => ({ rpc: vi.fn() }));
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { rpc: mocks.rpc },
+vi.mock('@/integrations/supabase/planned-client', () => ({
+  plannedSupabase: { rpc: mocks.rpc },
 }));
 
 describe('Booking availability safety', () => {

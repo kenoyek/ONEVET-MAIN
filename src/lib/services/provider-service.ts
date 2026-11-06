@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { plannedSupabase as supabase } from '@/integrations/supabase/planned-client';
 import type { ProviderOrganization, ProviderMember, ProviderLocation, ProviderType } from '@/types/platform';
 
 export interface CreateProviderOrgInput {

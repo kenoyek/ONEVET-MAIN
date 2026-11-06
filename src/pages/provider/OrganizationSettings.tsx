@@ -1,3 +1,6 @@
+import type { PlannedRows } from '@/integrations/supabase/planned-types';
+type ProviderOrganization=PlannedRows['provider_organizations'];
+type ProviderLocation=PlannedRows['provider_locations'];
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
@@ -51,7 +54,7 @@ export default function OrganizationSettings() {
   const [submittingInvite, setSubmittingInvite] = useState(false);
 
   // Product inventory state
-  const [products, setProducts] = useState<{ id: string; price: number; stock: number; [key: string]: unknown }[]>([]);
+  const [products, setProducts] = useState<PlannedRows['products'][]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [newProductName, setNewProductName] = useState('');
@@ -63,13 +66,13 @@ export default function OrganizationSettings() {
   const [submittingProduct, setSubmittingProduct] = useState(false);
 
   // Financial commissions state
-  const [commissions, setCommissions] = useState<Record<string, unknown>[]>([]);
+  const [commissions, setCommissions] = useState<PlannedRows['vendor_commissions'][]>([]);
 
   const fetchVendorProducts = useCallback(async (vendorId: string) => {
     setLoadingProducts(true);
     try {
       const data = await vendorProductService.getVendorProducts(vendorId);
-      setProducts((data || []) as { id: string; price: number; stock: number; [key: string]: unknown }[]);
+      setProducts(data || []);
     } catch (err) {
       console.error('Failed to fetch vendor products:', err);
     } finally {
@@ -80,7 +83,7 @@ export default function OrganizationSettings() {
   const fetchVendorCommissions = useCallback(async (vendorId: string) => {
     try {
       const data = await vendorProductService.getVendorCommissions(vendorId);
-      setCommissions((data || []) as Record<string, unknown>[]);
+      setCommissions(data || []);
     } catch (err) {
       console.error('Failed to fetch vendor commissions:', err);
     }
@@ -250,7 +253,7 @@ export default function OrganizationSettings() {
                     <Label htmlFor="role">Member Role *</Label>
                     <Select
                       value={inviteRole}
-                      onValueChange={(val: string) => setInviteRole(val)}
+                      onValueChange={val=>{if(val==='owner'||val==='manager'||val==='staff'||val==='practitioner')setInviteRole(val);}}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
@@ -541,9 +544,9 @@ export default function OrganizationSettings() {
                             <p className="text-xs text-muted-foreground">Date: {new Date(comm.created_at).toLocaleDateString()}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-green-600">₦{comm.net_amount?.toLocaleString()}</p>
-                            <Badge variant={comm.payout_status === 'paid' ? 'default' : 'outline'}>
-                              {comm.payout_status}
+                            <p className="font-bold text-green-600">₦{comm.net_payout?.toLocaleString()}</p>
+                            <Badge variant={comm.status === 'settled' ? 'default' : 'outline'}>
+                              {comm.status}
                             </Badge>
                           </div>
                         </div>
@@ -567,7 +570,7 @@ export default function OrganizationSettings() {
               <CardContent>
                 <div className="space-y-4">
                   {organization.members && organization.members.length > 0 ? (
-                    organization.members.map((member: { id: string; role: string; user?: { first_name?: string; last_name?: string; email?: string } }) => (
+                    organization.members.map((member) => (
                       <div
                         key={member.id}
                         className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
@@ -621,7 +624,7 @@ export default function OrganizationSettings() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {organization.locations && organization.locations.length > 0 ? (
-                    organization.locations.map((loc: { id: string; name: string; address?: string; city?: string; state?: string; phone?: string; timezone?: string; is_primary?: boolean }) => (
+                    organization.locations.map((loc) => (
                       <Card key={loc.id} className="border">
                         <CardHeader className="pb-2">
                           <div className="flex items-center justify-between">

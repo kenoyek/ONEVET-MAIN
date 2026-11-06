@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 
 interface TimelineEvent {
   id: string;
-  event_type: 'consultation' | 'diagnosis' | 'vaccination' | 'prescription' | 'lab_result' | 'grooming' | 'weight_update' | 'admission' | 'procedure' | 'document_upload';
+  event_type: string;
   title: string;
   description?: string | null;
   event_date: string;
@@ -56,7 +56,7 @@ export const PetPassportTimeline: React.FC<PetPassportTimelineProps> = ({ timeli
       <CardContent className="space-y-6">
         <div className="relative border-l-2 border-muted ml-4 pl-6 space-y-6">
           {timeline.map((event) => {
-            const config = EVENT_ICONS[event.event_type] || EVENT_ICONS.consultation;
+            const config = EVENT_ICONS[event.event_type] || {icon: FileText, color:'text-muted-foreground', badge:'Health record'};
             const Icon = config.icon;
 
             return (

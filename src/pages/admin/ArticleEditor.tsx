@@ -86,7 +86,7 @@ export default function ArticleEditor() {
       const { data, error } = await supabase
         .from('articles')
         .select('*')
-        .eq('id', id)
+        .eq('id', id || '')
         .single();
 
       if (error) throw error;
@@ -148,7 +148,7 @@ export default function ArticleEditor() {
         const { error } = await supabase
           .from('articles')
           .update(articleData)
-          .eq('id', id);
+          .eq('id', id || '');
 
         if (error) throw error;
         toast.success('Article updated successfully!');

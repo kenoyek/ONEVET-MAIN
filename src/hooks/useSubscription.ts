@@ -15,7 +15,7 @@ interface Subscription {
     price: number;
     duration_months: number;
     features: unknown;
-  };
+  } | null;
 }
 
 interface UseSubscriptionReturn {
