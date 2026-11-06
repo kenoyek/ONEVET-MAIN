@@ -27,7 +27,7 @@ describe('Published provider directory', () => {
     publicServices.mockResolvedValue([{ id: 'service-id', organization_name: 'Approved Organization', name: 'Grooming session', description: 'A provider-written service description.', city: 'Ibadan', state: 'Oyo', country: 'Nigeria', base_price: 5000, currency: 'NGN', duration_minutes: 45, delivery_mode: 'clinic_visit' }]);
     profile();
     expect(await screen.findByRole('heading', { name: 'Approved Organization' })).toBeInTheDocument();
-    expect(screen.getByText('Bookings are not available yet')).toBeInTheDocument();
+    expect(screen.getByText('Appointment requests need confirmation')).toBeInTheDocument();
     expect(screen.getByText('Base fee: NGN 5,000.00')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /book now|pay now|request appointment/i })).not.toBeInTheDocument();
   });

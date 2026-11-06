@@ -44,6 +44,7 @@ export default function Dashboard() {
             </Link>
           </Button>
         </header>
+        <Button asChild variant="outline" className="mb-6"><Link to="/my-bookings">Your appointment requests</Link></Button>
         <div className="grid md:grid-cols-2 gap-5 mb-8">
           <Link className="care-path" to="/pets">
             <PawPrint className="text-primary mb-5" />

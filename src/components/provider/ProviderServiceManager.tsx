@@ -46,7 +46,7 @@ export function ProviderServiceManager({ providerId, providerType, slug, approve
     await Promise.all([cache.invalidateQueries({ queryKey: ['owned-provider-services', user?.id, providerId] }), cache.invalidateQueries({ queryKey: ['provider-draft', user?.id] }), cache.invalidateQueries({ queryKey: ['provider-marketplace'] }), cache.invalidateQueries({ queryKey: ['public-provider'] })]);
   }
   return <section className="care-path mb-8"><h2 className="text-xl mb-3">Services and public listing</h2>
-    <p className="text-muted-foreground mb-4">Draft your services, then publish when organization approval and credentials are current. Publishing makes your organization name, identifier, category, city/state and service details public. Your registration email, phone, street address and documents stay private. Bookings and online payments remain unavailable.</p>
+    <p className="text-muted-foreground mb-4">Draft your services, then publish when organization approval and credentials are current. Publishing makes your organization name, identifier, category, city/state and service details public. Your registration email, phone, street address and documents stay private. Set availability in the booking section to accept appointment requests. Online payments remain unavailable.</p>
     {!category ? <p>Service publishing is not available for this organization category yet.</p> : <>
       <label className="flex gap-3 items-start mb-5"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-1" />I understand which details will appear publicly when I publish.</label>
       {!approved && <p className="mb-4 text-sm">You can prepare drafts now. Complete organization verification before publishing.</p>}
@@ -58,7 +58,7 @@ export function ProviderServiceManager({ providerId, providerType, slug, approve
             {!item.is_published && !suspended && <Button variant="outline" disabled={busy} onClick={() => { setEditing(editing === item.id ? '' : item.id); setError(''); }}>{editing === item.id ? 'Close editor' : 'Edit service'}</Button>}
             <Button disabled={busy || (!item.is_published && (!approved || suspended || !consent))} onClick={async () => {
               if (busy) return; setBusy(true); setError(''); setMessage('');
-              try { await service.publish(item, !item.is_published); setMessage(item.is_published ? 'Service unpublished.' : 'Service published. Availability and payment are not enabled.'); setEditing(''); await refresh(); }
+              try { await service.publish(item, !item.is_published); setMessage(item.is_published ? 'Service unpublished.' : 'Service published. Booking availability is controlled by your schedule. Online payments remain disabled.'); setEditing(''); await refresh(); }
               catch (cause) { setError(publicationError(cause)); }
               finally { setBusy(false); }
             }}>{busy ? 'Working…' : item.is_published ? 'Unpublish service' : 'Publish service'}</Button>

@@ -952,6 +952,193 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_booking_events: {
+        Row: {
+          actor_id: string
+          booking_id: string
+          created_at: string
+          id: string
+          note: string
+          status: string
+          version: number
+        }
+        Insert: {
+          actor_id: string
+          booking_id: string
+          created_at?: string
+          id?: string
+          note?: string
+          status: string
+          version: number
+        }
+        Update: {
+          actor_id?: string
+          booking_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_booking_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "provider_booking_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_booking_requests: {
+        Row: {
+          animal_snapshot: Json
+          base_fee: number
+          batch_id: string | null
+          contact_phone: string
+          created_at: string
+          currency: string
+          customer_id: string
+          customer_notes: string
+          end_at: string
+          id: string
+          pet_id: string | null
+          provider_address: string | null
+          provider_id: string
+          provider_owner_id: string
+          request_key: string
+          response_note: string
+          service_id: string
+          service_snapshot: Json
+          start_at: string
+          status: string
+          updated_at: string
+          version: number
+          visit_address: string
+        }
+        Insert: {
+          animal_snapshot: Json
+          base_fee: number
+          batch_id?: string | null
+          contact_phone: string
+          created_at?: string
+          currency?: string
+          customer_id: string
+          customer_notes?: string
+          end_at: string
+          id?: string
+          pet_id?: string | null
+          provider_address?: string | null
+          provider_id: string
+          provider_owner_id: string
+          request_key: string
+          response_note?: string
+          service_id: string
+          service_snapshot: Json
+          start_at: string
+          status?: string
+          updated_at?: string
+          version?: number
+          visit_address?: string
+        }
+        Update: {
+          animal_snapshot?: Json
+          base_fee?: number
+          batch_id?: string | null
+          contact_phone?: string
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          customer_notes?: string
+          end_at?: string
+          id?: string
+          pet_id?: string | null
+          provider_address?: string | null
+          provider_id?: string
+          provider_owner_id?: string
+          request_key?: string
+          response_note?: string
+          service_id?: string
+          service_snapshot?: Json
+          start_at?: string
+          status?: string
+          updated_at?: string
+          version?: number
+          visit_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_booking_requests_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "livestock_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_booking_requests_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_booking_requests_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_booking_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "provider_service_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_booking_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "provider_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_booking_settings: {
+        Row: {
+          closed_dates: string[]
+          enabled: boolean
+          provider_id: string
+          updated_at: string
+          version: number
+          weekly: Json
+        }
+        Insert: {
+          closed_dates?: string[]
+          enabled?: boolean
+          provider_id: string
+          updated_at?: string
+          version?: number
+          weekly?: Json
+        }
+        Update: {
+          closed_dates?: string[]
+          enabled?: boolean
+          provider_id?: string
+          updated_at?: string
+          version?: number
+          weekly?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_booking_settings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_documents: {
         Row: {
           created_at: string
@@ -1610,6 +1797,7 @@ export type Database = {
       provider_service_catalog: {
         Row: {
           base_price: number | null
+          booking_enabled: boolean | null
           category: string | null
           city: string | null
           country: string | null
@@ -1623,6 +1811,7 @@ export type Database = {
           provider_id: string | null
           provider_slug: string | null
           provider_type: string | null
+          service_version: number | null
           state: string | null
           updated_at: string | null
         }
@@ -1714,6 +1903,13 @@ export type Database = {
       }
       get_online_vets_count: { Args: never; Returns: number }
       get_profile_id: { Args: { _user_id: string }; Returns: string }
+      get_provider_booking_slots: {
+        Args: { local_date: string; service_uuid: string }
+        Returns: {
+          end_at: string
+          start_at: string
+        }[]
+      }
       get_unread_message_count: { Args: { p_user_id: string }; Returns: number }
       get_unread_notification_count: {
         Args: { _user_id: string }
@@ -1769,6 +1965,29 @@ export type Database = {
         }
         Returns: string
       }
+      request_provider_booking: {
+        Args: {
+          animal_batch?: string
+          animal_pet?: string
+          contact_phone?: string
+          customer_notes?: string
+          expected_service_version: number
+          request_key: string
+          service_uuid: string
+          start_time: string
+          visit_address?: string
+        }
+        Returns: string
+      }
+      respond_provider_booking: {
+        Args: {
+          booking_uuid: string
+          decision: string
+          expected_version: number
+          response_note?: string
+        }
+        Returns: string
+      }
       review_provider_verification: {
         Args: {
           decision: string
@@ -1777,6 +1996,16 @@ export type Database = {
           provider_uuid: string
         }
         Returns: string
+      }
+      save_provider_booking_schedule: {
+        Args: {
+          closed_dates: string[]
+          enabled: boolean
+          expected_version: number
+          provider_uuid: string
+          weekly: Json
+        }
+        Returns: number
       }
       save_provider_draft: {
         Args: { input: Json; provider_uuid?: string }

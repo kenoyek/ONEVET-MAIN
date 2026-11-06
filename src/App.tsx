@@ -54,6 +54,7 @@ const ProviderOnboarding = lazy(() => import("./pages/provider/ProviderOnboardin
 const ProviderDraftWorkspace = lazy(() => import("./pages/provider/ProviderDraftWorkspace"));
 const ProviderMarketplace = lazy(() => import("./pages/marketplace/ProviderMarketplace"));
 const PublicProviderProfile = lazy(() => import("./pages/provider/PublicProviderProfile"));
+const MyBookings = lazy(() => import("./pages/booking/MyBookings"));
 const NewBooking = lazy(() => import("./pages/booking/NewBooking"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -242,10 +243,12 @@ const App = () => (
                     <Route path="/provider-marketplace" element={<ProviderMarketplace />} />
                     <Route path="/provider/public/:slug" element={<PublicProviderProfile />} />
                     <Route path="/booking/new" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin']}>
-                        <PlannedModuleGate><NewBooking /></PlannedModuleGate>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'veterinarian', 'admin']}>
+                        <NewBooking />
                       </ProtectedRoute>
                     } />
+
+                    <Route path="/my-bookings" element={<ProtectedRoute allowedRoles={['pet_owner','client','service_provider','veterinarian','admin']}><MyBookings /></ProtectedRoute>} />
 
                     {/* Catch-all 404 Route */}
                     <Route path="*" element={<NotFound />} />
