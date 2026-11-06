@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { AppointmentCalendarDownload } from './AppointmentCalendarDownload';
 import { BookingRescheduleForm } from './BookingRescheduleForm';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -46,6 +47,7 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
         {provider && booking.status==='confirmed' && new Date(booking.end_at)<=new Date() && <Button disabled={busy} onClick={() => void respond('completed')}>Mark completed</Button>}
       </div></>}
     {!readOnly && !provider && booking.customer_id===user?.id && booking.status==='confirmed' && new Date(booking.start_at)>new Date() && <><Button variant="outline" disabled={busy} onClick={()=>setRescheduling(previous=>!previous)}>{rescheduling?'Close reschedule form':'Request reschedule'}</Button>{rescheduling && <BookingRescheduleForm key={`${booking.id}-${booking.version}`} booking={booking} onSubmitted={refresh}/>}</>}
+    {!readOnly && booking.status==='confirmed' && new Date(booking.end_at)>new Date() && (booking.customer_id===user?.id||booking.provider_owner_id===user?.id) && <AppointmentCalendarDownload key={`${user?.id}-${booking.id}`} bookingId={booking.id}/>}
     {error && <p role="alert" className="text-destructive">{error}</p>}
     <Button variant="link" onClick={() => setShowHistory(previous => !previous)}>{showHistory ? 'Hide history' : 'Show history'}</Button>
     {showHistory && (events.isPending ? <p role="status">Loading history…</p> : events.isError ? <><p role="alert">Could not load history.</p><Button variant="outline" onClick={() => void events.refetch()}>Retry history</Button></> : <ol className="space-y-2">{events.data?.map(event => <li key={event.id} className="border-l-2 pl-3 text-sm">{event.status} · {bookingTime(event.created_at)}{event.note && <p className="whitespace-pre-wrap">{event.note}</p>}</li>)}</ol>)}

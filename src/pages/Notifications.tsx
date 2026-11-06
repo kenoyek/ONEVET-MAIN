@@ -1,0 +1,16 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Navbar } from '@/components/layout/Navbar';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth-context';
+import { useNotificationInbox } from '@/hooks/useInAppNotifications';
+import { notificationDestination } from '@/lib/services/inbox-service';
+function Inbox(){
+  const [page,setPage]=useState(0);const [unread,setUnread]=useState(false);const inbox=useNotificationInbox(page,unread);
+  return <><div className="flex flex-wrap gap-4 items-center mb-6"><label className="flex gap-2"><input type="checkbox" checked={unread} onChange={event=>{setUnread(event.target.checked);setPage(0);}}/>Unread only</label><Button variant="outline" disabled={inbox.busy||!inbox.unreadCount} onClick={async()=>{try{await inbox.markAllAsRead();setPage(0);}catch{/* The hook shows the action error. */}}}>Mark all as read</Button><Button variant="outline" onClick={()=>void inbox.refetch()}>Refresh notifications</Button><p className="text-sm">{inbox.countUnavailable?'Unread count unavailable':`${inbox.unreadCount} unread`}</p></div>
+    {inbox.mutationError&&<p role="alert" className="text-destructive mb-4">{inbox.mutationError}</p>}
+    {inbox.loading?<p role="status">Loading notifications…</p>:inbox.error?<p role="alert">Could not load notifications. Refresh to try again.</p>:!inbox.notifications.length?<p>{unread?'No unread notifications on this page.':'No notifications on this page.'}</p>:<ul className="space-y-4">{inbox.notifications.map(notification=>{const destination=notificationDestination(notification);return <li key={notification.id} className={`care-path ${notification.is_read===false?'border-primary/40':''}`}><div className="flex flex-wrap justify-between gap-3"><h2 className="text-lg">{notification.title}</h2>{notification.is_read===false&&<span className="text-sm text-primary">Unread</span>}</div><p className="whitespace-pre-wrap mt-3">{notification.message}</p><time className="text-xs text-muted-foreground block my-3">{new Date(notification.created_at).toLocaleString('en-NG',{timeZone:'Africa/Lagos'})} WAT</time><div className="flex flex-wrap items-center gap-4">{destination&&<Link className="text-primary underline" to={destination} onClick={()=>{if(notification.is_read===false)void inbox.markAsRead(notification.id).catch(()=>{});}}>Open details</Link>}{notification.is_read===false&&<Button variant="outline" disabled={inbox.busy} onClick={()=>void inbox.markAsRead(notification.id).catch(()=>{})}>Mark as read</Button>}</div></li>;})}</ul>}
+    <div className="flex gap-4 items-center mt-6"><Button variant="outline" disabled={page===0||inbox.loading} onClick={()=>setPage(previous=>previous-1)}>Previous</Button><span>Page {page+1}</span><Button variant="outline" disabled={!inbox.hasNext||inbox.loading} onClick={()=>setPage(previous=>previous+1)}>Next</Button></div>
+  </>;
+}
+export default function Notifications(){const {user}=useAuth();return <div className="min-h-screen bg-background"><Navbar/><main className="container-wide max-w-4xl pt-32 pb-20"><h1 className="text-3xl mb-4">Your notifications</h1><p className="text-muted-foreground mb-6">Booking updates and account alerts appear here. Open an alert to review the current details.</p><Inbox key={user?.id}/></main></div>;}

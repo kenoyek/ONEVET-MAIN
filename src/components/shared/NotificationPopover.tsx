@@ -1,101 +1,18 @@
-import { Bell, Check, Loader2, Info, CheckCircle, AlertTriangle, AlertCircle } from 'lucide-react';
-import { useInAppNotifications, type Notification } from '@/hooks/useInAppNotifications';
+import { useState } from 'react';
+import { Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useInAppNotifications } from '@/hooks/useInAppNotifications';
+import { notificationDestination } from '@/lib/services/inbox-service';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { formatDistanceToNow } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-
-export function NotificationPopover() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, loading } = useInAppNotifications();
-  const navigate = useNavigate();
-
-  const handleNotificationClick = (notification: Notification) => {
-    markAsRead(notification.id);
-    if (notification.link) {
-      navigate(notification.link);
-    }
-  };
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'success': return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'error': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default: return <Info className="h-4 w-4 text-blue-500" />;
-    }
-  };
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button aria-label="Notifications" variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <span className="absolute top-2 right-2 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h4 className="font-semibold">Notifications</h4>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" className="text-xs h-8" onClick={markAllAsRead}>
-              Mark all as read
-            </Button>
-          )}
-        </div>
-        <ScrollArea className="h-[400px]">
-          {loading ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">
-              No notifications yet
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {notifications.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => handleNotificationClick(n)}
-                  className={cn(
-                    "flex gap-3 p-4 text-left hover:bg-muted transition-colors border-b last:border-0",
-                    !n.is_read && "bg-primary/5 hover:bg-primary/10"
-                  )}
-                >
-                  <div className="mt-1">{getIcon(n.type)}</div>
-                  <div className="flex-1 space-y-1">
-                    <p className={cn("text-sm leading-none font-medium", !n.is_read && "font-bold")}>
-                      {n.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {n.message}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-        <div className="p-2 border-t">
-          <Button variant="ghost" className="w-full text-xs" onClick={() => navigate('/notifications')}>
-            View all notifications
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+export function NotificationPopover(){
+  const inbox=useInAppNotifications();const [open,setOpen]=useState(false);
+  return <Popover open={open} onOpenChange={setOpen}><PopoverTrigger asChild><Button aria-label={`Notifications${inbox.countUnavailable?' (unread count unavailable)':inbox.unreadCount?` (${inbox.unreadCount} unread)`:''}`} variant="ghost" size="icon" className="relative"><Bell className="h-5 w-5"/>{inbox.unreadCount>0&&<span className="absolute -top-1 -right-1 rounded-full bg-destructive px-1.5 text-xs text-destructive-foreground">{inbox.unreadCount>99?'99+':inbox.unreadCount}</span>}</Button></PopoverTrigger>
+    <PopoverContent className="w-80 max-w-[calc(100vw-2rem)] p-0" align="end"><div className="border-b p-4 flex justify-between items-center"><h2 className="font-semibold">Notifications</h2><Button variant="link" size="sm" disabled={inbox.busy||!inbox.unreadCount} onClick={()=>void inbox.markAllAsRead().catch(()=>{})}>Mark all as read</Button></div>
+      {inbox.mutationError&&<p role="alert" className="p-3 text-sm text-destructive">{inbox.mutationError}</p>}
+      {inbox.countUnavailable&&<p role="status" className="px-4 pt-3 text-xs">Unread count unavailable. Refresh to check.</p>}
+      <div className="max-h-96 overflow-y-auto">{inbox.loading?<p role="status" className="p-6">Loading notifications…</p>:inbox.error?<div className="p-4"><p role="alert">Could not load notifications.</p><Button variant="outline" onClick={()=>void inbox.refetch()}>Retry notifications</Button></div>:!inbox.notifications.length?<p className="p-6 text-sm text-muted-foreground">No notifications yet.</p>:<ul>{inbox.notifications.map(notification=>{const target=notificationDestination(notification);return <li key={notification.id} className={`border-b p-4 space-y-2 ${notification.is_read===false?'bg-primary/5':''}`}><h3 className="text-sm font-medium">{notification.title}{notification.is_read===false&&<span className="ml-2 text-xs">Unread</span>}</h3><p className="text-xs text-muted-foreground">{notification.message}</p>{target&&<Link className="text-xs text-primary underline" to={target} onClick={()=>{if(notification.is_read===false)void inbox.markAsRead(notification.id).catch(()=>{});setOpen(false);}}>Open details</Link>}{notification.is_read===false&&<Button size="sm" variant="link" disabled={inbox.busy} onClick={()=>void inbox.markAsRead(notification.id).catch(()=>{})}>Mark as read</Button>}</li>;})}</ul>}</div>
+      <div className="p-3"><Button variant="ghost" asChild className="w-full"><Link to="/notifications" onClick={()=>setOpen(false)}>View all notifications</Link></Button></div>
+    </PopoverContent>
+  </Popover>;
 }
