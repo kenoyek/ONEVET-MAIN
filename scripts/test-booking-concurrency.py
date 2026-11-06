@@ -24,3 +24,20 @@ with tempfile.TemporaryFile(mode='w+t') as output:
 counts=sql("SELECT count(*) FILTER(WHERE status='confirmed')||','||count(*) FILTER(WHERE status='pending') FROM provider_booking_requests WHERE request_key IN ('c9111111-1111-4111-8111-111111111111','c9222222-2222-4222-8222-222222222222');")
 if counts!='1,1':raise SystemExit('Race did not leave exactly one confirmed and one pending request')
 print('PASS: two concurrent confirmations produce exactly one confirmed appointment and one slot conflict')
+# Race original cancellation against replacement confirmation. The losing confirmation
+# must not resurrect the cancelled original or its pending alternative.
+sql("BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','b8222222-2222-4222-8222-222222222222',true);SELECT request_booking_reschedule((SELECT id FROM provider_booking_requests WHERE request_key='c9111111-1111-4111-8111-111111111111'),2,2,(((now() AT TIME ZONE 'Africa/Lagos')::date+2)::text||'T09:15:00+01:00')::timestamptz,'c9333333-3333-4333-8333-333333333333','Race reschedule request');COMMIT;")
+cancel="BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','b8222222-2222-4222-8222-222222222222',true);SELECT respond_provider_booking((SELECT id FROM provider_booking_requests WHERE request_key='c9111111-1111-4111-8111-111111111111'),2,'cancelled','Cancel original and alternative.');"
+with tempfile.TemporaryFile(mode='w+t') as output:
+ first=subprocess.Popen(base,stdin=subprocess.PIPE,stdout=output,stderr=output,text=True)
+ first.stdin.write("SET application_name='onevet-reschedule-race-first';"+cancel+"SELECT pg_sleep(4);COMMIT;")
+ first.stdin.close()
+ for attempt in range(40):
+  if sql("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='onevet-reschedule-race-first' AND wait_event='PgSleep');")=='t':break
+  if first.poll() is not None:raise SystemExit('Cancellation did not reach its transaction hold')
+  time.sleep(.1)
+ else:raise SystemExit('Timed out waiting for original cancellation')
+ second=subprocess.run(base,input=confirm('c9333333-3333-4333-8333-333333333333')+'COMMIT;',text=True,capture_output=True)
+ if first.wait(timeout=10)!=0 or second.returncode==0 or '40001' not in second.stderr:raise SystemExit('Expected original cancellation to invalidate the alternative')
+if sql("SELECT count(*) FROM provider_booking_requests WHERE request_key IN ('c9111111-1111-4111-8111-111111111111','c9333333-3333-4333-8333-333333333333') AND status='cancelled';")!='2':raise SystemExit('Original and alternative must both remain cancelled')
+print('PASS: concurrent original cancellation prevents replacement confirmation and leaves both records cancelled')

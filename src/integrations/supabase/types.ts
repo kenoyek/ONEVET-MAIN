@@ -1006,7 +1006,10 @@ export type Database = {
           provider_address: string | null
           provider_id: string
           provider_owner_id: string
+          replacement_for: string | null
+          replacement_version: number | null
           request_key: string
+          reschedule_reason: string
           response_note: string
           service_id: string
           service_snapshot: Json
@@ -1031,7 +1034,10 @@ export type Database = {
           provider_address?: string | null
           provider_id: string
           provider_owner_id: string
+          replacement_for?: string | null
+          replacement_version?: number | null
           request_key: string
+          reschedule_reason?: string
           response_note?: string
           service_id: string
           service_snapshot: Json
@@ -1056,7 +1062,10 @@ export type Database = {
           provider_address?: string | null
           provider_id?: string
           provider_owner_id?: string
+          replacement_for?: string | null
+          replacement_version?: number | null
           request_key?: string
+          reschedule_reason?: string
           response_note?: string
           service_id?: string
           service_snapshot?: Json
@@ -1086,6 +1095,13 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_booking_requests_replacement_for_fkey"
+            columns: ["replacement_for"]
+            isOneToOne: false
+            referencedRelation: "provider_booking_requests"
             referencedColumns: ["id"]
           },
           {
@@ -1901,6 +1917,13 @@ export type Database = {
         }
         Returns: string
       }
+      get_booking_reschedule_slots: {
+        Args: { booking_uuid: string; local_date: string }
+        Returns: {
+          end_at: string
+          start_at: string
+        }[]
+      }
       get_online_vets_count: { Args: never; Returns: number }
       get_profile_id: { Args: { _user_id: string }; Returns: string }
       get_provider_booking_slots: {
@@ -1942,6 +1965,34 @@ export type Database = {
         }
         Returns: boolean
       }
+      internal_create_provider_booking: {
+        Args: {
+          animal_batch?: string
+          animal_pet?: string
+          contact_phone?: string
+          customer_notes?: string
+          expected_service_version: number
+          original_booking?: string
+          original_version?: number
+          reason?: string
+          request_key: string
+          service_uuid: string
+          start_time: string
+          visit_address?: string
+        }
+        Returns: string
+      }
+      internal_provider_booking_slots: {
+        Args: {
+          excluded_booking: string
+          local_date: string
+          service_uuid: string
+        }
+        Returns: {
+          end_at: string
+          start_at: string
+        }[]
+      }
       is_consultation_participant: {
         Args: { _consultation_id: string; _user_id: string }
         Returns: boolean
@@ -1962,6 +2013,17 @@ export type Database = {
           kind: string
           object_path: string
           provider_uuid: string
+        }
+        Returns: string
+      }
+      request_booking_reschedule: {
+        Args: {
+          booking_uuid: string
+          expected_booking_version: number
+          expected_service_version: number
+          reason: string
+          request_key: string
+          start_time: string
         }
         Returns: string
       }

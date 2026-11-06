@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const { rpc, from, select, order, eq, range }=vi.hoisted(()=>({rpc:vi.fn(),from:vi.fn(),select:vi.fn(),order:vi.fn(),eq:vi.fn(),range:vi.fn()}));
+const { rpc, from, select, order, eq, range, inFilter, gte }=vi.hoisted(()=>({rpc:vi.fn(),from:vi.fn(),select:vi.fn(),order:vi.fn(),eq:vi.fn(),range:vi.fn(),inFilter:vi.fn(),gte:vi.fn()}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc,from}}));
 import { appointmentService as service, appointmentError, bookingTime, watDate } from '@/lib/services/appointment-service';
 describe('Trusted appointment service',()=>{
@@ -32,6 +32,14 @@ describe('Trusted appointment service',()=>{
  it('retains recorded bookings when provider approval cannot be rechecked',async()=>{
   from.mockReturnValue({select});select.mockReturnValue({order});order.mockReturnValue({order,eq});eq.mockReturnValue({range});range.mockResolvedValue({data:[{id:'booking-id',provider_id:'org-id'}],error:null});rpc.mockResolvedValue({data:null,error:{code:'42501'}});
   const result=await service.list({customerId:'customer-id'},0);expect(result.rows[0]?.id).toBe('booking-id');expect(result.rows[0]?.provider_eligibility).toBe('unknown');
+ });
+ it('submits reschedules with the original and current service versions without cancelling the original',async()=>{
+  await service.reschedule({bookingId:'original-id',bookingVersion:2,serviceVersion:4,start:'2026-11-20T08:15:00Z',key:'nonce',reason:' Later start please '});
+  expect(rpc).toHaveBeenCalledExactlyOnceWith('request_booking_reschedule',{booking_uuid:'original-id',expected_booking_version:2,expected_service_version:4,start_time:'2026-11-20T08:15:00Z',request_key:'nonce',reason:'Later start please'});
+ });
+ it('filters upcoming requests on the server and sorts the nearest times first',async()=>{
+  const builder={select,order,eq,in:inFilter,gte,range};from.mockReturnValue(builder);for(const method of [select,order,eq,inFilter,gte])method.mockReturnValue(builder);range.mockResolvedValue({data:[],error:null});
+  await service.list({customerId:'customer-id'},0,'upcoming');expect(inFilter).toHaveBeenCalledWith('status',['pending','confirmed']);expect(gte).toHaveBeenCalledWith('end_at',expect.any(String));expect(order).toHaveBeenCalledWith('start_at',{ascending:true});
  });
  it('preserves slot-race failures and fails closed on slot lookup errors',async()=>{
   rpc.mockResolvedValue({data:null,error:{code:'23P01'}});
