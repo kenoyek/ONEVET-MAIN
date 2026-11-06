@@ -1,3 +1,4 @@
+import { providerCatalogService } from './provider-catalog-service';
 import { plannedSupabase } from '@/integrations/supabase/planned-client';
 import { supabase } from '@/integrations/supabase/client';
 import { ServiceDeliveryMode } from '@/types/platform';
@@ -67,8 +68,7 @@ export const marketplaceService = {
    * Search published services & approved providers across the marketplace
    */
   async searchMarketplace(filter: SearchProvidersFilter) {
-    // Main currently runs the original service-listing schema. This curated view
-    // exposes approved providers without requiring undeployed organization tables.
+    // Preserve the existing approved individual-provider directory alongside organization services.
     let queryBuilder = supabase.from('care_service_directory').select('*');
     if (filter.category)
       queryBuilder = queryBuilder.eq(
@@ -79,10 +79,10 @@ export const marketplaceService = {
       queryBuilder = queryBuilder.gte('base_price', filter.min_price);
     if (filter.max_price !== undefined)
       queryBuilder = queryBuilder.lte('base_price', filter.max_price);
-    const { data, error } = await queryBuilder;
+    const [{ data, error }, organizationServices] = await Promise.all([queryBuilder, providerCatalogService.publicServices()]);
     if (error) throw error;
     // Legacy listings do not advertise channel, emergency coverage or precise durations.
-    if (filter.delivery_mode || filter.is_emergency_service) return [];
+    if (filter.is_emergency_service) return [];
     let results: MarketplaceServiceItem[] = (data ?? []).map((item) => ({
       id: item.id,
       name: item.name,
@@ -105,6 +105,20 @@ export const marketplaceService = {
       },
       location: { id: item.id, city: item.location },
     }));
+    results.push(...organizationServices.filter(item =>
+      (!filter.category || item.category === filter.category) &&
+      (!filter.delivery_mode || item.delivery_mode === filter.delivery_mode) &&
+      (filter.min_price === undefined || Number(item.base_price) >= filter.min_price) &&
+      (filter.max_price === undefined || Number(item.base_price) <= filter.max_price)
+    ).map(item => ({
+      id: item.id!, name: item.name!, category: item.category!, description: item.description,
+      base_price: Number(item.base_price), currency: item.currency!, delivery_mode: item.delivery_mode!, duration_minutes: item.duration_minutes,
+      legacy: false,
+      organization: { id: item.provider_id!, name: item.organization_name!, slug: item.provider_slug, status: 'active', verification_status: 'approved', provider_type: item.provider_type, country: item.country, city: item.city },
+      location: { id: item.provider_id!, city: item.city },
+    })));
+    if (filter.delivery_mode) results = results.filter(item => !item.legacy);
+    if (filter.provider_type) results = results.filter(item => item.organization?.provider_type === filter.provider_type);
     if (filter.query) {
       const q = filter.query.toLowerCase();
       results = results.filter(

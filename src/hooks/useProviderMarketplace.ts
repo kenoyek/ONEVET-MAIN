@@ -8,7 +8,9 @@ export function useProviderMarketplace(filter: SearchProvidersFilter) {
       const data = await marketplaceService.searchMarketplace(filter);
       return data as MarketplaceServiceItem[];
     },
-    staleTime: 1000 * 60 * 5, // 5 mins
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchInterval: 60_000,
   });
 
   return {

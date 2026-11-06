@@ -240,7 +240,7 @@ const App = () => (
                       </ProtectedRoute>
                     } />
                     <Route path="/provider-marketplace" element={<ProviderMarketplace />} />
-                    <Route path="/provider/public/:slug" element={<PlannedModuleGate><PublicProviderProfile /></PlannedModuleGate>} />
+                    <Route path="/provider/public/:slug" element={<PublicProviderProfile />} />
                     <Route path="/booking/new" element={
                       <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin']}>
                         <PlannedModuleGate><NewBooking /></PlannedModuleGate>

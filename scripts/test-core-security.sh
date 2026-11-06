@@ -19,10 +19,12 @@ done
  supabase/migrations/20261106040000_public_read_boundaries.sql \
  supabase/migrations/20261106050000_provider_draft_registration.sql \
  supabase/migrations/20261106060000_provider_verification_workflow.sql \
- supabase/migrations/20261106070000_verification_evidence_history.sql
+ supabase/migrations/20261106070000_verification_evidence_history.sql \
+ supabase/migrations/20261106080000_provider_service_publication.sql
  echo 'BEGIN;'
  cat supabase/tests/core-security.sql \
  supabase/tests/provider-drafts.sql \
- supabase/tests/provider-verification.sql
+ supabase/tests/provider-verification.sql \
+ supabase/tests/provider-publication.sql
  echo 'ROLLBACK;'
 } | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet

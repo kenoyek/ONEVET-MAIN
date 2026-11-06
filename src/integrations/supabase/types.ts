@@ -1162,6 +1162,62 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_services: {
+        Row: {
+          base_price: number
+          category: string
+          created_at: string
+          currency: string
+          delivery_mode: string
+          description: string
+          duration_minutes: number
+          id: string
+          is_published: boolean
+          name: string
+          provider_id: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          base_price: number
+          category: string
+          created_at?: string
+          currency?: string
+          delivery_mode: string
+          description: string
+          duration_minutes: number
+          id?: string
+          is_published?: boolean
+          name: string
+          provider_id: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          base_price?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          delivery_mode?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          is_published?: boolean
+          name?: string
+          provider_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_verification_cases: {
         Row: {
           document_ids: string[]
@@ -1551,6 +1607,35 @@ export type Database = {
           },
         ]
       }
+      provider_service_catalog: {
+        Row: {
+          base_price: number | null
+          category: string | null
+          city: string | null
+          country: string | null
+          currency: string | null
+          delivery_mode: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string | null
+          name: string | null
+          organization_name: string | null
+          provider_id: string | null
+          provider_slug: string | null
+          provider_type: string | null
+          state: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_profiles: {
         Row: {
           avatar_url: string | null
@@ -1667,6 +1752,14 @@ export type Database = {
       }
       is_provider_reviewer: { Args: never; Returns: boolean }
       is_verified_veterinarian: { Args: { uid: string }; Returns: boolean }
+      owns_provider_workspace: {
+        Args: { provider_uuid: string }
+        Returns: boolean
+      }
+      provider_publication_eligible: {
+        Args: { provider_uuid: string }
+        Returns: boolean
+      }
       register_provider_evidence: {
         Args: {
           expiry?: string
@@ -1687,6 +1780,23 @@ export type Database = {
       }
       save_provider_draft: {
         Args: { input: Json; provider_uuid?: string }
+        Returns: string
+      }
+      save_provider_service: {
+        Args: {
+          expected_version?: number
+          input: Json
+          provider_uuid: string
+          service_uuid?: string
+        }
+        Returns: string
+      }
+      set_provider_service_publication: {
+        Args: {
+          expected_version: number
+          publish: boolean
+          service_uuid: string
+        }
         Returns: string
       }
       submit_provider_verification: {

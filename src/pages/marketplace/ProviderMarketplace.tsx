@@ -352,7 +352,7 @@ export default function ProviderMarketplace() {
                           ? item.category === 'vet_clinic'
                             ? '/consultations/new'
                             : '/contact'
-                          : `/booking/new?service_id=${item.id}`
+                          : `/provider/public/${item.organization?.slug}`
                       }
                       className="w-full"
                     >
@@ -361,7 +361,7 @@ export default function ProviderMarketplace() {
                           ? item.category === 'vet_clinic'
                             ? 'Request veterinary care'
                             : 'Ask about this service'
-                          : 'Request appointment'}
+                          : 'View provider'}
                       </Button>
                     </Link>
                   </CardFooter>
