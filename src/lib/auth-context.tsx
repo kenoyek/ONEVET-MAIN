@@ -26,6 +26,7 @@ export interface Profile {
   business_name: string | null;
   business_address: string | null;
   location: string | null;
+  customer_type?: string | null;
 }
 
 interface AuthContextType {
@@ -40,6 +41,7 @@ interface AuthContextType {
    * Profile/role may still be loading in the background — never use them to gate auth.
    */
   loading: boolean;
+  permissionsError: boolean;
   signUp: (
     email: string,
     password: string,
@@ -74,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [permissionsError, setPermissionsError] = useState(false);
 
   // loading = true until we get the FIRST auth response (session or null).
   // This prevents any flash of "logged out" on page load.
@@ -93,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(async (authUser: User) => {
     if (!authUser?.id || !mounted.current) return;
 
+    setPermissionsError(false);
     const generation = ++profileGeneration.current;
     const isCurrent = () => mounted.current && activeUserId.current === authUser.id && profileGeneration.current === generation;
     try {
@@ -154,38 +158,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!isCurrent()) return;
 
-      if (rolesData && rolesData.length > 0) {
+      if (!roleError && rolesData && rolesData.length > 0) {
         const fetchedRoles = rolesData.map((r) => r.role as AppRole);
         setRoles(fetchedRoles);
-        setRole(fetchedRoles[0]);
-      } else if (!roleError) {
-        // No role row — create from metadata
-        const requestedRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
-        const { data: newRole } = await supabase
-          .from('user_roles')
-          .insert({ user_id: authUser.id, role: requestedRole })
-          .select()
-          .maybeSingle();
-
-        if (isCurrent()) {
-          const activeRole = newRole ? (newRole.role as AppRole) : requestedRole;
-          setRoles([activeRole]);
-          setRole(activeRole);
-        }
+        setRole(fetchedRoles[0] ?? null);
       } else {
-        // Role query errored — derive from metadata so UI isn't stuck
-        const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
-        if (isCurrent()) {
-          setRoles([fallbackRole]);
-          setRole(fallbackRole);
-        }
+        throw new Error('Account permissions could not be verified');
       }
     } catch (err) {
       console.warn('[Auth] fetchProfile error (non-fatal):', err);
       if (isCurrent()) {
-        const fallbackRole = (authUser.user_metadata?.role as AppRole) ?? 'pet_owner';
-        setRoles([fallbackRole]);
-        setRole(fallbackRole);
+        setRoles([]);
+        setRole(null);
+        setPermissionsError(true);
       }
     }
   }, []);
@@ -207,15 +192,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         console.debug('[Auth] event:', event, '| user:', newSession?.user?.id ?? 'none');
 
-        if (event === 'PASSWORD_RECOVERY') {
-          // Let the current tab handle the reset flow
-          if (mounted.current) setLoading(false);
-          return;
-        }
-
         if (activeUserId.current !== (newSession?.user.id ?? null)) {
           activeUserId.current = newSession?.user.id ?? null;
           profileGeneration.current++;
+          setPermissionsError(false);
           queryClient.clear();
           setProfile(null);
           setRole(null);
@@ -336,14 +316,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       setRole(null);
       setRoles([]);
+      setPermissionsError(false);
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, role, roles, loading, signUp, signIn, signOut, refreshProfile }}
+      value={{ user, session, profile, role, roles, loading, permissionsError, signUp, signIn, signOut, refreshProfile }}
     >
-      {children}
+      <React.Fragment key={user?.id ?? 'signed-out'}>{children}</React.Fragment>
     </AuthContext.Provider>
   );
 }

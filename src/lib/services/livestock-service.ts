@@ -1,3 +1,8 @@
+import {
+  farmSchema,
+  batchSchema,
+  observationSchema,
+} from '@/lib/farm-validation';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface RegisterFarmInput {
@@ -37,6 +42,7 @@ export const livestockService = {
    * Register a new commercial livestock farm
    */
   async registerFarm(input: RegisterFarmInput) {
+    farmSchema.parse(input);
     const { data, error } = await supabase
       .from('livestock_farms')
       .insert({
@@ -60,7 +66,8 @@ export const livestockService = {
    * Create a new livestock herd / flock batch
    */
   async createHerdBatch(input: CreateHerdBatchInput) {
-    const batchCode = `OV-HERD-${Math.floor(10000000 + Math.random() * 90000000)}`;
+    batchSchema.parse(input);
+    const batchCode = `OV-HERD-${crypto.randomUUID()}`;
 
     const { data, error } = await supabase
       .from('livestock_batches')
@@ -85,6 +92,11 @@ export const livestockService = {
    * Log flock health record, mass vaccination, or food safety withdrawal period
    */
   async logFlockHealthRecord(input: LogFlockHealthRecordInput) {
+    observationSchema.parse({
+      ...input,
+      affected_count: input.affected_count ?? 0,
+      mortality_count: input.mortality_count ?? 0,
+    });
     const { data, error } = await supabase
       .from('flock_health_records')
       .insert({
@@ -111,13 +123,47 @@ export const livestockService = {
   async getOwnerFarms(ownerId: string) {
     const { data, error } = await supabase
       .from('livestock_farms')
-      .select(`
-        *,
-        batches:livestock_batches(*)
-      `)
+      .select(
+        `
+        *
+      `,
+      )
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false });
 
+    if (error) throw error;
+    return data;
+  },
+
+  async getOwnerFarm(ownerId: string, farmId: string) {
+    const { data, error } = await supabase
+      .from('livestock_farms')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .eq('id', farmId)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  },
+
+  async getBatches(farmId: string) {
+    const { data, error } = await supabase
+      .from('livestock_batches')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async getHealthRecords(batchIds: string[]) {
+    if (!batchIds.length) return [];
+    const { data, error } = await supabase
+      .from('flock_health_records')
+      .select('*')
+      .in('batch_id', batchIds)
+      .order('recorded_at', { ascending: false })
+      .limit(50);
     if (error) throw error;
     return data;
   },

@@ -10,6 +10,7 @@ export type FeatureFlagKey =
   | 'pharmacy_enabled'
   | 'subscriptions_enabled'
   | 'ai_triage_enabled'
+  | 'customer_farms_enabled'
   | 'livestock_enabled'
   | 'insurance_enabled';
 
@@ -26,6 +27,7 @@ const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
   subscriptions_enabled: true,
   ai_triage_enabled: false,
   livestock_enabled: true,
+  customer_farms_enabled: false, // Enable only after the customer-farm RLS migration is deployed.
   insurance_enabled: false,
 };
 
@@ -59,6 +61,11 @@ function getLocalStorageOverride(flag: FeatureFlagKey): boolean | undefined {
  * Evaluates whether a given feature flag is enabled.
  */
 export function isFeatureEnabled(flag: FeatureFlagKey): boolean {
+  // This rollout requires a reviewed backend migration. Production builds cannot
+  // enable it through a leftover development localStorage override.
+  if (flag === 'customer_farms_enabled' && !import.meta.env.DEV) {
+    return getEnvOverride(flag) ?? DEFAULT_FEATURE_FLAGS[flag];
+  }
   const localOverride = getLocalStorageOverride(flag);
   if (localOverride !== undefined) return localOverride;
 

@@ -42,11 +42,11 @@ const Auth = () => {
   // Role-based redirect after login.
   // We redirect as soon as `user` is known — we must NOT wait for `role`
   // because `role` is fetched from a DB table and can be slow or fail.
-  // We derive the destination from role if available, otherwise from JWT metadata.
+  // Database permissions are verified by ProtectedRoute before opening a portal.
   useEffect(() => {
-    if (!loading && user && mode !== 'reset') {
-      // Use DB role if already loaded; otherwise fall back to JWT user_metadata.role
-      const effectiveRole = role ?? (user.user_metadata?.role as string);
+    if (!loading && user && mode !== 'reset' && searchParams.get('mode') !== 'reset') {
+      // Only database roles determine the portal destination.
+      const effectiveRole = role;
       if (returnPath) {
         navigate(returnPath, { replace: true });
       } else if (effectiveRole === 'admin') {
@@ -58,7 +58,7 @@ const Auth = () => {
         navigate('/dashboard');
       }
     }
-  }, [user, loading, role, navigate, mode, returnPath]);
+  }, [user, loading, role, navigate, mode, returnPath, searchParams]);
 
   if (loading) {
     return (

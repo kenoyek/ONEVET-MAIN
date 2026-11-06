@@ -84,7 +84,7 @@ export function SignUpForm() {
                 <SelectContent className="glass-card">
                   <SelectItem value="pet_owner">Pet Owner</SelectItem>
                   <SelectItem value="farm_owner">Farm Owner</SelectItem>
-                  <SelectItem value="livestock_owner">Livestock Owner</SelectItem>
+                  <SelectItem value="both">Pets and Farm Animals</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage className="font-bold text-xs" />

@@ -21,7 +21,7 @@ const SPECIES_FILTER_OPTIONS = [
 ];
 
 const Pets = () => {
-  const { pets, isLoading } = usePets();
+  const { pets, isLoading, isError, refetch } = usePets();
   const [searchQuery, setSearchQuery] = useState('');
   const [speciesFilter, setSpeciesFilter] = useState('all');
 
@@ -47,7 +47,7 @@ const Pets = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container-wide py-8">
+      <main id="main-content" tabIndex={-1} className="container-wide pt-28 md:pt-36 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -74,6 +74,7 @@ const Pets = () => {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                aria-label="Search pets by name or breed"
                 placeholder="Search by name or breed..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -81,7 +82,7 @@ const Pets = () => {
               />
             </div>
             <Select value={speciesFilter} onValueChange={setSpeciesFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger aria-label="Filter by species" className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Filter by species" />
               </SelectTrigger>
               <SelectContent>
@@ -95,7 +96,7 @@ const Pets = () => {
           </div>
 
           {/* Pet Grid */}
-          {isLoading ? (
+          {isError ? <section role="alert" className="care-path"><h2 className="text-xl mb-3">We couldn’t load your pets.</h2><p className="text-muted-foreground mb-4">Check your connection and try again.</p><Button onClick={()=>refetch()}>Try again</Button></section> : isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-24" />

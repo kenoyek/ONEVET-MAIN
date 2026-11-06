@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import type { CustomerDatabase } from './customer-schema';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY ||
@@ -24,7 +24,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(effectiveSupabaseUrl, effectiveSupabaseKey, {
+export const supabase = createClient<CustomerDatabase>(effectiveSupabaseUrl, effectiveSupabaseKey, {
   auth: {
     storage: localStorage,
     persistSession: true,

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 
 const mock = vi.hoisted(() => ({
+  roleStatus: 'ok' as 'ok' | 'error' | 'empty',
   listener: null as null | ((event: string, session: Session | null) => void),
   profiles: new Map<string, Promise<{ data: unknown; error: null }>>(),
 }));
@@ -22,7 +23,11 @@ vi.mock('@/integrations/supabase/client', () => ({
         eq: (_field: string, id: string) =>
           table === 'profiles'
             ? { maybeSingle: () => mock.profiles.get(id) }
-            : Promise.resolve({ data: [{ role: 'pet_owner' }], error: null }),
+            : Promise.resolve({
+                data: mock.roleStatus === 'ok' ? [{ role: 'pet_owner' }] : [],
+                error:
+                  mock.roleStatus === 'error' ? { message: 'offline' } : null,
+              }),
       }),
     }),
   },
@@ -30,7 +35,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 function Probe() {
   const a = useAuth();
   return (
-    <p data-testid="identity">
+    <p data-testid="identity" data-permissions-error={a.permissionsError}>
       {a.user?.id ?? 'none'}|{a.profile?.first_name ?? 'none'}|
       {a.roles.join(',')}
     </p>
@@ -42,6 +47,7 @@ afterEach(() => {
   cleanup();
   mock.profiles.clear();
   mock.listener = null;
+  mock.roleStatus = 'ok';
 });
 describe('Account transition isolation', () => {
   it('clears cached data and ignores a profile response from the previous account', async () => {
@@ -89,4 +95,40 @@ describe('Account transition isolation', () => {
     expect(screen.getByTestId('identity').textContent).toBe('none|none|');
     expect(client.getQueryData(['private-record'])).toBeUndefined();
   });
+  it.each(['error', 'empty'] as const)(
+    'does not grant metadata roles when the role lookup is %s',
+    async (status) => {
+      mock.roleStatus = status;
+      mock.profiles.set(
+        'forged',
+        Promise.resolve({
+          data: { id: 'p-forged', first_name: 'Test' },
+          error: null,
+        }),
+      );
+      const client = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      });
+      render(
+        <QueryClientProvider client={client}>
+          <AuthProvider>
+            <Probe />
+          </AuthProvider>
+        </QueryClientProvider>,
+      );
+      await act(async () => {});
+      const forged = session('forged');
+      forged.user.user_metadata = { role: 'admin' };
+      await act(async () => {
+        mock.listener?.('SIGNED_IN', forged);
+      });
+      await waitFor(() =>
+        expect(screen.getByTestId('identity')).toHaveAttribute(
+          'data-permissions-error',
+          'true',
+        ),
+      );
+      expect(screen.getByTestId('identity').textContent).toBe('forged|Test|');
+    },
+  );
 });

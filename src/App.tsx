@@ -18,6 +18,8 @@ const CareGuide = lazy(() => import("./pages/CareGuide"));
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const Farms = lazy(() => import("./pages/farms/Farms"));
+const FarmDetail = lazy(() => import("./pages/farms/FarmDetail"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const VetDashboard = lazy(() => import("./pages/VetDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -88,7 +90,7 @@ const App = () => (
 
                     {/* Core Portals & Dashboards */}
                     <Route path="/dashboard" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider']}>
                         <Dashboard />
                       </ProtectedRoute>
                     } />
@@ -147,78 +149,80 @@ const App = () => (
 
                     {/* Teleconsultations */}
                     <Route path="/consultations" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'veterinarian', 'service_provider', 'admin']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'veterinarian', 'service_provider', 'admin']}>
                         <Consultations />
                       </ProtectedRoute>
                     } />
                     <Route path="/consultations/new" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider']}>
                         <ConsultationNew />
                       </ProtectedRoute>
                     } />
                     <Route path="/consultations/:id" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'veterinarian', 'service_provider', 'admin']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'veterinarian', 'service_provider', 'admin']}>
                         <ConsultationChat />
                       </ProtectedRoute>
                     } />
 
+                    <Route path="/farms" element={<ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider']}><Farms /></ProtectedRoute>} />
+                    <Route path="/farms/:farmId" element={<ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider']}><FarmDetail /></ProtectedRoute>} />
                     {/* User Profile & Pet Management */}
                     <Route path="/profile" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'veterinarian', 'service_provider', 'admin']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'veterinarian', 'service_provider', 'admin']}>
                         <Profile />
                       </ProtectedRoute>
                     } />
                     <Route path="/pets" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider']}>
                         <Pets />
                       </ProtectedRoute>
                     } />
                     <Route path="/pets/new" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider']}>
                         <PetNew />
                       </ProtectedRoute>
                     } />
                     <Route path="/pets/:id" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider']}>
                         <PetDetail />
                       </ProtectedRoute>
                     } />
 
                     {/* Specialist Care Services */}
                     <Route path="/services/groomers" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin']}>
                         <Groomers />
                       </ProtectedRoute>
                     } />
                     <Route path="/services/pet-sitting" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin']}>
                         <PetSitting />
                       </ProtectedRoute>
                     } />
                     <Route path="/services/vet-clinics" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin']}>
                         <VetClinics />
                       </ProtectedRoute>
                     } />
 
                     {/* E-Commerce Marketplace */}
                     <Route path="/marketplace" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
                         <Marketplace />
                       </ProtectedRoute>
                     } />
                     <Route path="/marketplace/:id" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
                         <ProductDetail />
                       </ProtectedRoute>
                     } />
                     <Route path="/cart" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
                         <Cart />
                       </ProtectedRoute>
                     } />
                     <Route path="/checkout" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'service_provider', 'admin', 'veterinarian']}>
+                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
                         <Checkout />
                       </ProtectedRoute>
                     } />

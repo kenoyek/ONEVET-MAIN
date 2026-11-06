@@ -75,3 +75,9 @@ npm run dev
 ## 👨🏽‍💻 Maintainers
 1Vet Engineering Team
 Nigeria
+
+## Customer farm workspace rollout
+
+The customer dashboard includes care preferences and account-scoped carts. Farm/group/observation records require the reviewed ownership migration before enabling `VITE_FEATURE_CUSTOMER_FARMS_ENABLED=true` and rebuilding. The flag defaults to false; do not enable it against the old permissive policies.
+
+See [customer portal release and rollout](docs/1vet-customer-portal-release.md). Run `npm test -- --maxWorkers=2` for application regression tests and `bash scripts/test-farm-rls.sh` for isolated PostgreSQL authorization tests (Docker required). The latter never connects to a remote database.
