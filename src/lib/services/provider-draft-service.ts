@@ -49,8 +49,8 @@ export const providerDraftService = {
     if (!data) throw new Error('No organization returned');
     return { id: data, slug: validated.slug };
   },
-  async list() {
-    const { data, error } = await supabase.from('provider_organizations').select('*').order('created_at', { ascending: false });
+  async list(userId: string) {
+    const { data, error } = await supabase.from('provider_organizations').select('*').eq('created_by', userId).order('created_at', { ascending: false });
     if (error) throw error;
     return data;
   },

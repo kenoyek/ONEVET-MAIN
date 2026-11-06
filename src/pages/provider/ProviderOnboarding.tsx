@@ -10,12 +10,12 @@ export default function ProviderOnboarding() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const cache = useQueryClient();
-  const organizations = useQuery({ queryKey: ['provider-drafts', user?.id], queryFn: () => providerDraftService.list(), enabled: !!user });
+  const organizations = useQuery({ queryKey: ['provider-drafts', user?.id], queryFn: () => providerDraftService.list(user!.id), enabled: !!user });
   return <div className="min-h-screen bg-background"><Navbar />
     <main className="container-wide pt-32 pb-20 max-w-4xl">
       <p className="eyebrow mb-4">Veterinary & service partners</p>
       <h1 className="text-3xl mb-4">Register your organization</h1>
-      <p className="text-muted-foreground mb-8">Save your business details as a private draft. Registration does not grant professional approval or publish your business. Verification, staff invitations and bookings are not available in this workspace yet.</p>
+      <p className="text-muted-foreground mb-8">Save your business details as a private draft. Registration does not grant professional approval or publish your business. After saving, attach documents and submit your organization for review. Staff invitations and bookings are not available yet.</p>
       <section className="care-path mb-8" aria-labelledby="your-organizations">
         <h2 id="your-organizations" className="text-xl mb-4">Your organizations</h2>
         {organizations.isPending ? <p role="status">Loading organizations…</p> : organizations.isError ? <div><p role="alert">Could not load your organizations.</p><Button variant="outline" onClick={() => void organizations.refetch()}>Try again</Button></div> : organizations.data?.length ?

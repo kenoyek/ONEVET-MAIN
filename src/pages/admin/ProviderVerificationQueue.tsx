@@ -1,317 +1,80 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/layout/Navbar';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ProviderVerificationHistory } from '@/components/provider/ProviderVerificationHistory';
+import { ProviderEvidenceList } from '@/components/provider/ProviderEvidenceList';
 import { useAuth } from '@/lib/auth-context';
-import { verificationService } from '@/lib/services/verification-service';
-import { ProviderVerificationStatus } from '@/types/platform';
-import { toast } from 'sonner';
-import { ShieldCheck, ShieldAlert, CheckCircle2, XCircle, AlertCircle, FileText, Loader2, Eye } from 'lucide-react';
-
-export interface VerificationCaseItem {
-  id: string;
-  provider_id: string;
-  submitted_at: string;
-  risk_level: string;
-  organization?: {
-    name?: string | null;
-    provider_type?: string | null;
-    email?: string | null;
-    city?: string | null;
-    country?: string | null;
-  } | null;
-  [key: string]: unknown;
+import { providerVerificationService as service, verificationError, type ReviewDecision } from '@/lib/services/provider-verification-service';
+const filters = { pending: ['submitted', 'under_review'], returned: ['more_info_required', 'rejected'], approved: ['approved'], suspended: ['suspended'] };
+function ApplicationReview({ providerId }: { providerId: string }) {
+  const { user } = useAuth();
+  const cache = useQueryClient();
+  const [decision, setDecision] = useState<ReviewDecision | ''>('');
+  const [feedback, setFeedback] = useState('');
+  const [confirmed, setConfirmed] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const details = useQuery({ queryKey: ['provider-review', user?.id, providerId], enabled: !!user, queryFn: async () => {
+    const [application, documents, history] = await Promise.all([service.application(providerId), service.evidence(providerId), service.history(providerId)]);
+    return { application, documents, history };
+  } });
+  const application = details.data?.application;
+  const snapshot = application?.organization_snapshot;
+  const snapshotFields = snapshot && typeof snapshot === 'object' && !Array.isArray(snapshot) ? Object.entries(snapshot).filter(([key, value]) => ['name','slug','provider_type','description','email','phone','website','state','city','address','country'].includes(key) && typeof value === 'string') : [];
+  const submittedDocuments = details.data?.documents.filter(document => application?.document_ids.includes(document.id)) ?? [];
+  return <section className="care-path mt-8" aria-labelledby="application-review-title">
+    <h2 id="application-review-title" className="text-2xl mb-4">Application review</h2>
+    {details.isPending ? <p role="status">Loading application…</p> : details.isError || !application ? <><p role="alert">Application unavailable.</p><Button variant="outline" onClick={() => void details.refetch()}>Refresh application</Button></> : <div className="space-y-6">
+      <p>Status: {application.status.replaceAll('_', ' ')} · revision {application.revision}</p>
+      <dl className="grid gap-3 sm:grid-cols-2">{snapshotFields.map(([key, value]) => <div key={key}><dt className="text-sm text-muted-foreground capitalize">{key.replaceAll('_', ' ')}</dt><dd className="whitespace-pre-wrap break-words">{String(value)}</dd></div>)}</dl>
+      <div><h3 className="font-medium mb-3">Evidence in this submission</h3><ProviderEvidenceList documents={submittedDocuments} accountId={user?.id ?? ''} /></div>
+      {application.feedback && <p className="whitespace-pre-wrap rounded-md bg-muted p-4">Latest feedback: {application.feedback}</p>}
+      {['submitted','under_review','approved'].includes(application.status) && <form className="space-y-4" onSubmit={async event => {
+        event.preventDefault(); if (!decision || busy || (decision === 'approved' && !confirmed)) return;
+        setBusy(true); setError(''); setMessage('');
+        try {
+          await service.review(application, decision, feedback);
+          setDecision(''); setFeedback(''); setConfirmed(false); setMessage('Review decision recorded.');
+          await Promise.all([cache.invalidateQueries({ queryKey: ['provider-review', user?.id, providerId] }), cache.invalidateQueries({ queryKey: ['provider-review-queue', user?.id] })]);
+        } catch (cause) { setError(verificationError(cause)); }
+        finally { setBusy(false); }
+      }}>
+        <fieldset disabled={busy} className="space-y-4"><legend className="font-medium mb-3">Record a decision</legend>
+          <p className="text-sm text-muted-foreground">Approval requires checking the evidence and applicable licences. It keeps the organization inactive; it does not publish services or approve an individual's licence. You cannot review your own organization.</p>
+          <div><Label htmlFor="review-decision">Decision</Label><select id="review-decision" required value={decision} onChange={e => { setDecision(e.target.value as ReviewDecision | ''); setConfirmed(false); }} className="w-full border rounded-md bg-background p-3">
+            <option value="">Choose a decision</option>
+            {application.status === 'submitted' && <option value="under_review">Start review</option>}
+            {['submitted','under_review'].includes(application.status) && <><option value="more_info_required">Request more information</option><option value="rejected">Reject application</option><option value="approved">Approve organization</option></>}
+            {application.status === 'approved' && <option value="suspended">Suspend organization</option>}
+          </select></div>
+          <div><Label htmlFor="review-feedback">Feedback visible to the organization owner</Label><Textarea id="review-feedback" maxLength={3000} value={feedback} onChange={e => setFeedback(e.target.value)} required={['more_info_required','rejected','suspended'].includes(decision)} minLength={['more_info_required','rejected','suspended'].includes(decision) ? 10 : undefined} /></div>
+          {decision === 'approved' && <label className="flex gap-3 items-start"><input className="mt-1" type="checkbox" required checked={confirmed} onChange={e => setConfirmed(e.target.checked)} />I reviewed the submitted evidence and applicable licence validity.</label>}
+        </fieldset>
+        <Button type="submit" disabled={busy || !decision || (decision === 'approved' && !confirmed)}>{busy ? 'Recording…' : 'Record decision'}</Button>
+      </form>}
+      <Button variant="outline" disabled={busy} onClick={() => void details.refetch()}>Refresh application</Button>
+      <ProviderVerificationHistory events={details.data?.history ?? []} documents={details.data?.documents ?? []} accountId={user?.id ?? ''} />
+    </div>}
+    {error && <p role="alert" className="mt-4 text-destructive">{error}</p>}
+    {message && <p role="status" className="mt-4">{message}</p>}
+  </section>;
 }
-
-export interface VerificationDocumentItem {
-  id: string;
-  document_type: string;
-  document_number?: string | null;
-  issuing_authority?: string | null;
-  verification_status: string;
-  [key: string]: unknown;
-}
-
 export default function ProviderVerificationQueue() {
   const { user } = useAuth();
-  const [queue, setQueue] = useState<VerificationCaseItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCase, setSelectedCase] = useState<VerificationCaseItem | null>(null);
-  const [documents, setDocuments] = useState<VerificationDocumentItem[]>([]);
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [reviewAction, setReviewAction] = useState<ProviderVerificationStatus | null>(null);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [internalNotes, setInternalNotes] = useState('');
-  const [processing, setProcessing] = useState(false);
-
-  const fetchQueue = async () => {
-    setLoading(true);
-    try {
-      const data = await verificationService.getVerificationQueue();
-      setQueue((data || []) as unknown as VerificationCaseItem[]);
-    } catch (err: unknown) {
-      console.error('Failed to fetch verification queue:', err);
-      toast.error('Failed to load verification queue');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchQueue();
-  }, []);
-
-  const handleOpenReview = async (item: VerificationCaseItem) => {
-    setSelectedCase(item);
-    setReviewOpen(true);
-    try {
-      const docs = await verificationService.getProviderDocuments(item.provider_id);
-      setDocuments((docs || []) as unknown as VerificationDocumentItem[]);
-    } catch {
-      setDocuments([]);
-    }
-  };
-
-  const handleExecuteReview = async () => {
-    if (!selectedCase || !reviewAction || !user) return;
-    if (reviewAction === 'rejected' && !rejectionReason.trim()) {
-      toast.error('Please specify a rejection reason');
-      return;
-    }
-
-    setProcessing(true);
-    try {
-      await verificationService.reviewVerificationCase({
-        case_id: selectedCase.id,
-        provider_id: selectedCase.provider_id,
-        new_status: reviewAction,
-        rejection_reason: rejectionReason,
-        internal_notes: internalNotes,
-        admin_id: user.id,
-      });
-
-      toast.success(`Provider ${reviewAction.toUpperCase()} successfully`);
-      setReviewOpen(false);
-      setReviewAction(null);
-      setRejectionReason('');
-      setInternalNotes('');
-      fetchQueue();
-    } catch (err: unknown) {
-      toast.error((err as Error).message || 'Failed to update verification status');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <div className="container max-w-6xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-2">
-              <ShieldCheck className="h-8 w-8 text-primary" /> Provider Verification Command Queue
-            </h1>
-            <p className="text-muted-foreground">
-              Review verification cases, license documents, and regulatory compliance for healthcare providers.
-            </p>
-          </div>
-          <Button variant="outline" onClick={fetchQueue} className="gap-2">
-            Refresh Queue
-          </Button>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : queue.length === 0 ? (
-          <Card className="text-center py-16">
-            <CardContent className="space-y-3">
-              <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-              <h3 className="text-xl font-semibold">Verification Queue Clear</h3>
-              <p className="text-muted-foreground">There are currently no pending provider applications awaiting review.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {queue.map((item) => (
-              <Card key={item.id} className="hover:border-primary/50 transition-colors">
-                <CardContent className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-bold">{item.organization?.name || 'Provider Organization'}</h3>
-                      <Badge variant={item.risk_level === 'high' ? 'destructive' : 'outline'}>
-                        Risk: {item.risk_level.toUpperCase()}
-                      </Badge>
-                      <Badge variant="secondary" className="capitalize">
-                        {item.organization?.provider_type?.replace(/_/g, ' ')}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Submitted: {new Date(item.submitted_at).toLocaleDateString()} • Location: {item.organization?.city || 'N/A'}, {item.organization?.country}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" className="gap-2" onClick={() => handleOpenReview(item)}>
-                      <Eye className="h-4 w-4" /> Review Application
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Review Dialog */}
-        <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                Review Case: {selectedCase?.organization?.name}
-              </DialogTitle>
-              <DialogDescription>
-                Inspect compliance credentials, uploaded licenses, and execute review decision.
-              </DialogDescription>
-            </DialogHeader>
-
-            {selectedCase && (
-              <div className="space-y-6 py-2">
-                <div className="grid grid-cols-2 gap-4 text-sm p-4 bg-muted/40 rounded-lg">
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Provider Type</span>
-                    <span className="font-semibold capitalize">{selectedCase.organization?.provider_type?.replace(/_/g, ' ')}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Email</span>
-                    <span className="font-semibold">{selectedCase.organization?.email}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Submission Date</span>
-                    <span className="font-semibold">{new Date(selectedCase.submitted_at).toLocaleString()}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-xs">Current Risk Level</span>
-                    <span className="font-semibold capitalize">{selectedCase.risk_level}</span>
-                  </div>
-                </div>
-
-                {/* Document Verification Section */}
-                <div>
-                  <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4" /> Verification Documents & Credentials
-                  </h4>
-                  {documents.length === 0 ? (
-                    <p className="text-sm text-muted-foreground italic p-3 border rounded">
-                      No document attachments uploaded yet.
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 border rounded-md">
-                          <div>
-                            <p className="font-medium text-sm capitalize">{doc.document_type.replace(/_/g, ' ')}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Doc #: {doc.document_number || 'N/A'} • Authority: {doc.issuing_authority || 'N/A'}
-                            </p>
-                          </div>
-                          <Badge variant={doc.verification_status === 'verified' ? 'default' : 'outline'}>
-                            {doc.verification_status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Review Action Controls */}
-                <div className="border-t pt-4 space-y-4">
-                  <h4 className="font-semibold">Review Decision</h4>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant={reviewAction === 'approved' ? 'default' : 'outline'}
-                      className="gap-2"
-                      onClick={() => setReviewAction('approved')}
-                    >
-                      <CheckCircle2 className="h-4 w-4 text-green-500" /> Approve Application
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant={reviewAction === 'more_info_required' ? 'default' : 'outline'}
-                      className="gap-2"
-                      onClick={() => setReviewAction('more_info_required')}
-                    >
-                      <AlertCircle className="h-4 w-4 text-yellow-500" /> Request More Info
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant={reviewAction === 'rejected' ? 'destructive' : 'outline'}
-                      className="gap-2"
-                      onClick={() => setReviewAction('rejected')}
-                    >
-                      <XCircle className="h-4 w-4 text-red-500" /> Reject Application
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant={reviewAction === 'suspended' ? 'destructive' : 'outline'}
-                      className="gap-2"
-                      onClick={() => setReviewAction('suspended')}
-                    >
-                      <ShieldAlert className="h-4 w-4" /> Suspend Provider
-                    </Button>
-                  </div>
-
-                  {reviewAction === 'rejected' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="rejection">Rejection Reason *</Label>
-                      <Textarea
-                        id="rejection"
-                        required
-                        placeholder="State clear regulatory or documentation missing reasons for applicant..."
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Internal Admin Audit Notes</Label>
-                    <Textarea
-                      id="notes"
-                      rows={2}
-                      placeholder="Notes visible only to platform admins & compliance officers..."
-                      value={internalNotes}
-                      onChange={(e) => setInternalNotes(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button variant="outline" onClick={() => setReviewOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      disabled={!reviewAction || processing}
-                      onClick={handleExecuteReview}
-                    >
-                      {processing ? 'Saving Decision...' : 'Confirm Decision'}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
-  );
+  const [filter, setFilter] = useState<keyof typeof filters>('pending');
+  const [page, setPage] = useState(0);
+  const [selected, setSelected] = useState('');
+  const queue = useQuery({ queryKey: ['provider-review-queue', user?.id, filter, page], enabled: !!user, queryFn: () => service.queue(filters[filter], page) });
+  return <div className="min-h-screen bg-background"><Navbar /><main className="container-wide max-w-5xl pt-32 pb-20">
+    <h1 className="text-3xl mb-4">Organization verification</h1>
+    <p className="text-muted-foreground mb-6">Review the submitted business snapshot and private documents. Each decision is recorded in the audit trail and review history.</p>
+    <Label htmlFor="queue-filter">Applications</Label><select id="queue-filter" value={filter} onChange={e => { setFilter(e.target.value as keyof typeof filters); setPage(0); setSelected(''); }} className="border rounded-md bg-background p-3 block mb-6"><option value="pending">Pending review</option><option value="returned">Returned or rejected</option><option value="approved">Approved</option><option value="suspended">Suspended</option></select>
+    {queue.isPending ? <p role="status">Loading applications…</p> : queue.isError ? <><p role="alert">Could not load applications.</p><Button onClick={() => void queue.refetch()}>Retry applications</Button></> : queue.data?.cases.length ? <ul className="space-y-3">{queue.data.cases.map(application => <li key={application.id} className="border rounded-lg p-4 flex flex-wrap justify-between items-center gap-3"><div><p className="font-medium">{application.organization?.name ?? 'Organization unavailable'}</p><p className="text-sm text-muted-foreground">{application.status.replaceAll('_',' ')} · revision {application.revision}</p></div><Button variant="outline" onClick={() => setSelected(application.provider_id)}>Review application</Button></li>)}</ul> : <p>No applications in this view.</p>}
+    <div className="flex items-center gap-4 mt-6"><Button variant="outline" disabled={page===0 || queue.isFetching} onClick={() => { setPage(previous => previous-1); setSelected(''); }}>Previous</Button><span>Page {page+1}</span><Button variant="outline" disabled={!queue.data?.hasNext || queue.isFetching} onClick={() => { setPage(previous => previous+1); setSelected(''); }}>Next</Button></div>
+    {selected && <ApplicationReview key={`${user?.id}-${selected}`} providerId={selected} />}
+  </main></div>;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc } }));
+const { rpc, from, select, eq, order } = vi.hoisted(() => ({ rpc: vi.fn(), from: vi.fn(), select: vi.fn(), eq: vi.fn(), order: vi.fn() }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc, from } }));
 import { providerDraftService, emptyProviderDraft, providerDraftSchema, providerDraftError } from '@/lib/services/provider-draft-service';
 const valid = { ...emptyProviderDraft(' clinic@example.invalid '), name: ' Clinic ', slug: 'test-clinic', state: 'FCT', city: 'Abuja', address: '12 Example Road' };
 describe('Main provider draft service', () => {
@@ -9,6 +9,12 @@ describe('Main provider draft service', () => {
     rpc.mockResolvedValue({ data: 'organization-id', error: null });
     expect(await providerDraftService.save(valid)).toEqual({ id: 'organization-id', slug: 'test-clinic' });
     expect(rpc).toHaveBeenCalledExactlyOnceWith('save_provider_draft', { input: { ...valid, name: 'Clinic', email: 'clinic@example.invalid' } });
+  });
+  it('limits the owner list explicitly even when administrator RLS permits broader reads', async () => {
+    from.mockReturnValue({ select }); select.mockReturnValue({ eq }); eq.mockReturnValue({ order });
+    order.mockResolvedValue({ data: [], error: null });
+    expect(await providerDraftService.list('owner-id')).toEqual([]);
+    expect(eq).toHaveBeenCalledWith('created_by', 'owner-id');
   });
   it('passes a known organization ID only on edits', async () => {
     rpc.mockResolvedValue({ data: 'organization-id', error: null });

@@ -143,7 +143,7 @@ const AdminDashboard = () => {
       }
 
       // Verification changes are audited atomically by the trusted database trigger.
-      // Organization onboarding is not deployed on the main legacy backend.
+      // Organization verification has a separate reviewed workflow.
 
       toast.success(approve ? 'Vendor approved!' : 'Vendor rejected');
       fetchDashboardData();
@@ -211,7 +211,8 @@ const AdminDashboard = () => {
                 Comprehensive platform management and oversight.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" asChild><Link to="/admin/verifications">Organization verification</Link></Button>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input

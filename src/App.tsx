@@ -119,7 +119,7 @@ const App = () => (
                     } />
                     <Route path="/admin/verifications" element={
                       <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                        <PlannedModuleGate><ProviderVerificationQueue /></PlannedModuleGate>
+                        <ProviderVerificationQueue />
                       </ProtectedRoute>
                     } />
                     <Route path="/admin/subscriptions" element={

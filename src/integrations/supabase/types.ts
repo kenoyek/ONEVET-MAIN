@@ -952,6 +952,47 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          expires_at: string | null
+          file_path: string
+          id: string
+          is_current: boolean
+          provider_id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          expires_at?: string | null
+          file_path: string
+          id?: string
+          is_current?: boolean
+          provider_id: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          expires_at?: string | null
+          file_path?: string
+          id?: string
+          is_current?: boolean
+          provider_id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_documents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_locations: {
         Row: {
           address: string
@@ -1120,6 +1161,107 @@ export type Database = {
           website?: string
         }
         Relationships: []
+      }
+      provider_verification_cases: {
+        Row: {
+          document_ids: string[]
+          feedback: string
+          id: string
+          organization_snapshot: Json
+          provider_id: string
+          reviewed_by: string | null
+          revision: number
+          status: string
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          document_ids: string[]
+          feedback?: string
+          id?: string
+          organization_snapshot: Json
+          provider_id: string
+          reviewed_by?: string | null
+          revision?: number
+          status: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          document_ids?: string[]
+          feedback?: string
+          id?: string
+          organization_snapshot?: Json
+          provider_id?: string
+          reviewed_by?: string | null
+          revision?: number
+          status?: string
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_verification_cases_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: true
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_verification_events: {
+        Row: {
+          actor_id: string
+          case_id: string
+          created_at: string
+          document_ids: string[] | null
+          feedback: string
+          id: string
+          organization_snapshot: Json | null
+          provider_id: string
+          revision: number
+          status: string
+        }
+        Insert: {
+          actor_id: string
+          case_id: string
+          created_at?: string
+          document_ids?: string[] | null
+          feedback?: string
+          id?: string
+          organization_snapshot?: Json | null
+          provider_id: string
+          revision: number
+          status: string
+        }
+        Update: {
+          actor_id?: string
+          case_id?: string
+          created_at?: string
+          document_ids?: string[] | null
+          feedback?: string
+          id?: string
+          organization_snapshot?: Json | null
+          provider_id?: string
+          revision?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_verification_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "provider_verification_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_verification_events_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -1462,6 +1604,14 @@ export type Database = {
       }
     }
     Functions: {
+      can_edit_provider_evidence: {
+        Args: { provider_uuid: string }
+        Returns: boolean
+      }
+      can_upload_provider_evidence: {
+        Args: { object_name: string }
+        Returns: boolean
+      }
       claim_consultation: {
         Args: { consultation_uuid: string }
         Returns: string
@@ -1515,9 +1665,32 @@ export type Database = {
         Args: { _consultation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_provider_reviewer: { Args: never; Returns: boolean }
       is_verified_veterinarian: { Args: { uid: string }; Returns: boolean }
+      register_provider_evidence: {
+        Args: {
+          expiry?: string
+          kind: string
+          object_path: string
+          provider_uuid: string
+        }
+        Returns: string
+      }
+      review_provider_verification: {
+        Args: {
+          decision: string
+          expected_revision: number
+          owner_feedback?: string
+          provider_uuid: string
+        }
+        Returns: string
+      }
       save_provider_draft: {
         Args: { input: Json; provider_uuid?: string }
+        Returns: string
+      }
+      submit_provider_verification: {
+        Args: { provider_uuid: string }
         Returns: string
       }
     }
