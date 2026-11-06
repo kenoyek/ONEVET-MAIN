@@ -10,7 +10,7 @@ describe('Phase 0 Technical Foundation', () => {
   });
 
   it('evaluates feature flag framework defaults and overrides', () => {
-    expect(isFeatureEnabled('provider_marketplace_enabled')).toBe(true);
+    expect(isFeatureEnabled('provider_marketplace_enabled')).toBe(false);
     expect(isFeatureEnabled('pharmacy_enabled')).toBe(false);
 
     const allFlags = getAllFeatureFlags();

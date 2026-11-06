@@ -47,7 +47,35 @@ type Table<Row extends Record<string, unknown>, Required extends keyof Row> = {
   Relationships: [];
 };
 export type CustomerDatabase = Omit<Database, 'public'> & {
-  public: Omit<Database['public'], 'Tables'> & {
+  public: Omit<Database['public'], 'Tables' | 'Views' | 'Functions'> & {
+    Views: Database['public']['Views'] & {
+      care_service_directory: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          category: string;
+          base_price: number;
+          currency: string;
+          location: string | null;
+          provider_id: string;
+          first_name: string;
+          last_name: string;
+          business_name: string | null;
+          specialty: string | null;
+          avatar_url: string | null;
+          license_verified: boolean;
+          verification_status: string;
+        };
+        Relationships: [];
+      };
+    };
+    Functions: Database['public']['Functions'] & {
+      claim_consultation: {
+        Args: { consultation_uuid: string };
+        Returns: string;
+      };
+    };
     Tables: Database['public']['Tables'] & {
       profiles: Omit<
         Database['public']['Tables']['profiles'],

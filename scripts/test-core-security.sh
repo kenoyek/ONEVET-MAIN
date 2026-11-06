@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+unset DOCKER_HOST DOCKER_CONTEXT DOCKER_TLS DOCKER_TLS_VERIFY DOCKER_CERT_PATH
+core_test_container="onevet-core-test-$$"
+postgres_image="postgres:16-alpine@sha256:aa6cb33cf4c19c765cefcf48d96176258800870a9a1e930ad126200f9d825139"
+docker --host=unix:///var/run/docker.sock run --detach --name "$core_test_container" --network none --tmpfs /var/lib/postgresql/data -e POSTGRES_HOST_AUTH_METHOD=trust "$postgres_image" >/dev/null
+trap 'docker --host=unix:///var/run/docker.sock rm --force "$core_test_container" >/dev/null' EXIT
+for attempt in {1..30}; do
+ if docker --host=unix:///var/run/docker.sock exec "$core_test_container" pg_isready -U postgres >/dev/null 2>&1; then break; fi
+ sleep 1
+done
+cat supabase/tests/core-bootstrap.sql \
+ supabase/migrations/20260401000000_independent_architecture_master.sql \
+ supabase/migrations/20261106010000_live_security_repairs.sql \
+ supabase/migrations/20261106020000_payment_receipt_ledger.sql \
+ supabase/migrations/20261106030000_bootstrap_customer_farms.sql \
+ supabase/migrations/20261106040000_public_read_boundaries.sql \
+ supabase/tests/core-security.sql | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet

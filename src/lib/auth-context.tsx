@@ -21,6 +21,8 @@ export interface Profile {
   license_number: string | null;
   license_url?: string | null;
   license_verified: boolean;
+  verification_status?: string | null;
+  is_active?: boolean | null;
   is_available: boolean;
   specialty: string | null;
   business_name: string | null;
@@ -135,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               meta.role === 'veterinarian'
                 ? 'pending'
                 : meta.role === 'service_provider'
-                ? 'approved'
+                ? 'pending'
                 : 'inactive',
           })
           .select()

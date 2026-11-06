@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -70,6 +71,7 @@ export default function Pricing() {
   const { user, profile } = useAuth();
   const { subscription, isActive, loading: subLoading, refetch } = useSubscription();
   const { initializePayment } = usePaystack();
+  const paymentsEnabled = isFeatureEnabled('payments_enabled');
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
@@ -93,6 +95,7 @@ export default function Pricing() {
       return;
     }
 
+    if (!paymentsEnabled) { toast.error('Online payments are currently unavailable.'); return; }
     setIsProcessing(plan.id);
 
     initializePayment({
@@ -113,7 +116,7 @@ export default function Pricing() {
             }
           });
 
-          if (error) throw error;
+          if (error || data?.status !== 'success') throw error || new Error('Payment not verified');
 
           toast.success(`Successfully subscribed to ${plan.name}!`);
           await refetch();
@@ -136,6 +139,7 @@ export default function Pricing() {
     <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       <main className="pt-28 md:pt-32 pb-20">
+        {!paymentsEnabled && <p role="status" className="container-wide text-sm text-muted-foreground py-4">Online payments are currently unavailable. Please contact support for assistance.</p>}
         {/* Hero */}
         <section className="py-12 text-center">
           <div className="container-wide max-w-3xl mx-auto px-4">
@@ -242,7 +246,7 @@ export default function Pricing() {
                               <Button
                                 className="w-full h-16 rounded-full font-black text-lg shadow-glow hover:scale-105 transition-all"
                                 onClick={() => handleSubscribe(plan)}
-                                disabled={isProcessing !== null}
+                                disabled={isProcessing !== null || !paymentsEnabled}
                               >
                                 {isProcessing === plan.id ? (
                                   <Loader2 className="mr-3 h-6 w-6 animate-spin" />

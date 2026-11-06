@@ -1,19 +1,50 @@
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAuth } from '@/lib/auth-context';
-import { providerService, CreateProviderOrgInput } from '@/lib/services/provider-service';
+import {
+  providerService,
+  CreateProviderOrgInput,
+} from '@/lib/services/provider-service';
 import { ProviderType } from '@/types/platform';
 import { toast } from 'sonner';
-import { Building2, Stethoscope, Scissors, TestTube, Pill, Store, GraduationCap, Truck, CheckCircle2 } from 'lucide-react';
+import {
+  Building2,
+  Stethoscope,
+  Scissors,
+  TestTube,
+  Pill,
+  Store,
+  GraduationCap,
+  Truck,
+  CheckCircle2,
+} from 'lucide-react';
 
-const PROVIDER_TYPES: { type: ProviderType; label: string; description: string; icon: React.ComponentType<{ className?: string }> }[] = [
+const PROVIDER_TYPES: {
+  type: ProviderType;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}[] = [
   {
     type: 'veterinary_clinic',
     label: 'Veterinary Clinic',
@@ -35,19 +66,22 @@ const PROVIDER_TYPES: { type: ProviderType; label: string; description: string; 
   {
     type: 'diagnostic_laboratory',
     label: 'Diagnostic Laboratory',
-    description: 'Veterinary diagnostic testing, pathology and sample analysis.',
+    description:
+      'Veterinary diagnostic testing, pathology and sample analysis.',
     icon: TestTube,
   },
   {
     type: 'pharmacy',
     label: 'Veterinary Pharmacy',
-    description: 'Licensed pharmacy fulfilling pet prescriptions and medicines.',
+    description:
+      'Licensed pharmacy fulfilling pet prescriptions and medicines.',
     icon: Pill,
   },
   {
     type: 'pet_store',
     label: 'Pet Store / Vendor',
-    description: 'Retailer selling pet food, supplements, care products and supplies.',
+    description:
+      'Retailer selling pet food, supplements, care products and supplies.',
     icon: Store,
   },
   {
@@ -64,7 +98,7 @@ const PROVIDER_TYPES: { type: ProviderType; label: string; description: string; 
   },
 ];
 
-export default function ProviderOnboarding() {
+function OrganizationOnboarding() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState<1 | 2>(1);
@@ -122,12 +156,17 @@ export default function ProviderOnboarding() {
     setLoading(true);
 
     try {
-      const result = await providerService.createOrganization(formData, user.id);
+      const result = await providerService.createOrganization(
+        formData,
+        user.id,
+      );
       toast.success('Provider organization registered successfully!');
       navigate(`/provider/organization/${result.organization.slug}`);
     } catch (err: unknown) {
       console.error('Organization registration failed:', err);
-      toast.error((err as Error).message || 'Failed to register provider organization');
+      toast.error(
+        (err as Error).message || 'Failed to register provider organization',
+      );
     } finally {
       setLoading(false);
     }
@@ -138,9 +177,12 @@ export default function ProviderOnboarding() {
       <Navbar />
       <div className="container max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Register Provider Organization</h1>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">
+            Register Provider Organization
+          </h1>
           <p className="text-muted-foreground">
-            Join the 1vet multi-provider pet healthcare ecosystem as an approved service provider.
+            Join the 1vet multi-provider pet healthcare ecosystem as an approved
+            service provider.
           </p>
         </div>
 
@@ -148,7 +190,9 @@ export default function ProviderOnboarding() {
         <div className="flex items-center justify-center gap-4 mb-8">
           <div
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-              step === 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              step === 1
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}
           >
             <span>1</span> Select Provider Category
@@ -156,7 +200,9 @@ export default function ProviderOnboarding() {
           <div className="h-px w-8 bg-border" />
           <div
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
-              step === 2 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              step === 2
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}
           >
             <span>2</span> Organization Profile & Details
@@ -172,7 +218,9 @@ export default function ProviderOnboarding() {
                 <Card
                   key={item.type}
                   className={`cursor-pointer transition-all hover:border-primary ${
-                    isSelected ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : ''
+                    isSelected
+                      ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
+                      : ''
                   }`}
                   onClick={() => handleTypeSelect(item.type)}
                 >
@@ -180,7 +228,9 @@ export default function ProviderOnboarding() {
                     <div className="p-2 rounded-lg bg-primary/10 text-primary mb-2">
                       <Icon className="h-6 w-6" />
                     </div>
-                    {isSelected && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                    {isSelected && (
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                    )}
                   </CardHeader>
                   <CardContent>
                     <CardTitle className="text-lg mb-1">{item.label}</CardTitle>
@@ -203,7 +253,8 @@ export default function ProviderOnboarding() {
             <CardHeader>
               <CardTitle>Organization & Location Details</CardTitle>
               <CardDescription>
-                Provide details for your business entity and primary branch location.
+                Provide details for your business entity and primary branch
+                location.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -221,13 +272,20 @@ export default function ProviderOnboarding() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="slug">Public Portal Identifier (Slug) *</Label>
+                    <Label htmlFor="slug">
+                      Public Portal Identifier (Slug) *
+                    </Label>
                     <Input
                       id="slug"
                       required
                       placeholder="apex-pet-hospital"
                       value={formData.slug}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          slug: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -239,7 +297,12 @@ export default function ProviderOnboarding() {
                     rows={3}
                     placeholder="Brief description of your healthcare services, facilities, and care philosophy..."
                     value={formData.description}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -252,7 +315,12 @@ export default function ProviderOnboarding() {
                       required
                       placeholder="contact@apexvet.com"
                       value={formData.email}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                     />
                   </div>
 
@@ -262,7 +330,12 @@ export default function ProviderOnboarding() {
                       id="phone"
                       placeholder="+234 800 000 0000"
                       value={formData.phone}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
                     />
                   </div>
 
@@ -272,13 +345,20 @@ export default function ProviderOnboarding() {
                       id="website"
                       placeholder="https://apexvet.com"
                       value={formData.website}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, website: e.target.value }))}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          website: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
 
                 <div className="border-t pt-4 space-y-4">
-                  <h3 className="font-semibold text-lg">Primary Branch Location</h3>
+                  <h3 className="font-semibold text-lg">
+                    Primary Branch Location
+                  </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
@@ -286,7 +366,12 @@ export default function ProviderOnboarding() {
                       <Input
                         id="country"
                         value={formData.country}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, country: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            country: e.target.value,
+                          }))
+                        }
                       />
                     </div>
 
@@ -296,7 +381,12 @@ export default function ProviderOnboarding() {
                         id="state"
                         placeholder="Lagos"
                         value={formData.state}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            state: e.target.value,
+                          }))
+                        }
                       />
                     </div>
 
@@ -307,7 +397,12 @@ export default function ProviderOnboarding() {
                         required
                         placeholder="Ikeja"
                         value={formData.city}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            city: e.target.value,
+                          }))
+                        }
                       />
                     </div>
                   </div>
@@ -330,11 +425,17 @@ export default function ProviderOnboarding() {
                 </div>
 
                 <div className="flex justify-between items-center pt-4 border-t">
-                  <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                  >
                     Back
                   </Button>
                   <Button type="submit" size="lg" disabled={loading}>
-                    {loading ? 'Registering Organization...' : 'Submit Provider Registration'}
+                    {loading
+                      ? 'Registering Organization...'
+                      : 'Submit Provider Registration'}
                   </Button>
                 </div>
               </form>
@@ -342,6 +443,46 @@ export default function ProviderOnboarding() {
           </Card>
         )}
       </div>
+    </div>
+  );
+}
+
+export default function ProviderOnboarding() {
+  const { role } = useAuth();
+  if (isFeatureEnabled('provider_marketplace_enabled'))
+    return <OrganizationOnboarding />;
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="container-wide pt-32 pb-20">
+        <p className="eyebrow mb-4">Veterinary & service partners</p>
+        <h1 className="text-3xl md:text-4xl mb-5">
+          Bring your expertise to 1Vet.
+        </h1>
+        <p className="text-muted-foreground max-w-xl leading-relaxed">
+          Professional approval is required before offering care. Organization
+          registration is not available on this deployment yet.
+        </p>
+        <div className="care-path mt-8 max-w-2xl">
+          <h2 className="text-xl mb-3">
+            {role === 'veterinarian'
+              ? 'Submit your professional details'
+              : 'Request professional account access'}
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            {role === 'veterinarian'
+              ? 'Add your licence details and supporting document to your profile for administrator review. Updating credentials requires re-verification.'
+              : 'Contact the team about your professional role and services. An administrator must review and approve access.'}
+          </p>
+          <Button asChild>
+            <Link to={role === 'veterinarian' ? '/profile' : '/contact'}>
+              {role === 'veterinarian'
+                ? 'Complete professional profile'
+                : 'Contact the team'}
+            </Link>
+          </Button>
+        </div>
+      </main>
     </div>
   );
 }

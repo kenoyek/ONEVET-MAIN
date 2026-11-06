@@ -183,15 +183,7 @@ const VetDashboard = () => {
 
   const acceptConsultation = async (consultationId: string) => {
     try {
-      const { error } = await supabase
-        .from('consultations')
-        .update({ 
-          veterinarian_id: profile!.id,
-          status: 'accepted',
-          started_at: new Date().toISOString(),
-        })
-        .eq('id', consultationId)
-        .eq('status', 'pending');
+      const { error } = await supabase.rpc('claim_consultation', { consultation_uuid: consultationId });
 
       if (error) throw error;
 
@@ -231,7 +223,7 @@ const VetDashboard = () => {
               size="lg" 
               variant={isAvailable ? 'default' : 'outline'}
               onClick={toggleAvailability}
-              disabled={isTogglingAvailability}
+              disabled={isTogglingAvailability || !profile?.license_verified || profile?.verification_status !== 'approved' || profile?.is_active === false}
               className="gap-3 font-bold rounded-full shadow-soft px-8 min-w-[160px]"
             >
               {isAvailable ? (
@@ -249,7 +241,7 @@ const VetDashboard = () => {
           </div>
 
           {/* Verification Status */}
-          {!profile?.license_verified && (
+          {(!profile?.license_verified || profile?.verification_status !== 'approved' || profile?.is_active === false) && (
             <Card className="mb-10 border-warning/50 bg-warning/5 glass-card">
               <CardContent className="flex flex-col sm:flex-row items-center justify-between py-6 px-8 gap-4 text-center sm:text-left">
                 <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -257,7 +249,7 @@ const VetDashboard = () => {
                     <Stethoscope className="h-8 w-8" />
                   </div>
                   <div>
-                    <p className="font-bold text-lg">License verification pending</p>
+                    <p className="font-bold text-lg">Professional approval required</p>
                     <p className="text-sm text-muted-foreground font-medium">
                       Please upload your veterinary license to start accepting consultations.
                     </p>

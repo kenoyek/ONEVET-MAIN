@@ -142,30 +142,8 @@ const AdminDashboard = () => {
         throw new Error('Failed to update verification status. Please run the SQL migration in Supabase to grant Admin update permissions.');
       }
 
-      const targetUserId = updatedProfiles[0]?.user_id;
-
-      // 2. Also update associated provider_organizations if present
-      if (targetUserId) {
-        await supabase
-          .from('provider_organizations')
-          .update({
-            verification_status: newStatus,
-            updated_at: new Date().toISOString()
-          })
-          .eq('created_by', targetUserId);
-      }
-
-      // 3. Log the audit action safely
-      const adminId = profile?.user_id;
-      if (adminId) {
-        await supabase.from('audit_logs').insert({
-          action: approve ? 'vendor_approved' : 'vendor_rejected',
-          entity_type: 'profile',
-          entity_id: vetId,
-          details: { approved: approve },
-          user_id: adminId
-        });
-      }
+      // Verification changes are audited atomically by the trusted database trigger.
+      // Organization onboarding is not deployed on the main legacy backend.
 
       toast.success(approve ? 'Vendor approved!' : 'Vendor rejected');
       fetchDashboardData();

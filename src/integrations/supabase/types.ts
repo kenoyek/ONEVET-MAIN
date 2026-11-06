@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -69,6 +69,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articles_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -155,6 +162,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "care_service_directory"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
@@ -235,10 +256,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "consultations_pet_owner_id_fkey"
+            columns: ["pet_owner_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "consultations_veterinarian_id_fkey"
             columns: ["veterinarian_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultations_veterinarian_id_fkey"
+            columns: ["veterinarian_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -273,6 +308,191 @@ export type Database = {
         }
         Relationships: []
       }
+      flock_health_records: {
+        Row: {
+          affected_count: number | null
+          attending_vet_id: string | null
+          batch_id: string
+          created_at: string
+          id: string
+          mortality_count: number | null
+          observations: string
+          record_type: string
+          recorded_at: string
+          recorded_by_id: string
+          treatment_administered: string | null
+          withdrawal_period_days: number | null
+        }
+        Insert: {
+          affected_count?: number | null
+          attending_vet_id?: string | null
+          batch_id: string
+          created_at?: string
+          id?: string
+          mortality_count?: number | null
+          observations: string
+          record_type: string
+          recorded_at?: string
+          recorded_by_id: string
+          treatment_administered?: string | null
+          withdrawal_period_days?: number | null
+        }
+        Update: {
+          affected_count?: number | null
+          attending_vet_id?: string | null
+          batch_id?: string
+          created_at?: string
+          id?: string
+          mortality_count?: number | null
+          observations?: string
+          record_type?: string
+          recorded_at?: string
+          recorded_by_id?: string
+          treatment_administered?: string | null
+          withdrawal_period_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flock_health_records_attending_vet_id_fkey"
+            columns: ["attending_vet_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flock_health_records_attending_vet_id_fkey"
+            columns: ["attending_vet_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flock_health_records_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "livestock_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flock_health_records_recorded_by_id_fkey"
+            columns: ["recorded_by_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flock_health_records_recorded_by_id_fkey"
+            columns: ["recorded_by_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livestock_batches: {
+        Row: {
+          batch_code: string
+          breed: string | null
+          created_at: string
+          farm_id: string
+          head_count: number
+          housing_unit: string | null
+          id: string
+          purpose: string | null
+          species: string
+          status: string
+        }
+        Insert: {
+          batch_code: string
+          breed?: string | null
+          created_at?: string
+          farm_id: string
+          head_count?: number
+          housing_unit?: string | null
+          id?: string
+          purpose?: string | null
+          species: string
+          status?: string
+        }
+        Update: {
+          batch_code?: string
+          breed?: string | null
+          created_at?: string
+          farm_id?: string
+          head_count?: number
+          housing_unit?: string | null
+          id?: string
+          purpose?: string | null
+          species?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livestock_batches_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "livestock_farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      livestock_farms: {
+        Row: {
+          city: string
+          created_at: string
+          farm_name: string
+          farm_type: string
+          id: string
+          location_address: string
+          owner_id: string
+          registration_number: string | null
+          state: string
+          total_acreage: number | null
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          farm_name: string
+          farm_type: string
+          id?: string
+          location_address: string
+          owner_id: string
+          registration_number?: string | null
+          state: string
+          total_acreage?: number | null
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          farm_name?: string
+          farm_type?: string
+          id?: string
+          location_address?: string
+          owner_id?: string
+          registration_number?: string | null
+          state?: string
+          total_acreage?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livestock_farms_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "livestock_farms_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_listings: {
         Row: {
           category: string
@@ -285,6 +505,7 @@ export type Database = {
           location: string | null
           price: number
           seller_id: string
+          stock_quantity: number | null
           title: string
           updated_at: string
         }
@@ -299,6 +520,7 @@ export type Database = {
           location?: string | null
           price: number
           seller_id: string
+          stock_quantity?: number | null
           title: string
           updated_at?: string
         }
@@ -313,6 +535,7 @@ export type Database = {
           location?: string | null
           price?: number
           seller_id?: string
+          stock_quantity?: number | null
           title?: string
           updated_at?: string
         }
@@ -322,6 +545,13 @@ export type Database = {
             columns: ["seller_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -366,7 +596,190 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string
+          quantity: number
+          seller_id: string
+          total_price: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id: string
+          quantity: number
+          seller_id: string
+          total_price: number
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          product_id?: string
+          quantity?: number
+          seller_id?: string
+          total_price?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          payment_reference: string | null
+          payment_status: string
+          phone_number: string
+          shipping_address: string
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          payment_reference?: string | null
+          payment_status?: string
+          phone_number: string
+          shipping_address: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          payment_reference?: string | null
+          payment_status?: string
+          phone_number?: string
+          shipping_address?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_receipts: {
+        Row: {
+          amount_kobo: number
+          created_at: string
+          currency: string
+          payment_type: string
+          reference: string
+          target_id: string
+          user_id: string
+        }
+        Insert: {
+          amount_kobo: number
+          created_at?: string
+          currency: string
+          payment_type: string
+          reference: string
+          target_id: string
+          user_id: string
+        }
+        Update: {
+          amount_kobo?: number
+          created_at?: string
+          currency?: string
+          payment_type?: string
+          reference?: string
+          target_id?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       pets: {
         Row: {
@@ -428,6 +841,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pets_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -436,60 +856,99 @@ export type Database = {
           bio: string | null
           business_address: string | null
           business_name: string | null
+          city: string | null
+          country: string | null
           created_at: string
+          customer_type: string | null
           email: string | null
+          email_verified: boolean | null
           first_name: string
           id: string
+          is_active: boolean | null
           is_available: boolean | null
+          last_login: string | null
           last_name: string
           license_number: string | null
           license_url: string | null
           license_verified: boolean | null
           location: string | null
           phone: string | null
+          phone_verified: boolean | null
+          profile_completed: boolean | null
           specialty: string | null
+          state: string | null
           updated_at: string
           user_id: string
+          vendor_type: string | null
+          verification_status:
+            | Database["public"]["Enums"]["vendor_status"]
+            | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           business_address?: string | null
           business_name?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          customer_type?: string | null
           email?: string | null
+          email_verified?: boolean | null
           first_name?: string
           id?: string
+          is_active?: boolean | null
           is_available?: boolean | null
+          last_login?: string | null
           last_name?: string
           license_number?: string | null
           license_url?: string | null
           license_verified?: boolean | null
           location?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
+          profile_completed?: boolean | null
           specialty?: string | null
+          state?: string | null
           updated_at?: string
           user_id: string
+          vendor_type?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["vendor_status"]
+            | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           business_address?: string | null
           business_name?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
+          customer_type?: string | null
           email?: string | null
+          email_verified?: boolean | null
           first_name?: string
           id?: string
+          is_active?: boolean | null
           is_available?: boolean | null
+          last_login?: string | null
           last_name?: string
           license_number?: string | null
           license_url?: string | null
           license_verified?: boolean | null
           location?: string | null
           phone?: string | null
+          phone_verified?: boolean | null
+          profile_completed?: boolean | null
           specialty?: string | null
+          state?: string | null
           updated_at?: string
           user_id?: string
+          vendor_type?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["vendor_status"]
+            | null
         }
         Relationships: []
       }
@@ -537,10 +996,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reviews_reviewed_id_fkey"
+            columns: ["reviewed_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reviews_reviewer_id_fkey"
             columns: ["reviewer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -594,6 +1067,13 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_listings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -725,12 +1205,135 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      care_service_directory: {
+        Row: {
+          avatar_url: string | null
+          base_price: number | null
+          business_name: string | null
+          category: string | null
+          currency: string | null
+          description: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          license_verified: boolean | null
+          location: string | null
+          name: string | null
+          provider_id: string | null
+          specialty: string | null
+          verification_status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_listings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_listings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          business_name: string | null
+          created_at: string | null
+          customer_type: string | null
+          first_name: string | null
+          id: string | null
+          is_available: boolean | null
+          last_name: string | null
+          license_verified: boolean | null
+          location: string | null
+          specialty: string | null
+          user_id: string | null
+          vendor_type: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          business_name?: string | null
+          created_at?: string | null
+          customer_type?: string | null
+          first_name?: string | null
+          id?: string | null
+          is_available?: boolean | null
+          last_name?: string | null
+          license_verified?: boolean | null
+          location?: string | null
+          specialty?: string | null
+          user_id?: string | null
+          vendor_type?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          business_name?: string | null
+          created_at?: string | null
+          customer_type?: string | null
+          first_name?: string | null
+          id?: string | null
+          is_available?: boolean | null
+          last_name?: string | null
+          license_verified?: boolean | null
+          location?: string | null
+          specialty?: string | null
+          user_id?: string | null
+          vendor_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      claim_consultation: {
+        Args: { consultation_uuid: string }
+        Returns: string
+      }
+      finalize_verified_payment: {
+        Args: {
+          p_amount_kobo: number
+          p_currency: string
+          p_reference: string
+          p_target_id: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_online_vets_count: { Args: never; Returns: number }
       get_profile_id: { Args: { _user_id: string }; Returns: string }
       get_unread_message_count: { Args: { p_user_id: string }; Returns: number }
+      get_unread_notification_count: {
+        Args: { _user_id: string }
+        Returns: number
+      }
+      grant_role: {
+        Args: {
+          new_role: Database["public"]["Enums"]["app_role"]
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      handle_order_payment: {
+        Args: { p_order_id: string; p_payment_reference: string }
+        Returns: undefined
+      }
+      handle_subscription_payment: {
+        Args: {
+          p_payment_reference: string
+          p_plan_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -743,6 +1346,7 @@ export type Database = {
         Args: { _consultation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_verified_veterinarian: { Args: { uid: string }; Returns: boolean }
     }
     Enums: {
       app_role: "pet_owner" | "veterinarian" | "service_provider" | "admin"
@@ -775,6 +1379,12 @@ export type Database = {
         | "pig"
         | "horse"
         | "other"
+      vendor_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "suspended"
+        | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -790,12 +1400,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -819,11 +1429,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -844,11 +1454,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -869,11 +1479,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -886,11 +1496,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -934,6 +1544,13 @@ export const Constants = {
         "pig",
         "horse",
         "other",
+      ],
+      vendor_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "suspended",
+        "inactive",
       ],
     },
   },

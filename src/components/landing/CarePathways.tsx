@@ -153,7 +153,7 @@ export function CarePathways() {
               ],
               [
                 'Can I get help with livestock?',
-                'You can seek veterinary guidance for farm animals as well as pets. Confirm the provider’s species expertise before booking. Farm dashboards and herd or flock booking are planned improvements, not currently offered as a complete workflow.',
+                'You can seek veterinary guidance for farm animals as well as pets. Confirm the provider’s species expertise before booking. Farm records support animal groups and owner observations; group-targeted consultation booking is not yet available.',
               ],
               [
                 'What does an online consultation include?',

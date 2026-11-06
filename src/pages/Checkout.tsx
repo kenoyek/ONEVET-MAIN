@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -23,9 +24,10 @@ import { Separator } from "@/components/ui/separator";
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const navigate = useNavigate();
   const { initializePayment } = usePaystack();
+  const paymentsEnabled = isFeatureEnabled('payments_enabled');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -53,6 +55,7 @@ const Checkout = () => {
       return;
     }
 
+    if (!paymentsEnabled) { toast.error('Online payments are currently unavailable.'); return; }
     setIsProcessing(true);
 
     try {
@@ -92,10 +95,11 @@ const Checkout = () => {
 
       // 3. Initialize Paystack
       initializePayment({
-        email: formData.email,
+        email: user?.email || formData.email,
         amount: totalPrice,
         metadata: {
           order_id: order.id,
+          user_id: user?.id,
           cart_items: items.map(i => i.id)
         },
         onSuccess: async (reference) => {
@@ -109,7 +113,7 @@ const Checkout = () => {
               }
             });
 
-            if (error) throw error;
+            if (error || data?.status !== 'success') throw error || new Error('Payment not verified');
 
             setIsProcessing(false);
             setOrderId(order.id);
@@ -175,6 +179,7 @@ const Checkout = () => {
     <div className="min-h-screen bg-background bg-mesh-gradient">
       <Navbar />
       <main className="pt-28 md:pt-32 pb-20">
+        {!paymentsEnabled && <p role="status" className="container-wide text-sm text-muted-foreground py-4">Online payments are currently unavailable. Please contact support for assistance.</p>}
         <div className="container-wide">
           <div className="flex items-center gap-2 mb-10">
             <Button variant="ghost" size="sm" className="rounded-full font-bold hover:bg-primary/5 group" onClick={() => navigate('/cart')}>
@@ -293,7 +298,7 @@ const Checkout = () => {
                 type="submit"
                 size="xl"
                 className="w-full h-18 text-xl font-black rounded-full shadow-glow hover:scale-[1.02] transition-all"
-                disabled={isProcessing}
+                disabled={isProcessing || !paymentsEnabled}
               >
                 {isProcessing ? (
                   <>

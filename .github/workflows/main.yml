@@ -11,22 +11,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm install
+      run: npm ci
 
     - name: Run Lint
       run: npm run lint
       continue-on-error: true
 
-    - name: Run Type Check
+    - name: Build frontend
       run: npm run build
       env:
         VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -34,5 +34,10 @@ jobs:
         VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
 
     - name: Run Tests
-      run: npm run test
-      continue-on-error: true
+      run: npm test -- --maxWorkers=2
+
+    - name: Run core database security regressions
+      run: bash scripts/test-core-security.sh
+
+    - name: Run farm ownership regressions
+      run: bash scripts/test-farm-rls.sh

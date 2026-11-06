@@ -15,7 +15,14 @@ export interface SearchProvidersFilter {
 export interface CreateServiceInput {
   provider_id: string;
   location_id?: string;
-  category: 'veterinary' | 'grooming' | 'diagnostics' | 'training' | 'boarding' | 'pet_sitting' | 'transportation';
+  category:
+    | 'veterinary'
+    | 'grooming'
+    | 'diagnostics'
+    | 'training'
+    | 'boarding'
+    | 'pet_sitting'
+    | 'transportation';
   name: string;
   description?: string;
   delivery_mode: ServiceDeliveryMode;
@@ -38,6 +45,7 @@ export interface MarketplaceServiceItem {
   delivery_mode: string;
   is_emergency_service?: boolean;
   is_active?: boolean;
+  legacy?: boolean;
   organization?: {
     id: string;
     name: string;
@@ -58,50 +66,52 @@ export const marketplaceService = {
    * Search published services & approved providers across the marketplace
    */
   async searchMarketplace(filter: SearchProvidersFilter) {
-    let queryBuilder = supabase
-      .from('provider_services')
-      .select(`
-        *,
-        location:provider_locations(*),
-        organization:provider_organizations(*)
-      `)
-      .eq('is_active', true);
-
-    if (filter.category) {
-      queryBuilder = queryBuilder.eq('category', filter.category);
-    }
-
-    if (filter.delivery_mode) {
-      queryBuilder = queryBuilder.eq('delivery_mode', filter.delivery_mode);
-    }
-
-    if (filter.is_emergency_service) {
-      queryBuilder = queryBuilder.eq('is_emergency_service', true);
-    }
-
-    if (filter.min_price !== undefined) {
+    // Main currently runs the original service-listing schema. This curated view
+    // exposes approved providers without requiring undeployed organization tables.
+    let queryBuilder = supabase.from('care_service_directory').select('*');
+    if (filter.category)
+      queryBuilder = queryBuilder.eq(
+        'category',
+        filter.category === 'veterinary' ? 'vet_clinic' : filter.category,
+      );
+    if (filter.min_price !== undefined)
       queryBuilder = queryBuilder.gte('base_price', filter.min_price);
-    }
-
-    if (filter.max_price !== undefined) {
+    if (filter.max_price !== undefined)
       queryBuilder = queryBuilder.lte('base_price', filter.max_price);
-    }
-
     const { data, error } = await queryBuilder;
     if (error) throw error;
-
-    // Filter by provider status and search query if provided
-    let results = (data || []).map((item) => item as unknown as MarketplaceServiceItem).filter(
-      (item) => item.organization && item.organization.status === 'active'
-    );
-
+    // Legacy listings do not advertise channel, emergency coverage or precise durations.
+    if (filter.delivery_mode || filter.is_emergency_service) return [];
+    let results: MarketplaceServiceItem[] = (data ?? []).map((item) => ({
+      id: item.id,
+      name: item.name,
+      category: item.category,
+      description: item.description,
+      base_price: Number(item.base_price),
+      currency: item.currency,
+      delivery_mode: 'confirm_with_provider',
+      legacy: true,
+      organization: {
+        id: item.provider_id,
+        name:
+          item.business_name || `${item.first_name} ${item.last_name}`.trim(),
+        status: 'active',
+        verification_status: item.verification_status,
+        provider_type:
+          item.category === 'vet_clinic' ? 'veterinarian' : 'service_provider',
+        country: 'Nigeria',
+        city: item.location,
+      },
+      location: { id: item.id, city: item.location },
+    }));
     if (filter.query) {
       const q = filter.query.toLowerCase();
       results = results.filter(
         (item) =>
           item.name.toLowerCase().includes(q) ||
-          (item.organization?.name && item.organization.name.toLowerCase().includes(q)) ||
-          (item.description && item.description.toLowerCase().includes(q))
+          (item.organization?.name &&
+            item.organization.name.toLowerCase().includes(q)) ||
+          (item.description && item.description.toLowerCase().includes(q)),
       );
     }
 
@@ -109,8 +119,10 @@ export const marketplaceService = {
       const cityQ = filter.city.toLowerCase();
       results = results.filter(
         (item) =>
-          (item.location?.city && item.location.city.toLowerCase().includes(cityQ)) ||
-          (item.organization?.city && item.organization.city.toLowerCase().includes(cityQ))
+          (item.location?.city &&
+            item.location.city.toLowerCase().includes(cityQ)) ||
+          (item.organization?.city &&
+            item.organization.city.toLowerCase().includes(cityQ)),
       );
     }
 
@@ -166,12 +178,14 @@ export const marketplaceService = {
   async getPublicProviderProfile(slug: string) {
     const { data: org, error: orgError } = await supabase
       .from('provider_organizations')
-      .select(`
+      .select(
+        `
         *,
         locations:provider_locations(*),
         services:provider_services(*),
         availability_rules:provider_availability_rules(*)
-      `)
+      `,
+      )
       .eq('slug', slug)
       .single();
 

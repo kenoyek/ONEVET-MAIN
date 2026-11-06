@@ -11,7 +11,7 @@ describe('Farm production rollout gate', () => {
     localStorage.setItem('1vet_ff_customer_farms_enabled', 'true');
     expect(isFeatureEnabled('customer_farms_enabled')).toBe(false);
   });
-  it('requires the explicit production environment flag', () => {
+  it('respects the explicit production environment flag', () => {
     vi.stubEnv('DEV', false);
     vi.stubEnv('VITE_FEATURE_CUSTOMER_FARMS_ENABLED', 'true');
     expect(isFeatureEnabled('customer_farms_enabled')).toBe(true);

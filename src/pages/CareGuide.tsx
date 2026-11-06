@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import { Link, useLocation } from 'react-router-dom';
 import {
   ArrowRight,
@@ -60,10 +61,10 @@ export default function CareGuide() {
           },
           {
             icon: ClipboardList,
-            title: 'Prepare for your conversation',
-            text: 'Have your species, group size, production stage, recent changes, and health history ready. A complete farm and herd management portal is planned.',
-            href: '/consultations/new',
-            action: 'Request a consultation',
+            title: 'Keep your farm records together',
+            text: 'Add your farm, organize animals into flocks, herds, ponds or batches, and record health observations. Clinical advice still comes from your veterinarian.',
+            href: isFeatureEnabled('customer_farms_enabled') ? '/farms' : '/contact',
+            action: isFeatureEnabled('customer_farms_enabled') ? 'Open farm records' : 'Ask about farm records',
           },
           {
             icon: BookOpen,

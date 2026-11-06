@@ -24,3 +24,6 @@ See 1vet-platform-audit.md and 1vet-release-validation.md for exact scope and ch
 
 ## Customer release implementation update
 The customer dashboard, audience preferences, account-scoped carts, and gated farm/group/observation workspace are now implemented. See `1vet-customer-portal-release.md` for the scoped schema extension, migration, 27 PostgreSQL assertions, browser-fixture evidence and required target-backend rollout gates. The earlier public-release boundary above is historical. This release does not implement farm-target consultation foreign keys or deploy backend changes.
+
+## Main backend repair update
+Four repair migrations are now applied and tracked on main. Payment helpers are server-only, profile and clinical permissions are enforced, farm tables are provisioned, and discovery uses the actual legacy listing schema. Payments remain intentionally unavailable by user instruction. See `1vet-main-backend-repairs.md` for the 46 rollback-only main checks, 71 application tests, deployed function version and remaining scope.

@@ -8,6 +8,7 @@ export type FeatureFlagKey =
   | 'grooming_enabled'
   | 'laboratory_enabled'
   | 'pharmacy_enabled'
+  | 'payments_enabled'
   | 'subscriptions_enabled'
   | 'ai_triage_enabled'
   | 'customer_farms_enabled'
@@ -20,14 +21,15 @@ export type FeatureFlagKey =
  * and disabled or gated for pending phased modules.
  */
 const DEFAULT_FEATURE_FLAGS: Record<FeatureFlagKey, boolean> = {
-  provider_marketplace_enabled: true,
+  provider_marketplace_enabled: false, // Organization tables are not deployed on main.
   grooming_enabled: true,
   laboratory_enabled: false,
   pharmacy_enabled: false,
   subscriptions_enabled: true,
+  payments_enabled: false, // User requested payments remain unavailable.
   ai_triage_enabled: false,
   livestock_enabled: true,
-  customer_farms_enabled: false, // Enable only after the customer-farm RLS migration is deployed.
+  customer_farms_enabled: true, // Ownership policies deployed and validated on main.
   insurance_enabled: false,
 };
 
@@ -63,7 +65,7 @@ function getLocalStorageOverride(flag: FeatureFlagKey): boolean | undefined {
 export function isFeatureEnabled(flag: FeatureFlagKey): boolean {
   // This rollout requires a reviewed backend migration. Production builds cannot
   // enable it through a leftover development localStorage override.
-  if (flag === 'customer_farms_enabled' && !import.meta.env.DEV) {
+  if (['customer_farms_enabled', 'payments_enabled', 'provider_marketplace_enabled'].includes(flag) && !import.meta.env.DEV) {
     return getEnvOverride(flag) ?? DEFAULT_FEATURE_FLAGS[flag];
   }
   const localOverride = getLocalStorageOverride(flag);

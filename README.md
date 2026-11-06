@@ -78,6 +78,8 @@ Nigeria
 
 ## Customer farm workspace rollout
 
-The customer dashboard includes care preferences and account-scoped carts. Farm/group/observation records require the reviewed ownership migration before enabling `VITE_FEATURE_CUSTOMER_FARMS_ENABLED=true` and rebuilding. The flag defaults to false; do not enable it against the old permissive policies.
+The customer dashboard includes care preferences and account-scoped carts. The reviewed repairs are now applied to main, and farm/group/observation records are enabled by default. Other backends must apply and validate the ownership policies first. Set `VITE_FEATURE_CUSTOMER_FARMS_ENABLED=false` to pause the portal. Payments remain disabled by default under the user’s instruction.
 
 See [customer portal release and rollout](docs/1vet-customer-portal-release.md). Run `npm test -- --maxWorkers=2` for application regression tests and `bash scripts/test-farm-rls.sh` for isolated PostgreSQL authorization tests (Docker required). The latter never connects to a remote database.
+
+See [main backend repair evidence and rollout](docs/1vet-main-backend-repairs.md). Run `bash scripts/test-core-security.sh` for core security, settlement, and farm bootstrap regressions. Production repair deployment is restricted to the explicit reviewed manifest in `scripts/deploy-reviewed-repairs.py`; do not replay all historical migrations on the existing main database.
