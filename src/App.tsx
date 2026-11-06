@@ -51,7 +51,7 @@ const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const ProviderOnboarding = lazy(() => import("./pages/provider/ProviderOnboarding"));
-const OrganizationSettings = lazy(() => import("./pages/provider/OrganizationSettings"));
+const ProviderDraftWorkspace = lazy(() => import("./pages/provider/ProviderDraftWorkspace"));
 const ProviderMarketplace = lazy(() => import("./pages/marketplace/ProviderMarketplace"));
 const PublicProviderProfile = lazy(() => import("./pages/provider/PublicProviderProfile"));
 const NewBooking = lazy(() => import("./pages/booking/NewBooking"));
@@ -236,7 +236,7 @@ const App = () => (
                     } />
                     <Route path="/provider/organization/:slug" element={
                       <ProtectedRoute allowedRoles={['service_provider', 'veterinarian', 'pet_owner', 'admin', 'clinic_admin', 'groomer', 'laboratory', 'pharmacy', 'vendor', 'trainer']}>
-                        <PlannedModuleGate><OrganizationSettings /></PlannedModuleGate>
+                        <ProviderDraftWorkspace />
                       </ProtectedRoute>
                     } />
                     <Route path="/provider-marketplace" element={<ProviderMarketplace />} />

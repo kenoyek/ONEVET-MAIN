@@ -952,6 +952,175 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_locations: {
+        Row: {
+          address: string
+          city: string
+          country: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          name: string
+          phone: string
+          provider_id: string
+          state: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name: string
+          phone?: string
+          provider_id: string
+          state: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name?: string
+          phone?: string
+          provider_id?: string
+          state?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_locations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string | null
+          joined_at: string
+          member_role: string
+          permissions: Json
+          provider_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          member_role: string
+          permissions?: Json
+          provider_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string
+          member_role?: string
+          permissions?: Json
+          provider_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_members_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_organizations: {
+        Row: {
+          address: string
+          city: string
+          country: string
+          created_at: string
+          created_by: string
+          currency: string
+          description: string
+          email: string
+          id: string
+          name: string
+          phone: string
+          provider_type: string
+          slug: string
+          state: string
+          status: string
+          timezone: string
+          updated_at: string
+          verification_status: string
+          website: string
+        }
+        Insert: {
+          address: string
+          city: string
+          country?: string
+          created_at?: string
+          created_by: string
+          currency?: string
+          description?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string
+          provider_type: string
+          slug: string
+          state: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+          verification_status?: string
+          website?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          country?: string
+          created_at?: string
+          created_by?: string
+          currency?: string
+          description?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          provider_type?: string
+          slug?: string
+          state?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+          verification_status?: string
+          website?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           comment: string | null
@@ -1347,6 +1516,10 @@ export type Database = {
         Returns: boolean
       }
       is_verified_veterinarian: { Args: { uid: string }; Returns: boolean }
+      save_provider_draft: {
+        Args: { input: Json; provider_uuid?: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "pet_owner" | "veterinarian" | "service_provider" | "admin"

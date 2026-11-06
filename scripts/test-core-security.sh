@@ -10,10 +10,16 @@ for attempt in {1..30}; do
  if docker --host=unix:///var/run/docker.sock exec "$core_test_container" pg_isready -U postgres >/dev/null 2>&1; then break; fi
  sleep 1
 done
-cat supabase/tests/core-bootstrap.sql \
+{
+ cat supabase/tests/core-bootstrap.sql \
  supabase/migrations/20260401000000_independent_architecture_master.sql \
  supabase/migrations/20261106010000_live_security_repairs.sql \
  supabase/migrations/20261106020000_payment_receipt_ledger.sql \
  supabase/migrations/20261106030000_bootstrap_customer_farms.sql \
  supabase/migrations/20261106040000_public_read_boundaries.sql \
- supabase/tests/core-security.sql | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet
+ supabase/migrations/20261106050000_provider_draft_registration.sql
+ echo 'BEGIN;'
+ cat supabase/tests/core-security.sql \
+ supabase/tests/provider-drafts.sql
+ echo 'ROLLBACK;'
+} | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet

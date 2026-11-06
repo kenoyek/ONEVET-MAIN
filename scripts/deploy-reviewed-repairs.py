@@ -3,7 +3,7 @@
 import argparse, hashlib, json, os, pathlib, urllib.error, urllib.request
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 REF='fxvctkfhitpgfyaztqor'
-FILES=['20261106010000_live_security_repairs.sql','20261106020000_payment_receipt_ledger.sql','20261106030000_bootstrap_customer_farms.sql','20261106040000_public_read_boundaries.sql']
+FILES=['20261106010000_live_security_repairs.sql','20261106020000_payment_receipt_ledger.sql','20261106030000_bootstrap_customer_farms.sql','20261106040000_public_read_boundaries.sql','20261106050000_provider_draft_registration.sql']
 def request(path,body=None,key=None):
  headers={'Authorization':'Bearer '+os.environ['SUPABASE_ACCESS_TOKEN'],'Content-Type':'application/json'}
  if key:headers['Idempotency-Key']=key
