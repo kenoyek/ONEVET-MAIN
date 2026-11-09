@@ -41,3 +41,20 @@ with tempfile.TemporaryFile(mode='w+t') as output:
  if first.wait(timeout=10)!=0 or second.returncode==0 or '40001' not in second.stderr:raise SystemExit('Expected original cancellation to invalidate the alternative')
 if sql("SELECT count(*) FROM provider_booking_requests WHERE request_key IN ('c9111111-1111-4111-8111-111111111111','c9333333-3333-4333-8333-333333333333') AND status='cancelled';")!='2':raise SystemExit('Original and alternative must both remain cancelled')
 print('PASS: concurrent original cancellation prevents replacement confirmation and leaves both records cancelled')
+# Permission revocation and booking confirmation serialize on the same organization.
+sql("INSERT INTO auth.users(id,email,raw_user_meta_data,email_confirmed_at) VALUES('c8555555-5555-4555-8555-555555555555','local-team-race@example.invalid','{}',now());BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','b8111111-1111-4111-8111-111111111111',true);SELECT invite_provider_team_member((SELECT id FROM provider_organizations WHERE slug='booking-fixture-a'),'local-team-race@example.invalid','staff');COMMIT;")
+sql("BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','c8555555-5555-4555-8555-555555555555',true);SELECT respond_provider_team_invitation((SELECT id FROM provider_team_invitations WHERE invited_email='local-team-race@example.invalid'),1,'accept');COMMIT;")
+revoke="BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','b8111111-1111-4111-8111-111111111111',true);SELECT update_provider_team_member((SELECT id FROM list_provider_team((SELECT id FROM provider_organizations WHERE slug='booking-fixture-a')) WHERE user_id='c8555555-5555-4555-8555-555555555555'),1,'staff',false);"
+with tempfile.TemporaryFile(mode='w+t') as output:
+ first=subprocess.Popen(base,stdin=subprocess.PIPE,stdout=output,stderr=output,text=True)
+ first.stdin.write("SET application_name='onevet-team-revoke-first';"+revoke+"SELECT pg_sleep(4);COMMIT;")
+ first.stdin.close()
+ for attempt in range(40):
+  if sql("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='onevet-team-revoke-first' AND wait_event='PgSleep');")=='t':break
+  if first.poll() is not None:raise SystemExit('Revocation did not reach its transaction hold')
+  time.sleep(.1)
+ else:raise SystemExit('Timed out waiting for membership revocation')
+ second=subprocess.run(base,input="BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','c8555555-5555-4555-8555-555555555555',true);SELECT respond_provider_booking((SELECT id FROM provider_booking_requests WHERE request_key='c9222222-2222-4222-8222-222222222222'),1,'confirmed','Team race response');COMMIT;",text=True,capture_output=True)
+ if first.wait(timeout=10)!=0 or second.returncode==0 or '42501' not in second.stderr:raise SystemExit('A revoked coordinator must not confirm a request waiting on the organization lock')
+if sql("SELECT status FROM provider_booking_requests WHERE request_key='c9222222-2222-4222-8222-222222222222';")!='pending':raise SystemExit('Revoked operation changed the pending request')
+print('PASS: concurrent membership revocation blocks a queued coordinator confirmation')

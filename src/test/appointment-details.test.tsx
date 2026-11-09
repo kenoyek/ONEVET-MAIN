@@ -17,6 +17,9 @@ describe('Private appointment details',()=>{
  it('links replacement requests while retaining participant-only controls',async()=>{
   details.mockResolvedValue({id:'booking-id',customer_id:'customer-id',provider_owner_id:'provider-id'});replacements.mockResolvedValue([{id:'alternative-id',status:'pending',start_at:new Date(Date.now()+86400000).toISOString()}]);mount();expect(await screen.findByText('booking-id · participant')).toBeInTheDocument();expect(screen.getByRole('link',{name:/WAT/})).toHaveAttribute('href','/appointments/alternative-id');
  });
+ it('enables delegated provider mode through scoped capabilities rather than calendar ownership',async()=>{
+  details.mockResolvedValue({id:'booking-id',customer_id:'another-customer',provider_owner_id:'calendar-owner',provider_access:true,service_snapshot:{provider_slug:'our-clinic'}});mount();expect(await screen.findByText('booking-id · participant')).toBeInTheDocument();expect(screen.getByRole('link',{name:'Organization workspace'})).toHaveAttribute('href','/provider/organization/our-clinic');
+ });
  it('keeps administrator observations read-only when the administrator is not a participant',async()=>{
   details.mockResolvedValue({id:'booking-id',customer_id:'another-customer',provider_owner_id:'another-provider'});mount();expect(await screen.findByText('booking-id · read only')).toBeInTheDocument();
  });

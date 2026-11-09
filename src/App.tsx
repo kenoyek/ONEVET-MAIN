@@ -50,6 +50,7 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Pricing = lazy(() => import("./pages/Pricing"));
+const TeamInvitations = lazy(() => import("./pages/provider/TeamInvitations"));
 const ProviderOnboarding = lazy(() => import("./pages/provider/ProviderOnboarding"));
 const ProviderDraftWorkspace = lazy(() => import("./pages/provider/ProviderDraftWorkspace"));
 const ProviderMarketplace = lazy(() => import("./pages/marketplace/ProviderMarketplace"));
@@ -255,6 +256,8 @@ const App = () => (
                     <Route path="/appointments/:id" element={<ProtectedRoute allowedRoles={['pet_owner','client','service_provider','veterinarian','admin']}><AppointmentDetails /></ProtectedRoute>} />
 
                     <Route path="/notifications" element={<ProtectedRoute allowedRoles={['pet_owner','client','service_provider','veterinarian','admin']}><Notifications /></ProtectedRoute>} />
+
+                    <Route path="/provider/invitations" element={<ProtectedRoute allowedRoles={['pet_owner','client','service_provider','veterinarian','admin']}><TeamInvitations /></ProtectedRoute>} />
 
                     {/* Catch-all 404 Route */}
                     <Route path="*" element={<NotFound />} />

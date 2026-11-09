@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
-export type Appointment = Database['public']['Tables']['provider_booking_requests']['Row'] & { provider_eligibility?: 'eligible' | 'unavailable' | 'unknown' };
+export type Appointment = Database['public']['Tables']['provider_booking_requests']['Row'] & { provider_access?: boolean; provider_eligibility?: 'eligible' | 'unavailable' | 'unknown' };
 export type BookingSchedule = Database['public']['Tables']['provider_booking_settings']['Row'];
 export type WeeklyWindow = { weekday: number; opens: number; closes: number };
 export type BookingView = 'upcoming' | 'needs_response' | 'history' | 'all';
@@ -59,18 +59,22 @@ export const appointmentService = {
     const { data, error } = await query.range(page * 20, page * 20 + 20);
     if (error) throw error;
     const eligibility = new Map<string, 'eligible' | 'unavailable' | 'unknown'>();
+    const operators = new Map<string,boolean>();
     await Promise.all([...new Set(data.slice(0,20).map(row => row.provider_id))].map(async providerId => {
       try { const check = await supabase.rpc('provider_publication_eligible', { provider_uuid: providerId }); eligibility.set(providerId, check.error ? 'unknown' : check.data ? 'eligible' : 'unavailable'); }
       catch { eligibility.set(providerId, 'unknown'); }
+      try { const access=await supabase.rpc('has_provider_team_access',{provider_uuid:providerId,capability:'bookings'});operators.set(providerId,!access.error && access.data===true); } catch { operators.set(providerId,false); }
     }));
-    return { rows: data.slice(0,20).map(row => ({ ...row, provider_eligibility: eligibility.get(row.provider_id) ?? 'unknown' })), hasNext: data.length>20 };
+    return { rows: data.slice(0,20).map(row => ({ ...row, provider_eligibility: eligibility.get(row.provider_id) ?? 'unknown',provider_access:operators.get(row.provider_id)===true })), hasNext: data.length>20 };
   },
   async details(id: string) {
     const { data, error } = await supabase.from('provider_booking_requests').select('*').eq('id', id).single();
     if (error) throw error;
     let eligibility: 'eligible' | 'unavailable' | 'unknown' = 'unknown';
     try { const check = await supabase.rpc('provider_publication_eligible', { provider_uuid: data.provider_id }); eligibility = check.error ? 'unknown' : check.data ? 'eligible' : 'unavailable'; } catch { /* Preserve access to the recorded appointment when rechecking fails. */ }
-    return { ...data, provider_eligibility: eligibility };
+    let operator=false;
+    try { const access=await supabase.rpc('has_provider_team_access',{provider_uuid:data.provider_id,capability:'bookings'});operator=!access.error && access.data===true; } catch { /* A failed permission check must not enable provider actions. */ }
+    return { ...data, provider_eligibility: eligibility,provider_access:operator };
   },
   async replacements(id: string) {
     const { data, error } = await supabase.from('provider_booking_requests').select('id,status,start_at').eq('replacement_for', id).order('created_at', { ascending: false }).order('id').limit(50);

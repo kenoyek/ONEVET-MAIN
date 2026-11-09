@@ -140,6 +140,8 @@ export function Navbar() {
                   
                   <DropdownMenuSeparator className="bg-border/40" />
                   
+                  <DropdownMenuItem asChild><Link to="/provider/invitations">Team invitations & workspaces</Link></DropdownMenuItem>
+
                   {/* Account Section */}
                   <div className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground/75">
                     Account

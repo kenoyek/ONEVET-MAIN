@@ -1281,6 +1281,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          version: number
         }
         Insert: {
           created_at?: string
@@ -1293,6 +1294,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          version?: number
         }
         Update: {
           created_at?: string
@@ -1305,6 +1307,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          version?: number
         }
         Relationships: [
           {
@@ -1431,6 +1434,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "provider_services_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_team_invitations: {
+        Row: {
+          accepted_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          invited_by: string
+          invited_email: string
+          member_role: string
+          provider_id: string
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          accepted_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          invited_email: string
+          member_role: string
+          provider_id: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          accepted_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          invited_email?: string
+          member_role?: string
+          provider_id?: string
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_team_invitations_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
             referencedRelation: "provider_organizations"
@@ -1975,6 +2028,10 @@ export type Database = {
         Returns: undefined
       }
       has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
+      has_provider_team_access: {
+        Args: { capability: string; provider_uuid: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2010,12 +2067,57 @@ export type Database = {
           start_at: string
         }[]
       }
+      invite_provider_team_member: {
+        Args: {
+          email_address: string
+          provider_uuid: string
+          requested_role: string
+        }
+        Returns: string
+      }
       is_consultation_participant: {
         Args: { _consultation_id: string; _user_id: string }
         Returns: boolean
       }
+      is_provider_invitation_recipient: {
+        Args: { email_address: string }
+        Returns: boolean
+      }
       is_provider_reviewer: { Args: never; Returns: boolean }
       is_verified_veterinarian: { Args: { uid: string }; Returns: boolean }
+      list_provider_team: {
+        Args: { provider_uuid: string }
+        Returns: {
+          display_name: string
+          id: string
+          invitation_email: string
+          member_role: string
+          status: string
+          user_id: string
+          version: number
+        }[]
+      }
+      list_provider_team_invitations: {
+        Args: never
+        Returns: {
+          expires_at: string
+          id: string
+          member_role: string
+          organization_name: string
+          provider_id: string
+          provider_slug: string
+          version: number
+        }[]
+      }
+      list_provider_workspaces: {
+        Args: never
+        Returns: {
+          id: string
+          member_role: string
+          name: string
+          slug: string
+        }[]
+      }
       owns_provider_workspace: {
         Args: { provider_uuid: string }
         Returns: boolean
@@ -2067,6 +2169,14 @@ export type Database = {
         }
         Returns: string
       }
+      respond_provider_team_invitation: {
+        Args: {
+          decision: string
+          expected_version: number
+          invitation_uuid: string
+        }
+        Returns: string
+      }
       review_provider_verification: {
         Args: {
           decision: string
@@ -2075,6 +2185,10 @@ export type Database = {
           provider_uuid: string
         }
         Returns: string
+      }
+      revoke_provider_team_invitation: {
+        Args: { expected_version: number; invitation_uuid: string }
+        Returns: undefined
       }
       save_provider_booking_schedule: {
         Args: {
@@ -2110,6 +2224,15 @@ export type Database = {
       submit_provider_verification: {
         Args: { provider_uuid: string }
         Returns: string
+      }
+      update_provider_team_member: {
+        Args: {
+          active: boolean
+          expected_version: number
+          member_uuid: string
+          requested_role: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

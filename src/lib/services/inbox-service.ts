@@ -8,7 +8,7 @@ export function notificationDestination(notification: Pick<InboxNotification,'bo
   let target: URL;
   try { target = new URL(link,'https://onevet.invalid'); } catch { return null; }
   if (target.origin !== 'https://onevet.invalid') return null;
-  const staticRoutes = ['/', '/dashboard','/my-bookings','/notifications','/profile','/consultations','/vet-dashboard','/admin','/contact'];
+  const staticRoutes = ['/', '/dashboard','/my-bookings','/notifications','/provider/invitations','/profile','/consultations','/vet-dashboard','/admin','/contact'];
   const uuid = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
   if (!staticRoutes.includes(target.pathname) && !new RegExp(`^/(appointments|consultations|pets)/${uuid}$`,'i').test(target.pathname) && !/^\/provider\/organization\/[a-z0-9]+(-[a-z0-9]+)*$/.test(target.pathname)) return null;
   return target.pathname + target.search + target.hash;

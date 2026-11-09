@@ -19,6 +19,8 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
     catch (cause) { setError(appointmentError(cause)); }
     finally { setBusy(false); }
   }
+  const actingProvider=provider && booking.provider_access===true && booking.customer_id!==user?.id;
+  const canAct=!readOnly && (actingProvider || booking.customer_id===user?.id);
   const open = ['pending','confirmed'].includes(booking.status);
   const withinConfirmationWindow = new Date(booking.start_at).getTime() >= Date.now()+30*60_000;
   return <article id={`booking-${booking.id}`} className="rounded-lg border p-5 space-y-3">
@@ -39,14 +41,14 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
     {booking.response_note && <p className="text-sm whitespace-pre-wrap">Latest response: {booking.response_note}</p>}
     {booking.status==='pending' && !withinConfirmationWindow && <p className="text-sm text-destructive">The confirmation window has passed. Cancel or decline this request and choose a new time.</p>}
     {booking.status==='pending' && withinConfirmationWindow && <p className="text-sm text-muted-foreground">Awaiting provider confirmation. This request does not reserve the slot. Confirmation requires at least 30 minutes' notice.</p>}
-    {open && !readOnly && <><Label htmlFor={`response-${booking.id}`}>Response / explanation (required for cancellation or decline)</Label><Textarea id={`response-${booking.id}`} disabled={busy} maxLength={2000} value={note} onChange={event => setNote(event.target.value)} />
-      {provider && booking.status==='pending' && <p className="text-sm text-muted-foreground">Confirm only if you can provide this service at the recorded fee. Confirming a provider-location visit shares your primary location address with this customer.</p>}
+    {open && canAct && <><Label htmlFor={`response-${booking.id}`}>Response / explanation (required for cancellation or decline)</Label><Textarea id={`response-${booking.id}`} disabled={busy} maxLength={2000} value={note} onChange={event => setNote(event.target.value)} />
+      {actingProvider && booking.status==='pending' && <p className="text-sm text-muted-foreground">Confirm only if you can provide this service at the recorded fee. Confirming a provider-location visit shares your primary location address with this customer.</p>}
       <div className="flex flex-wrap gap-3">
-        {provider && booking.status==='pending' && <><Button disabled={busy || !withinConfirmationWindow || booking.provider_eligibility==='unavailable' || booking.provider_eligibility==='unknown'} onClick={() => void respond('confirmed')}>Confirm request</Button><Button variant="outline" disabled={busy || note.trim().length<5} onClick={() => void respond('declined')}>Decline request</Button></>}
+        {actingProvider && booking.status==='pending' && <><Button disabled={busy || !withinConfirmationWindow || booking.provider_eligibility==='unavailable' || booking.provider_eligibility==='unknown'} onClick={() => void respond('confirmed')}>Confirm request</Button><Button variant="outline" disabled={busy || note.trim().length<5} onClick={() => void respond('declined')}>Decline request</Button></>}
         <Button variant="outline" disabled={busy || note.trim().length<5} onClick={() => void respond('cancelled')}>Cancel request</Button>
-        {provider && booking.status==='confirmed' && new Date(booking.end_at)<=new Date() && <Button disabled={busy} onClick={() => void respond('completed')}>Mark completed</Button>}
+        {actingProvider && booking.status==='confirmed' && new Date(booking.end_at)<=new Date() && <Button disabled={busy} onClick={() => void respond('completed')}>Mark completed</Button>}
       </div></>}
-    {!readOnly && !provider && booking.customer_id===user?.id && booking.status==='confirmed' && new Date(booking.start_at)>new Date() && <><Button variant="outline" disabled={busy} onClick={()=>setRescheduling(previous=>!previous)}>{rescheduling?'Close reschedule form':'Request reschedule'}</Button>{rescheduling && <BookingRescheduleForm key={`${booking.id}-${booking.version}`} booking={booking} onSubmitted={refresh}/>}</>}
+    {!readOnly && !actingProvider && booking.customer_id===user?.id && booking.status==='confirmed' && new Date(booking.start_at)>new Date() && <><Button variant="outline" disabled={busy} onClick={()=>setRescheduling(previous=>!previous)}>{rescheduling?'Close reschedule form':'Request reschedule'}</Button>{rescheduling && <BookingRescheduleForm key={`${booking.id}-${booking.version}`} booking={booking} onSubmitted={refresh}/>}</>}
     {!readOnly && booking.status==='confirmed' && new Date(booking.end_at)>new Date() && (booking.customer_id===user?.id||booking.provider_owner_id===user?.id) && <AppointmentCalendarDownload key={`${user?.id}-${booking.id}`} bookingId={booking.id}/>}
     {error && <p role="alert" className="text-destructive">{error}</p>}
     <Button variant="link" onClick={() => setShowHistory(previous => !previous)}>{showHistory ? 'Hide history' : 'Show history'}</Button>

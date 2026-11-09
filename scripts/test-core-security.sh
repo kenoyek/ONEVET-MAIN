@@ -23,7 +23,8 @@ done
  supabase/migrations/20261106080000_provider_service_publication.sql \
  supabase/migrations/20261106090000_provider_booking_requests.sql \
  supabase/migrations/20261106100000_booking_rescheduling.sql \
- supabase/migrations/20261107010000_booking_notifications.sql
+ supabase/migrations/20261107010000_booking_notifications.sql \
+ supabase/migrations/20261107020000_provider_team_access.sql
  echo 'BEGIN;'
  cat supabase/tests/core-security.sql \
  supabase/tests/provider-drafts.sql \
@@ -32,7 +33,8 @@ done
  supabase/tests/provider-booking-setup.sql \
  supabase/tests/provider-booking.sql \
  supabase/tests/booking-rescheduling.sql \
- supabase/tests/booking-notifications.sql
+ supabase/tests/booking-notifications.sql \
+ supabase/tests/provider-team.sql
  echo 'ROLLBACK;'
 } | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet
 python scripts/test-booking-concurrency.py "$core_test_container"
