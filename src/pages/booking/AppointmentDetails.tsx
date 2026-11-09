@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
+import { AppointmentConversation } from '@/components/provider/AppointmentConversation';
 import { BookingRequestCard } from '@/components/provider/BookingRequestList';
 import { useAuth } from '@/lib/auth-context';
 import { appointmentService as service, bookingTime, snapshotText } from '@/lib/services/appointment-service';
@@ -17,6 +18,7 @@ export default function AppointmentDetails() {
       {booking.provider_access===true&&<Link className="text-primary underline block mb-4" to={`/provider/organization/${snapshotText(booking.service_snapshot,'provider_slug')}`}>Organization workspace</Link>}
       <BookingRequestCard key={`${user?.id}-${booking.id}`} booking={booking} provider={booking.provider_access===true&&booking.customer_id!==user?.id} readOnly={booking.provider_access!==true&&booking.customer_id!==user?.id} refresh={refresh}/>
       {!!details.data?.replacements.length&&<section className="care-path mt-6"><h2 className="text-xl mb-4">Alternative requests (latest 50)</h2><ul className="space-y-3">{details.data.replacements.map(row=><li key={row.id}><Link className="text-primary underline" to={`/appointments/${row.id}`}>{bookingTime(row.start_at)}</Link> · {row.status}</li>)}</ul></section>}
+      <AppointmentConversation bookingId={booking.id}/>
       <Button className="mt-6" variant="outline" onClick={()=>void refresh()}>Refresh appointment</Button>
     </>}
   </main></div>;

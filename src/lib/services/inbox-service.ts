@@ -1,8 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 export type InboxNotification = Database['public']['Tables']['notifications']['Row'];
-export function notificationDestination(notification: Pick<InboxNotification,'booking_id'|'link'>): string | null {
-  if (notification.booking_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(notification.booking_id)) return `/appointments/${notification.booking_id}`;
+export function notificationDestination(notification: Pick<InboxNotification,'booking_id'|'link'> & Partial<Pick<InboxNotification,'booking_message_id'>>): string | null {
+  if (notification.booking_id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(notification.booking_id)) return `/appointments/${notification.booking_id}${notification.booking_message_id?'#messages':''}`;
   const link = notification.link;
   if (!link || !link.startsWith('/') || link.startsWith('//') || (link.includes('\\') || link.includes('%') || Array.from(link).some(character=>character.charCodeAt(0)<=32 || character.charCodeAt(0)===127))) return null;
   let target: URL;

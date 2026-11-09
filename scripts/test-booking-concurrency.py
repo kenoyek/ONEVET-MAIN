@@ -58,3 +58,19 @@ with tempfile.TemporaryFile(mode='w+t') as output:
  if first.wait(timeout=10)!=0 or second.returncode==0 or '42501' not in second.stderr:raise SystemExit('A revoked coordinator must not confirm a request waiting on the organization lock')
 if sql("SELECT status FROM provider_booking_requests WHERE request_key='c9222222-2222-4222-8222-222222222222';")!='pending':raise SystemExit('Revoked operation changed the pending request')
 print('PASS: concurrent membership revocation blocks a queued coordinator confirmation')
+# A queued message cannot commit after its coordinator membership is revoked.
+sql("BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','b8111111-1111-4111-8111-111111111111',true);SELECT update_provider_team_member((SELECT id FROM list_provider_team((SELECT id FROM provider_organizations WHERE slug='booking-fixture-a')) WHERE user_id='c8555555-5555-4555-8555-555555555555'),2,'staff',true);COMMIT;")
+revoke_message="BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','b8111111-1111-4111-8111-111111111111',true);SELECT update_provider_team_member((SELECT id FROM list_provider_team((SELECT id FROM provider_organizations WHERE slug='booking-fixture-a')) WHERE user_id='c8555555-5555-4555-8555-555555555555'),3,'staff',false);"
+with tempfile.TemporaryFile(mode='w+t') as output:
+ first=subprocess.Popen(base,stdin=subprocess.PIPE,stdout=output,stderr=output,text=True)
+ first.stdin.write("SET application_name='onevet-message-revoke-first';"+revoke_message+"SELECT pg_sleep(4);COMMIT;")
+ first.stdin.close()
+ for attempt in range(40):
+  if sql("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='onevet-message-revoke-first' AND wait_event='PgSleep');")=='t':break
+  if first.poll() is not None:raise SystemExit('Message revocation did not reach its transaction hold')
+  time.sleep(.1)
+ else:raise SystemExit('Timed out waiting for message-access revocation')
+ second=subprocess.run(base,input="BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','c8555555-5555-4555-8555-555555555555',true);SELECT send_booking_message((SELECT id FROM provider_booking_requests WHERE request_key='c9222222-2222-4222-8222-222222222222'),'Revoked coordinator message',gen_random_uuid());COMMIT;",text=True,capture_output=True)
+ if first.wait(timeout=10)!=0 or second.returncode==0 or '42501' not in second.stderr:raise SystemExit('A revoked coordinator must not send a queued message')
+if sql("SELECT count(*) FROM provider_booking_messages WHERE sender_id='c8555555-5555-4555-8555-555555555555';")!='0':raise SystemExit('A revoked coordinator message was committed')
+print('PASS: concurrent membership revocation blocks a queued appointment message')

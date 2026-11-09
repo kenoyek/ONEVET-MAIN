@@ -608,6 +608,8 @@ export type Database = {
       notifications: {
         Row: {
           booking_id: string | null
+          booking_message_id: string | null
+          booking_message_ordinal: number | null
           booking_version: number | null
           created_at: string
           id: string
@@ -620,6 +622,8 @@ export type Database = {
         }
         Insert: {
           booking_id?: string | null
+          booking_message_id?: string | null
+          booking_message_ordinal?: number | null
           booking_version?: number | null
           created_at?: string
           id?: string
@@ -632,6 +636,8 @@ export type Database = {
         }
         Update: {
           booking_id?: string | null
+          booking_message_id?: string | null
+          booking_message_ordinal?: number | null
           booking_version?: number | null
           created_at?: string
           id?: string
@@ -648,6 +654,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "provider_booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_booking_message_id_fkey"
+            columns: ["booking_message_id"]
+            isOneToOne: false
+            referencedRelation: "provider_booking_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -1007,6 +1020,50 @@ export type Database = {
           },
         ]
       }
+      provider_booking_messages: {
+        Row: {
+          body: string
+          booking_id: string
+          client_nonce: string
+          created_at: string
+          id: string
+          ordinal: number
+          sender_id: string
+          sender_name: string
+          sender_role: string
+        }
+        Insert: {
+          body: string
+          booking_id: string
+          client_nonce: string
+          created_at?: string
+          id?: string
+          ordinal: number
+          sender_id: string
+          sender_name: string
+          sender_role: string
+        }
+        Update: {
+          body?: string
+          booking_id?: string
+          client_nonce?: string
+          created_at?: string
+          id?: string
+          ordinal?: number
+          sender_id?: string
+          sender_name?: string
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_booking_messages_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "provider_booking_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       provider_booking_requests: {
         Row: {
           animal_snapshot: Json
@@ -1168,6 +1225,35 @@ export type Database = {
             columns: ["provider_id"]
             isOneToOne: true
             referencedRelation: "provider_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provider_booking_thread_reads: {
+        Row: {
+          booking_id: string
+          last_read_ordinal: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_id: string
+          last_read_ordinal?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_id?: string
+          last_read_ordinal?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_booking_thread_reads_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "provider_booking_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -1968,6 +2054,14 @@ export type Database = {
         Args: { provider_uuid: string }
         Returns: boolean
       }
+      can_read_booking_thread: {
+        Args: { booking_uuid: string }
+        Returns: boolean
+      }
+      can_send_booking_message: {
+        Args: { booking_uuid: string }
+        Returns: boolean
+      }
       can_upload_provider_evidence: {
         Args: { object_name: string }
         Returns: boolean
@@ -1992,6 +2086,15 @@ export type Database = {
         Returns: {
           end_at: string
           start_at: string
+        }[]
+      }
+      get_booking_thread_state: {
+        Args: { booking_uuid: string }
+        Returns: {
+          can_send: boolean
+          last_ordinal: number
+          last_read_ordinal: number
+          unread_count: number
         }[]
       }
       get_online_vets_count: { Args: never; Returns: number }
@@ -2118,6 +2221,10 @@ export type Database = {
           slug: string
         }[]
       }
+      mark_booking_thread_read: {
+        Args: { booking_uuid: string; through_ordinal: number }
+        Returns: undefined
+      }
       owns_provider_workspace: {
         Args: { provider_uuid: string }
         Returns: boolean
@@ -2210,6 +2317,14 @@ export type Database = {
           input: Json
           provider_uuid: string
           service_uuid?: string
+        }
+        Returns: string
+      }
+      send_booking_message: {
+        Args: {
+          booking_uuid: string
+          client_nonce: string
+          message_text: string
         }
         Returns: string
       }

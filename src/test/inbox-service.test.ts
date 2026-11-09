@@ -19,7 +19,7 @@ describe('Recipient-scoped notification service',()=>{
   rpc.mockResolvedValue({data:null,error:{code:'offline'}});await expect(inboxService.unread('owner-id')).rejects.toEqual({code:'offline'});rpc.mockResolvedValue({data:null,error:null});await expect(inboxService.unread('owner-id')).rejects.toThrow();
  });
  it('prefers structured booking links and rejects external or encoded destinations',()=>{
-  const id='f1111111-1111-4111-8111-111111111111';expect(notificationDestination({booking_id:id,link:'https://evil.example'})).toBe(`/appointments/${id}`);
+  const id='f1111111-1111-4111-8111-111111111111';expect(notificationDestination({booking_id:id,link:'https://evil.example'})).toBe(`/appointments/${id}`);expect(notificationDestination({booking_id:id,booking_message_id:'message-id',link:null})).toBe(`/appointments/${id}#messages`);
   for(const link of ['javascript:alert(1)','https://evil.example','//evil.example','/\\evil.example','/%2f%2fevil.example','/unknown-route','/notifications\n'])expect(notificationDestination({booking_id:null,link})).toBeNull();
   expect(notificationDestination({booking_id:null,link:'/my-bookings'})).toBe('/my-bookings');expect(notificationDestination({booking_id:null,link:'/provider/organization/our-clinic'})).toBe('/provider/organization/our-clinic');
  });

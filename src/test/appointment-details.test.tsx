@@ -7,6 +7,7 @@ vi.mock('@/components/layout/Navbar',()=>({Navbar:()=> <nav>Navigation</nav>}));
 vi.mock('@/lib/auth-context',()=>({useAuth:()=>({user:{id:'customer-id'}})}));
 vi.mock('@/lib/services/appointment-service',async original=>({...await original<typeof import('@/lib/services/appointment-service')>(),appointmentService:{details,replacements}}));
 vi.mock('@/components/provider/BookingRequestList',()=>({BookingRequestCard:({booking,readOnly}:{booking:{id:string};readOnly:boolean})=><p>{booking.id} · {readOnly?'read only':'participant'}</p>}));
+vi.mock('@/components/provider/AppointmentConversation',()=>({AppointmentConversation:()=> <p>Appointment conversation</p>}));
 import AppointmentDetails from '@/pages/booking/AppointmentDetails';
 function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/appointments/booking-id']}><Routes><Route path="/appointments/:id" element={<AppointmentDetails/>}/></Routes></MemoryRouter></QueryClientProvider>);}
 describe('Private appointment details',()=>{
