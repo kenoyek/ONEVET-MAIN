@@ -1,3 +1,5 @@
+import { ArticleImage } from '@/components/articles/ArticleImage';
+import '@/components/articles/article-reading.css';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -153,7 +155,7 @@ export default function Articles() {
                 <Button variant="link" onClick={() => {setSearchQuery(''); setSelectedCategory('All');}} className="mt-4 font-bold">Clear all filters</Button>
               </div>
             ) : (
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              <div className={`grid gap-8 md:grid-cols-2 ${filteredArticles.length > 2 ? 'lg:grid-cols-3' : ''}`}>
                 {filteredArticles.map((article, index) => (
                   <motion.div
                     key={article.id}
@@ -163,14 +165,14 @@ export default function Articles() {
                     transition={{ delay: index * 0.05, duration: 0.5 }}
                   >
                     <Link to={`/articles/${article.slug}`} className="group block h-full">
-                      <Card className="card-elevated h-full rounded-3xl overflow-hidden hover:shadow-elevated hover:-translate-y-2 transition-all duration-500 flex flex-col">
-                        <div className="relative h-64 overflow-hidden m-2 rounded-[2rem]">
+                      <Card className="article-library-card card-elevated h-full rounded-3xl overflow-hidden hover:shadow-elevated hover:-translate-y-1 transition-all duration-500 flex flex-col">
+                        <div className="relative aspect-[3/2] overflow-hidden m-2 rounded-2xl">
                           {article.image_url ? (
-                            <img
+                            <ArticleImage
                               src={article.image_url}
                               alt={article.title}
-                              loading="lazy"
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                             />
                           ) : (
                             <div className="w-full h-full bg-primary flex items-center justify-center">
@@ -183,8 +185,8 @@ export default function Articles() {
                             </Badge>
                           </div>
                         </div>
-                        <CardHeader className="p-8 pb-4 flex-grow">
-                          <CardTitle className="text-2xl font-semibold line-clamp-2 group-hover:text-primary transition-colors tracking-tight leading-tight mb-4">
+                        <CardHeader className="p-6 pb-5 flex-grow">
+                          <CardTitle className="text-xl sm:text-2xl font-semibold group-hover:text-primary transition-colors tracking-tight leading-tight mb-4">
                             {article.title}
                           </CardTitle>
                           {article.excerpt && (
@@ -193,7 +195,7 @@ export default function Articles() {
                             </CardDescription>
                           )}
                         </CardHeader>
-                        <CardContent className="p-8 pt-0">
+                        <CardContent className="p-6 pt-0">
                           <div className="flex items-center justify-between border-t border-border/40 pt-6">
                             <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                               <span className="flex items-center gap-1.5">

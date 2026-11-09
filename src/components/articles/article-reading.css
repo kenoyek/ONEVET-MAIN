@@ -1,0 +1,58 @@
+.article-prose {
+  max-width: 68ch;
+  margin-inline: auto;
+  color: hsl(var(--foreground) / .84);
+  font-size: 1.0625rem;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.article-prose > :first-child { margin-top: 0; }
+.article-prose p { margin-block: 0 1.5em; }
+.article-prose h2,
+.article-prose h3 {
+  color: hsl(var(--foreground));
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: 1.3;
+  text-wrap: balance;
+  scroll-margin-top: 7rem;
+}
+.article-prose h2 {
+  margin-block: 2.5em .85em;
+  padding-top: 1.2em;
+  border-top: 1px solid hsl(var(--border));
+  font-size: clamp(1.45rem, 2.5vw, 1.85rem);
+}
+.article-prose h3 { margin-block: 2em .75em; font-size: 1.25rem; }
+.article-prose strong { color: hsl(var(--foreground)); font-weight: 700; }
+.article-prose ul, .article-prose ol { padding-left: 1.5em; margin-block: 1.25em 1.75em; }
+.article-prose ul { list-style: disc; }
+.article-prose ol { list-style: decimal; }
+.article-prose li { padding-left: .35em; margin-block: .65em; }
+.article-prose li::marker { color: hsl(var(--primary)); font-weight: 700; }
+.article-prose blockquote {
+  margin-block: 2rem;
+  padding: 1.4rem 1.5rem;
+  border-left: 3px solid hsl(var(--primary));
+  border-radius: 0 1rem 1rem 0;
+  background: hsl(var(--primary) / .055);
+  color: hsl(var(--foreground));
+}
+.article-prose blockquote p:last-child { margin-bottom: 0; }
+.article-prose a { color: hsl(var(--primary)); text-decoration: underline; text-underline-offset: .2em; }
+.article-prose a:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }
+.article-prose hr { border-color: hsl(var(--border)); margin-block: 2.5rem; }
+.article-prose img { border-radius: 1rem; margin-block: 2rem; max-width: 100%; height: auto; }
+.article-prose pre { overflow-x: auto; padding: 1rem; background: hsl(var(--muted)); border-radius: .75rem; }
+.article-prose > p:last-child:has(> em:only-child) {
+  border-top: 1px solid hsl(var(--border));
+  padding-top: 1.5rem;
+  margin-top: 2.5rem;
+  font-size: .875rem;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+@media (min-width: 768px) { .article-prose { font-size: 1.125rem; } }
+@media (prefers-reduced-motion: reduce) {
+  .article-library-card, .article-library-card img { transition: none !important; transform: none !important; }
+}

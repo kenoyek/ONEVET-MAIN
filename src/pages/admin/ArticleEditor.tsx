@@ -299,7 +299,7 @@ export default function ArticleEditor() {
                               />
                             </FormControl>
                             <FormDescription>
-                              Write in plain text. Use line breaks for paragraphs.
+                              Use Markdown: ## for headings, **bold** for emphasis, - for lists and &gt; for callouts. Separate paragraphs with a blank line.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>

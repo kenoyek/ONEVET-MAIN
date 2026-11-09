@@ -1,3 +1,5 @@
+import { ArticleImage } from '@/components/articles/ArticleImage';
+import { ArticleBody } from '@/components/articles/ArticleBody';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useState, useEffect, useCallback } from 'react';
@@ -13,7 +15,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -31,9 +33,9 @@ interface Article {
   excerpt: string | null;
   content: string;
   category: string;
-  tags: string[];
+  tags: string[] | null;
   image_url: string | null;
-  view_count: number;
+  view_count: number | null;
   published_at: string | null;
   created_at: string;
   author: {
@@ -178,9 +180,9 @@ export default function ArticleDetail() {
 
             {/* Header */}
             <header className="mb-12">
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex flex-wrap items-center gap-2 mb-6">
                 <Badge variant="default" className="bg-primary/10 text-primary hover:bg-primary/20 border-none px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">{article.category}</Badge>
-                {article.tags.slice(0, 3).map(tag => (
+                {(article.tags || []).slice(0, 3).map(tag => (
                   <Badge key={tag} variant="secondary" className="gap-1 bg-muted/50 border-none px-4 py-1 rounded-full text-xs font-bold text-muted-foreground">
                     <Tag className="h-3 w-3" />
                     {tag}
@@ -188,9 +190,10 @@ export default function ArticleDetail() {
                 ))}
               </div>
 
-              <PageHeading size="workspace" className="mb-8" title={<> {article.title} </>}/>
+              <PageHeading size="display" className="mb-6 max-w-4xl" title={article.title} />
+              {article.excerpt && <p className="max-w-3xl text-lg md:text-xl leading-relaxed text-muted-foreground mb-8">{article.excerpt}</p>}
 
-              <div className="card-elevated flex items-center justify-between flex-wrap gap-6 p-6 rounded-[2rem] shadow-soft">
+              <div className="flex items-center justify-between flex-wrap gap-5 py-6 border-y border-border">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
                     <AvatarImage src={article.author?.avatar_url || undefined} />
@@ -202,11 +205,12 @@ export default function ArticleDetail() {
                     <p className="font-bold text-sm leading-none mb-1">
                       {article.author ? `${article.author.first_name || ''} ${article.author.last_name || ''}`.trim() : '1Vet'}
                     </p>
-                    <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5" />
                         {format(new Date(article.published_at || article.created_at), 'MMM d, yyyy')}
                       </span>
+                      <span>{Math.max(1, Math.ceil(article.content.split(/\s+/).length / 200))} min read</span>
                     </div>
                   </div>
                 </div>
@@ -214,7 +218,7 @@ export default function ArticleDetail() {
                 <div className="flex items-center gap-2">
                   <div className="px-4 py-2 rounded-full bg-muted/30 text-xs font-bold text-muted-foreground flex items-center gap-1.5">
                     <Eye className="h-3.5 w-3.5" />
-                    {article.view_count.toLocaleString()} Views
+                    {(article.view_count || 0).toLocaleString()} Views
                   </div>
 
                   <Separator orientation="vertical" className="h-8 mx-2" />
@@ -251,25 +255,22 @@ export default function ArticleDetail() {
 
             {/* Featured Image */}
             {article.image_url && (
-              <div className="rounded-3xl overflow-hidden mb-12 shadow-elevated border-8 border-background bg-muted">
-                <img
+              <figure className="mb-10 md:mb-14">
+                <ArticleImage
                   src={article.image_url}
                   alt={article.title}
-                  className="w-full h-auto max-h-[600px] object-cover"
+                  className="w-full aspect-[3/2] md:aspect-[16/9] object-cover rounded-2xl md:rounded-3xl bg-muted"
+                  priority
+                  sizes="(max-width: 768px) 100vw, 960px"
                 />
-              </div>
+                {article.image_url.startsWith('https://1vet.store/images/articles/') && (
+                  <figcaption className="mt-3 text-xs text-muted-foreground">Illustrative image created for 1Vet.</figcaption>
+                )}
+              </figure>
             )}
 
             {/* Content */}
-            <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:tracking-tight prose-headings:font-semibold prose-p:font-medium prose-p:leading-relaxed prose-p:text-foreground/80 prose-strong:text-foreground prose-strong:font-bold prose-img:rounded-3xl">
-              {article.content.split('\n').map((paragraph, index) => (
-                paragraph.trim() ? (
-                  <p key={index}>
-                    {paragraph}
-                  </p>
-                ) : null
-              ))}
-            </div>
+            <ArticleBody content={article.content} />
 
             <Separator className="my-12" />
 
@@ -283,7 +284,7 @@ export default function ArticleDetail() {
                       <Card className="h-full hover:shadow-md transition-shadow group">
                         {related.image_url ? (
                           <div className="h-32 overflow-hidden rounded-t-lg">
-                            <img
+                            <ArticleImage
                               src={related.image_url}
                               alt={related.title}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform"

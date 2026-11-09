@@ -25,7 +25,7 @@ deployment = SourceFileLoader('deployment', str(ROOT / 'scripts/deploy-reviewed-
 payload = json.dumps(articles, ensure_ascii=False).replace("'", "''")
 query = """insert into public.articles
 (slug,title,category,excerpt,tags,content,author_id,image_url,is_published,published_at)
-select slug,title,category,excerpt,tags,content,null,null,true,now()
+select slug,title,category,excerpt,tags,content,null,image_url,true,now()
 from jsonb_to_recordset('%s'::jsonb) as a
 (slug text,title text,category text,excerpt text,tags text[],content text,author_id text,image_url text)
 on conflict (slug) do nothing
@@ -34,12 +34,12 @@ print(json.dumps(deployment.request('/database/query', {'query': query}), indent
 slugs = ','.join("'" + a['slug'].replace("'", "''") + "'" for a in articles)
 # Verify actual public-read visibility through the same anonymous role as the website.
 rows = deployment.request('/database/query', {'query':
-    'begin; set local role anon; select slug,title,category,excerpt,tags,content,is_published,published_at '
+    'begin; set local role anon; select slug,title,category,excerpt,tags,content,image_url,is_published,published_at '
     'from public.articles where slug in (' + slugs + '); rollback;'})
 assert isinstance(rows, list) and len(rows) == 2, 'Both articles must be publicly readable'
 for article in articles:
     row = next(r for r in rows if r['slug'] == article['slug'])
     assert row['is_published'] and row['published_at'], 'Publication not confirmed'
-    for key in ('title', 'category', 'excerpt', 'tags', 'content'):
+    for key in ('title', 'category', 'excerpt', 'tags', 'content', 'image_url'):
         assert row[key] == article[key], 'Existing article differs: ' + article['slug'] + '/' + key
     print('Verified public publication: https://1vet.store/articles/' + article['slug'])
