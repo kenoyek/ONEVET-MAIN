@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import {authErrorMessage} from '@/lib/auth-feedback';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -24,6 +25,8 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
   const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const busy=useRef(false);
+  const [submitError,setSubmitError]=useState('');
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
@@ -34,30 +37,21 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
   });
 
   const onSubmit = async (values: SignInValues) => {
+    if(busy.current)return;busy.current=true;setSubmitError('');
     setIsLoading(true);
     try {
       const { error } = await signIn(values.email, values.password);
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          toast.error('Invalid email or password. Please try again.');
-        } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Please verify your email before signing in.');
-        } else {
-          toast.error(error.message || 'Failed to sign in. Please try again.');
-        }
-      } else {
-        toast.success('Welcome back!');
-      }
+      if(error){setSubmitError(authErrorMessage(error,'signin'));}else{toast.success('Welcome back!');}
     } catch {
-      toast.error('An unexpected error occurred. Please try again.');
+      setSubmitError(authErrorMessage(null,'signin'));
     } finally {
-      setIsLoading(false);
+      busy.current=false;setIsLoading(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form noValidate aria-busy={isLoading} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6"><fieldset disabled={isLoading} className="space-y-5 min-w-0">
         <FormField
           control={form.control}
           name="email"
@@ -66,7 +60,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
               <FormLabel className="text-sm font-medium text-foreground">Email address</FormLabel>
               <FormControl>
                 <Input
-                  type="email"
+                  type="email" inputMode="email" autoCapitalize="none" spellCheck={false}
                   placeholder="you@example.com"
                   autoComplete="email"
                   className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
@@ -133,6 +127,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
             'Sign in'
           )}
         </Button>
+        </fieldset>{submitError&&<p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{submitError}</p>}
       </form>
     </Form>
   );

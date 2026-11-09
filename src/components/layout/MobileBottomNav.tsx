@@ -52,6 +52,7 @@ export function MobileBottomNav() {
     return user?.email?.[0]?.toUpperCase() || 'U';
   };
 
+  if(location.pathname==='/auth'||location.pathname.startsWith('/auth/'))return null;
   return (
     <>
       <nav aria-label="Quick navigation" className="fixed bottom-0 left-0 right-0 z-50 md:hidden glass-strong border-t border-border pb-[env(safe-area-inset-bottom)]">

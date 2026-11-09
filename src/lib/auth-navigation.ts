@@ -8,8 +8,8 @@ export function getAuthReturnPath(state: unknown): string | null {
     typeof path !== 'string' ||
     !path.startsWith('/') ||
     path.startsWith('//') ||
-    path.includes('\\') ||
-    /^\/auth(?:\/|$)/.test(path)
+    path.includes('\\') || path.includes('?') || path.includes('#') || Array.from(path).some(c=>c.charCodeAt(0)<=32||c.charCodeAt(0)===127) ||
+    /^\/auth(?:\/|$)/i.test(path)
   )
     return null;
   const search =

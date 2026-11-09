@@ -18,6 +18,10 @@ describe('Authentication return navigation', () => {
       '//example.com',
       '/auth',
       '/auth/callback',
+      '/AUTH',
+      '/auth?mode=reset',
+      '/booking\n/new',
+      ' /dashboard',
       '/\\example.com',
     ]) {
       expect(getAuthReturnPath({ from: { pathname } })).toBeNull();

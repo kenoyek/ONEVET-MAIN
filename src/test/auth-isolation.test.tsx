@@ -35,7 +35,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 function Probe() {
   const a = useAuth();
   return (
-    <p data-testid="identity" data-permissions-error={a.permissionsError}>
+    <p data-testid="identity" data-permissions-error={a.permissionsError} data-password-recovery={a.passwordRecovery}>
       {a.user?.id ?? 'none'}|{a.profile?.first_name ?? 'none'}|
       {a.roles.join(',')}
     </p>
@@ -131,4 +131,12 @@ describe('Account transition isolation', () => {
       expect(screen.getByTestId('identity').textContent).toBe('forged|Test|');
     },
   );
+});
+
+it('retains password recovery through token refresh and clears it for another account',async()=>{
+ mock.profiles.set('recovery-a',Promise.resolve({data:{id:'profile-a',first_name:'A'},error:null}));mock.profiles.set('recovery-b',Promise.resolve({data:{id:'profile-b',first_name:'B'},error:null}));
+ const client=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={client}><AuthProvider><Probe/></AuthProvider></QueryClientProvider>);await act(async()=>{});
+ await act(async()=>{mock.listener?.('PASSWORD_RECOVERY',session('recovery-a'));});expect(screen.getByTestId('identity')).toHaveAttribute('data-password-recovery','true');
+ await act(async()=>{mock.listener?.('TOKEN_REFRESHED',session('recovery-a'));});expect(screen.getByTestId('identity')).toHaveAttribute('data-password-recovery','true');
+ await act(async()=>{mock.listener?.('SIGNED_IN',session('recovery-b'));});expect(screen.getByTestId('identity')).toHaveAttribute('data-password-recovery','false');
 });

@@ -44,6 +44,8 @@ interface AuthContextType {
    */
   loading: boolean;
   permissionsError: boolean;
+  passwordRecovery: boolean;
+  completePasswordRecovery: () => void;
   signUp: (
     email: string,
     password: string,
@@ -79,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [permissionsError, setPermissionsError] = useState(false);
+  const [passwordRecovery,setPasswordRecovery]=useState(false);
 
   // loading = true until we get the FIRST auth response (session or null).
   // This prevents any flash of "logged out" on page load.
@@ -202,7 +205,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null);
           setRole(null);
           setRoles([]);
+          setPasswordRecovery(false);
         }
+
+        if(event==='PASSWORD_RECOVERY')setPasswordRecovery(true);
+        else if(!newSession)setPasswordRecovery(false);
 
         // ── Set user/session IMMEDIATELY ─────────────────────────────────────
         // This is what makes the Navbar re-render right away.
@@ -318,13 +325,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       setRole(null);
       setRoles([]);
+      setPasswordRecovery(false);
       setPermissionsError(false);
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, role, roles, loading, permissionsError, signUp, signIn, signOut, refreshProfile }}
+      value={{ user, session, profile, role, roles, loading, permissionsError, passwordRecovery, completePasswordRecovery:()=>setPasswordRecovery(false), signUp, signIn, signOut, refreshProfile }}
     >
       <React.Fragment key={user?.id ?? 'signed-out'}>{children}</React.Fragment>
     </AuthContext.Provider>

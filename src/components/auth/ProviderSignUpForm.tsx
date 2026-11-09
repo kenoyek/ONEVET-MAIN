@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import {RegistrationConfirmation} from './RegistrationConfirmation';
+import {authErrorMessage} from '@/lib/auth-feedback';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2, Stethoscope, Store, Scissors, Home } from 'lucide-react';
@@ -14,6 +16,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -49,11 +52,14 @@ const roleOptions: { value: ProviderRole; label: string; description: string; ic
   },
 ];
 
-export function ProviderSignUpForm() {
+export function ProviderSignUpForm({onSignIn}:{onSignIn?:()=>void}) {
+  const [confirmationEmail,setConfirmationEmail]=useState('');
   const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const busy=useRef(false);
+  const [submitError,setSubmitError]=useState('');
   const [selectedLabel, setSelectedLabel] = useState('');
 
   const form = useForm<ProviderSignUpValues>({
@@ -74,6 +80,8 @@ export function ProviderSignUpForm() {
   const watchRole = form.watch('role');
 
   const onSubmit = async (values: ProviderSignUpValues) => {
+    if(!selectedLabel){form.setError('role',{message:'Choose a professional category.'});return;}
+    if(busy.current)return;busy.current=true;setSubmitError('');
     setIsLoading(true);
     try {
       const { error } = await signUp(
@@ -90,26 +98,18 @@ export function ProviderSignUpForm() {
           vendorType: selectedLabel ? selectedLabel.toLowerCase().replace(/\s+/g, '_') : undefined
         }
       );
-      if (error) {
-        if (error.message.includes('already registered') || error.message.includes('already exists')) {
-          toast.error('This email is already registered. Please sign in instead.');
-        } else {
-          toast.error(error.message || 'Failed to create account. Please try again.');
-        }
-        return;
-      }
-
-      toast.success('Account created! Please check your email to verify your account.');
+      if(error){setSubmitError(authErrorMessage(error,'signup'));}else{setConfirmationEmail(values.email);form.reset();}
     } catch {
-      toast.error('An unexpected error occurred. Please try again.');
+      setSubmitError(authErrorMessage(null,'signup'));
     } finally {
-      setIsLoading(false);
+      busy.current=false;setIsLoading(false);
     }
   };
 
+  if(confirmationEmail)return <RegistrationConfirmation email={confirmationEmail} onSignIn={onSignIn}/>;
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form noValidate aria-busy={isLoading} onSubmit={form.handleSubmit(onSubmit)} className="space-y-6"><fieldset disabled={isLoading} className="space-y-5 min-w-0">
         <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -146,7 +146,7 @@ export function ProviderSignUpForm() {
             <FormItem>
               <FormLabel className="text-sm font-medium text-foreground">Business Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="dr.smith@clinic.com" autoComplete="email" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
+                <Input type="email" inputMode="email" autoCapitalize="none" spellCheck={false} placeholder="dr.smith@clinic.com" autoComplete="email" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
               </FormControl>
               <FormMessage className="font-bold text-xs" />
             </FormItem>
@@ -160,40 +160,29 @@ export function ProviderSignUpForm() {
             <FormItem>
               <FormLabel className="text-sm font-medium text-foreground text-center block mb-4">Professional Category</FormLabel>
               <FormControl>
-                <RadioGroup
-                  onValueChange={(val) => {
-                    field.onChange(val);
-                  }}
-                  defaultValue={field.value}
+                <RadioGroup aria-label="Professional category"
+                  onValueChange={(label)=>{const option=roleOptions.find(item=>item.label===label);if(option){field.onChange(option.value);setSelectedLabel(label);form.clearErrors('role');}}}
+                  value={selectedLabel}
                   className="grid grid-cols-2 gap-3"
                 >
                   {roleOptions.map((option, idx) => (
                     <div key={`${option.value}-${idx}`}>
                       <RadioGroupItem
-                        value={option.value}
+                        value={option.label}
                         id={`provider-${idx}`}
                         className="peer sr-only"
-                        checked={field.value === option.value && selectedLabel === option.label}
-                        onClick={() => {
-                          field.onChange(option.value);
-                          setSelectedLabel(option.label);
-                        }}
                       />
                       <Label
                         htmlFor={`provider-${idx}`}
-                        onClick={() => {
-                          field.onChange(option.value);
-                          setSelectedLabel(option.label);
-                        }}
                         className={cn(
                           "flex flex-col items-center gap-2 rounded-2xl border-2 border-muted bg-card p-4 cursor-pointer transition-all text-center h-full",
-                          "hover:bg-primary/5 hover:border-primary/20",
+                          "peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 hover:bg-primary/5 hover:border-primary/20",
                           field.value === option.value && selectedLabel === option.label && "border-primary bg-primary/5 shadow-soft scale-[1.02]"
                         )}
                       >
                         <div className={cn(
                           "p-2 rounded-xl transition-colors",
-                          field.value === option.value && selectedLabel === option.label ? "bg-primary text-white shadow-none" : "bg-primary/10 text-primary"
+                          field.value === option.value && selectedLabel === option.label ? "bg-primary text-primary-foreground shadow-none" : "bg-primary/10 text-primary"
                         )}>{option.icon}</div>
                         <div className="text-xs font-semibold uppercase tracking-tight">{option.label}</div>
                       </Label>
@@ -279,7 +268,8 @@ export function ProviderSignUpForm() {
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                <FormMessage className="font-bold text-xs" />
+                <FormDescription>At least 8 characters, with uppercase and lowercase letters and a number.</FormDescription>
+              <FormMessage className="font-bold text-xs" />
               </FormItem>
             )}
           />
@@ -326,6 +316,7 @@ export function ProviderSignUpForm() {
             'Create provider account'
           )}
         </Button>
+        </fieldset>{submitError&&<p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{submitError}</p>}
       </form>
     </Form>
   );

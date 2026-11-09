@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import {authErrorMessage} from '@/lib/auth-feedback';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, ArrowLeft, Mail, CheckCircle } from 'lucide-react';
@@ -22,6 +23,8 @@ interface PasswordResetFormProps {
 
 export function PasswordResetForm({ onBack }: PasswordResetFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const busy=useRef(false);
+  const [submitError,setSubmitError]=useState('');
   const [emailSent, setEmailSent] = useState(false);
 
   const form = useForm<PasswordResetValues>({
@@ -32,21 +35,18 @@ export function PasswordResetForm({ onBack }: PasswordResetFormProps) {
   });
 
   const onSubmit = async (values: PasswordResetValues) => {
+    if(busy.current)return;busy.current=true;setSubmitError('');
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
         redirectTo: `${window.location.origin}/auth/callback`,
       });
       
-      if (error) {
-        toast.error(error.message || 'Failed to send reset email. Please try again.');
-      } else {
-        setEmailSent(true);
-      }
+      if(error){setSubmitError(authErrorMessage(error,'reset'));}else{setEmailSent(true);}
     } catch {
-      toast.error('An unexpected error occurred. Please try again.');
+      setSubmitError(authErrorMessage(null,'reset'));
     } finally {
-      setIsLoading(false);
+      busy.current=false;setIsLoading(false);
     }
   };
 
@@ -58,7 +58,7 @@ export function PasswordResetForm({ onBack }: PasswordResetFormProps) {
         </div>
         <h3 className="text-lg font-semibold">Check your email</h3>
         <p className="text-muted-foreground">
-          We've sent a password reset link to{' '}
+          If an account exists for this email, you’ll receive a reset link at{' '}
           <span className="font-medium text-foreground">{form.getValues('email')}</span>
         </p>
         <p className="text-sm text-muted-foreground">
@@ -66,9 +66,9 @@ export function PasswordResetForm({ onBack }: PasswordResetFormProps) {
           <button
             type="button"
             className="text-primary hover:underline"
-            onClick={() => setEmailSent(false)}
+            onClick={() => {setEmailSent(false);setSubmitError('');}}
           >
-            try again
+            request another link
           </button>
         </p>
         <Button variant="outline" onClick={onBack} className="mt-4">
@@ -103,7 +103,7 @@ export function PasswordResetForm({ onBack }: PasswordResetFormProps) {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form noValidate aria-busy={isLoading} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4"><fieldset disabled={isLoading} className="space-y-5 min-w-0">
           <FormField
             control={form.control}
             name="email"
@@ -112,7 +112,7 @@ export function PasswordResetForm({ onBack }: PasswordResetFormProps) {
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
-                    type="email"
+                    type="email" inputMode="email" autoCapitalize="none" spellCheck={false}
                     placeholder="you@example.com"
                     autoComplete="email"
                     {...field}
@@ -133,7 +133,8 @@ export function PasswordResetForm({ onBack }: PasswordResetFormProps) {
               'Send Reset Link'
             )}
           </Button>
-        </form>
+          </fieldset>{submitError&&<p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{submitError}</p>}
+      </form>
       </Form>
     </div>
   );

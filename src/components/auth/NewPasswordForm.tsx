@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import {useAuth} from '@/lib/auth-context';
+import {Link} from 'react-router-dom';
+import {authErrorMessage} from '@/lib/auth-feedback';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,14 +17,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { toast } from 'sonner';
 
 export function NewPasswordForm() {
   const navigate = useNavigate();
+  const {user,completePasswordRecovery}=useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const busy=useRef(false);
+  const [submitError,setSubmitError]=useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
   const form = useForm<NewPasswordValues>({
@@ -33,28 +40,22 @@ export function NewPasswordForm() {
   });
 
   const onSubmit = async (values: NewPasswordValues) => {
+    if(busy.current)return;busy.current=true;setSubmitError('');
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({
         password: values.password,
       });
       
-      if (error) {
-        toast.error(error.message || 'Failed to update password. Please try again.');
-      } else {
-        setIsSuccess(true);
-        toast.success('Password updated successfully!');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
-      }
+      if(error){setSubmitError(authErrorMessage(error,'password'));}else{setIsSuccess(true);form.reset();}
     } catch {
-      toast.error('An unexpected error occurred. Please try again.');
+      setSubmitError(authErrorMessage(null,'password'));
     } finally {
-      setIsLoading(false);
+      busy.current=false;setIsLoading(false);
     }
   };
 
+  if(!user)return <section className="space-y-4 text-center"><h2 className="text-xl">Open your password-reset link</h2><p className="text-sm text-muted-foreground">This page needs a valid reset session. If your link expired, request a new one.</p><Button asChild><Link to="/auth?mode=recover">Request a new reset link</Link></Button></section>;
   if (isSuccess) {
     return (
       <div className="text-center space-y-4">
@@ -63,8 +64,8 @@ export function NewPasswordForm() {
         </div>
         <h3 className="text-lg font-semibold">Password updated!</h3>
         <p className="text-muted-foreground">
-          Your password has been successfully updated. Redirecting you to your dashboard...
-        </p>
+          Your new password is ready. Continue when you’re ready to return to your account.
+        </p><Button className="w-full" onClick={()=>{completePasswordRecovery();navigate('/auth',{replace:true});}}>Continue to your account</Button>
       </div>
     );
   }
@@ -82,7 +83,7 @@ export function NewPasswordForm() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form noValidate aria-busy={isLoading} onSubmit={form.handleSubmit(onSubmit)} className="space-y-4"><fieldset disabled={isLoading} className="space-y-5 min-w-0">
           <FormField
             control={form.control}
             name="password"
@@ -94,6 +95,7 @@ export function NewPasswordForm() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       autoComplete="new-password"
+                      className="pr-14"
                       {...field}
                     /></FormControl>
                     <Button
@@ -112,7 +114,8 @@ export function NewPasswordForm() {
                       )}
                     </Button>
                   </div>
-                <FormMessage />
+                <FormDescription>At least 8 characters, with uppercase and lowercase letters and a number.</FormDescription>
+              <FormMessage />
               </FormItem>
             )}
           />
@@ -128,6 +131,7 @@ export function NewPasswordForm() {
                       type={showConfirmPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       autoComplete="new-password"
+                      className="pr-14"
                       {...field}
                     /></FormControl>
                     <Button
@@ -161,7 +165,8 @@ export function NewPasswordForm() {
               'Update Password'
             )}
           </Button>
-        </form>
+          </fieldset>{submitError&&<p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{submitError}</p>}
+      </form>
       </Form>
     </div>
   );

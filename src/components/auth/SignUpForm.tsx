@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import {RegistrationConfirmation} from './RegistrationConfirmation';
+import {authErrorMessage} from '@/lib/auth-feedback';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -13,16 +15,20 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export function SignUpForm() {
+export function SignUpForm({onSignIn}:{onSignIn?:()=>void}) {
+  const [confirmationEmail,setConfirmationEmail]=useState('');
   const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const busy=useRef(false);
+  const [submitError,setSubmitError]=useState('');
 
   const form = useForm<SignUpValues>({
     resolver: zodResolver(signUpSchema),
@@ -38,6 +44,7 @@ export function SignUpForm() {
   });
 
   const onSubmit = async (values: SignUpValues) => {
+    if(busy.current)return;busy.current=true;setSubmitError('');
     setIsLoading(true);
     try {
       const { error } = await signUp(
@@ -48,27 +55,18 @@ export function SignUpForm() {
         values.role,
         { customerType: values.customerType }
       );
-      if (error) {
-        if (error.message.includes('already registered') || error.message.includes('already exists')) {
-          toast.error('This email is already registered. Please sign in instead.');
-        } else if (error.message.includes('invalid')) {
-          toast.error('Please check your email format and try again.');
-        } else {
-          toast.error(error.message || 'Failed to create account. Please try again.');
-        }
-      } else {
-        toast.success('Account created successfully! Please check your email to verify your account.');
-      }
+      if(error){setSubmitError(authErrorMessage(error,'signup'));}else{setConfirmationEmail(values.email);form.reset();}
     } catch {
-      toast.error('An unexpected error occurred. Please try again.');
+      setSubmitError(authErrorMessage(null,'signup'));
     } finally {
-      setIsLoading(false);
+      busy.current=false;setIsLoading(false);
     }
   };
 
+  if(confirmationEmail)return <RegistrationConfirmation email={confirmationEmail} onSignIn={onSignIn}/>;
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <form noValidate aria-busy={isLoading} onSubmit={form.handleSubmit(onSubmit)} className="space-y-5"><fieldset disabled={isLoading} className="space-y-5 min-w-0">
         <FormField
           control={form.control}
           name="customerType"
@@ -129,7 +127,7 @@ export function SignUpForm() {
               <FormLabel className="text-sm font-medium text-foreground">Email Address</FormLabel>
               <FormControl>
                 <Input
-                  type="email"
+                  type="email" inputMode="email" autoCapitalize="none" spellCheck={false}
                   placeholder="name@email.com"
                   autoComplete="email"
                   className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
@@ -171,6 +169,7 @@ export function SignUpForm() {
                     )}
                   </Button>
                 </div>
+              <FormDescription>At least 8 characters, with uppercase and lowercase letters and a number.</FormDescription>
               <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
@@ -221,6 +220,7 @@ export function SignUpForm() {
             'Create account'
           )}
         </Button>
+        </fieldset>{submitError&&<p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{submitError}</p>}
       </form>
     </Form>
   );

@@ -21,9 +21,9 @@ const Auth = () => {
   const location = useLocation();
   const returnPath = getAuthReturnPath(location.state);
   const [searchParams] = useSearchParams();
-  const { user, role, loading } = useAuth();
-  const [mode, setMode] = useState<AuthMode>('signin');
-  const [selectedRole, setSelectedRole] = useState<SelectedRole>(null);
+  const { user, role, loading, passwordRecovery, permissionsError } = useAuth();
+  const [mode, setMode] = useState<AuthMode>(()=>searchParams.get('mode')==='reset'?'reset':searchParams.get('mode')==='signup'?'signup':searchParams.get('mode')==='recover'?'forgot':'signin');
+  const [selectedRole, setSelectedRole] = useState<SelectedRole>(()=>searchParams.get('role')==='provider'?'provider':null);
 
   const isProviderFlow = searchParams.get('role') === 'provider';
 
@@ -33,19 +33,21 @@ const Auth = () => {
       setMode('reset');
     } else if (modeParam === 'signup') {
       setMode('signup');
-    }
+    } else if(modeParam==='recover'){setMode('forgot');}else{setMode('signin');}
     // If role=provider URL param, skip role selection
     if (searchParams.get('role') === 'provider') {
       setSelectedRole('provider');
     }
   }, [searchParams]);
 
-  // Role-based redirect after login.
-  // We redirect as soon as `user` is known — we must NOT wait for `role`
-  // because `role` is fetched from a DB table and can be slow or fail.
+  function changeMode(next:AuthMode){const params=new URLSearchParams(searchParams);if(next==='signin')params.delete('mode');else params.set('mode',next==='forgot'?'recover':next);setMode(next);navigate({pathname:'/auth',search:params.toString()?`?${params}`:''},{state:location.state});}
+
+  // Wait for database permissions before choosing an account portal.
+  // Return paths are preserved when switching between sign-in and registration.
   // Database permissions are verified by ProtectedRoute before opening a portal.
   useEffect(() => {
-    if (!loading && user && mode !== 'reset' && searchParams.get('mode') !== 'reset') {
+    if(passwordRecovery){if(searchParams.get('mode')!=='reset')navigate('/auth?mode=reset',{replace:true});return;}
+    if (!loading && user && (role!==null||permissionsError) && mode !== 'reset' && searchParams.get('mode') !== 'reset') {
       // Only database roles determine the portal destination.
       const effectiveRole = role;
       if (returnPath) {
@@ -59,21 +61,21 @@ const Auth = () => {
         navigate('/dashboard');
       }
     }
-  }, [user, loading, role, navigate, mode, returnPath, searchParams]);
+  }, [user, loading, role, navigate, mode, returnPath, searchParams, passwordRecovery, permissionsError]);
 
-  if (loading) {
+  if (loading||(user&&!passwordRecovery&&mode!=='reset'&&searchParams.get('mode')!=='reset')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="font-semibold text-sm uppercase tracking-widest text-primary">Synchronizing...</p>
+          <p className="font-semibold text-sm uppercase tracking-widest text-primary">Opening your account…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <main id="main-content" tabIndex={-1} className="min-h-screen flex bg-background">
+    <main id="main-content" tabIndex={-1} className="auth-page min-h-screen flex bg-background">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 auth-story p-12 xl:p-16 flex-col justify-between relative overflow-hidden">
           <Link to="/" className="flex items-center gap-3 group relative z-10">
@@ -165,7 +167,7 @@ const Auth = () => {
               >
                 <Card className="card-elevated p-4 sm:p-8 rounded-3xl">
                   <CardContent className="px-0 py-0">
-                    <PasswordResetForm onBack={() => setMode('signin')} />
+                    <PasswordResetForm onBack={() => changeMode('signin')} />
                   </CardContent>
                 </Card>
               </motion.div>
@@ -202,14 +204,14 @@ const Auth = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="px-0 pb-0">
-                    <Tabs value={mode === 'signup' ? 'signup' : 'signin'} onValueChange={(v) => { setMode(v as AuthMode); if (v === 'signin') setSelectedRole(null); }} className="w-full">
+                    <Tabs value={mode === 'signup' ? 'signup' : 'signin'} onValueChange={(v) => { changeMode(v as AuthMode); if (v === 'signin') setSelectedRole(null); }} className="w-full">
                       <TabsList className="grid w-full grid-cols-2 mb-10 bg-muted/50 p-1.5 h-auto rounded-2xl">
                         <TabsTrigger value="signin" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">Sign in</TabsTrigger>
                         <TabsTrigger value="signup" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">Create account</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="signin" className="mt-0 focus-visible:ring-0">
-                        <SignInForm onForgotPassword={() => setMode('forgot')} />
+                        <SignInForm onForgotPassword={() => changeMode('forgot')} />
                       </TabsContent>
 
                       <TabsContent value="signup" className="mt-0 focus-visible:ring-0">
@@ -273,7 +275,7 @@ const Auth = () => {
                                 <ArrowLeft className="h-4 w-4" />
                                 Choose a different account type
                               </button>
-                              {selectedRole === 'provider' ? <ProviderSignUpForm /> : <SignUpForm />}
+                              {selectedRole === 'provider' ? <ProviderSignUpForm onSignIn={()=>changeMode('signin')}/> : <SignUpForm onSignIn={()=>changeMode('signin')}/>}
                             </motion.div>
                           )}
                         </AnimatePresence>
