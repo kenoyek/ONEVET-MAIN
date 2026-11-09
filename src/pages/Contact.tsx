@@ -172,7 +172,7 @@ export default function Contact() {
                 {[
                   { icon: MapPin, title: "HQ Location", content: "Port-Harcourt, Rivers State", link: null },
                   { icon: Mail, title: "Official Email", content: "support@1vet.store", link: "mailto:support@1vet.store" },
-                  { icon: Phone, title: "Support line", content: "+234 809 800 0355", link: "tel:+2348098000355" },
+                  { icon: Phone, title: "Support line", content: "+234 705 239 8371", link: "tel:+2347052398371" },
                   { icon: Clock, title: "Service Hours", content: "Mon–Fri: 8am – 6pm", link: null },
                 ].map((item, i) => (
                   <Card key={i} className="card-elevated p-6 rounded-[2rem]">
