@@ -165,7 +165,7 @@ export default function ConsultationChat() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-20 pb-16 flex items-center justify-center">
+        <main id="main-content" tabIndex={-1} className="pt-20 pb-16 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
       </div>
@@ -176,7 +176,7 @@ export default function ConsultationChat() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-20 pb-16">
+        <main id="main-content" tabIndex={-1} className="pt-20 pb-16">
           <div className="container-wide py-8 text-center">
             <AlertCircle className="h-16 w-16 mx-auto text-destructive mb-4" />
             <h1 className="text-2xl font-bold mb-2">Consultation Not Found</h1>
@@ -205,7 +205,7 @@ export default function ConsultationChat() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-20 pb-16">
+        <main id="main-content" tabIndex={-1} className="pt-20 pb-16">
           <div className="container-wide py-8 max-w-2xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -248,7 +248,7 @@ export default function ConsultationChat() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-20 pb-16">
+        <main id="main-content" tabIndex={-1} className="pt-20 pb-16">
           <div className="container-wide py-8 max-w-2xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -310,7 +310,7 @@ export default function ConsultationChat() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-1 flex flex-col pt-16 md:pt-20">
+      <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col pt-16 md:pt-20">
         <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto border-x">
           <ConsultationHeader
             consultation={consultation}

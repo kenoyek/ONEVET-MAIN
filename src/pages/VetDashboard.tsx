@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -196,10 +197,10 @@ const VetDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container-wide py-12 pt-28 md:pt-32">
+      <main id="main-content" tabIndex={-1} className="container-wide py-12 pt-28 md:pt-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -208,9 +209,7 @@ const VetDashboard = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
             <div>
-              <h1 className="text-4xl font-black text-foreground tracking-tight mb-2">
-                Welcome, Dr. {profile?.last_name || 'Vet'}! 👋
-              </h1>
+              <PageHeading size="workspace" className="mb-2" title={<> Welcome, Dr. {profile?.last_name || 'Vet'}! 👋 </>}/>
               <div className="flex items-center gap-2">
                 {isAvailable ? (
                   <span className="status-online font-bold uppercase tracking-widest text-[10px]">Online & Ready</span>
@@ -242,7 +241,7 @@ const VetDashboard = () => {
 
           {/* Verification Status */}
           {(!profile?.license_verified || profile?.verification_status !== 'approved' || profile?.is_active === false) && (
-            <Card className="mb-10 border-warning/50 bg-warning/5 glass-card">
+            <Card className="mb-10 border-warning/50 bg-warning/5 card-elevated">
               <CardContent className="flex flex-col sm:flex-row items-center justify-between py-6 px-8 gap-4 text-center sm:text-left">
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                   <div className="p-3 rounded-2xl bg-warning/10 text-warning">
@@ -264,46 +263,46 @@ const VetDashboard = () => {
 
           {/* Stats Grid */}
           <div className="grid gap-6 md:grid-cols-4 mb-10">
-            <Card className="glass-card p-6">
+            <Card className="card-elevated p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-primary/10 text-primary shadow-sm">
                   <Users className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.totalConsultations}</p>
+                  <p className="text-3xl font-semibold text-foreground tracking-tight">{stats.totalConsultations}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Total Consults</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-6">
+            <Card className="card-elevated p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-success/10 text-success shadow-sm">
                   <CheckCircle className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.completedToday}</p>
+                  <p className="text-3xl font-semibold text-foreground tracking-tight">{stats.completedToday}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Done Today</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-6">
+            <Card className="card-elevated p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-warning/10 text-warning shadow-sm">
                   <Clock className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.pendingRequests}</p>
+                  <p className="text-3xl font-semibold text-foreground tracking-tight">{stats.pendingRequests}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Waiting</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-6">
+            <Card className="card-elevated p-6">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-2xl bg-accent/10 text-accent shadow-sm">
                   <Star className="h-6 w-6" />
                 </div>
                 <div>
-                  <p className="text-3xl font-black text-foreground tracking-tighter">{stats.averageRating || '-'}</p>
+                  <p className="text-3xl font-semibold text-foreground tracking-tight">{stats.averageRating || '-'}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Avg. Rating</p>
                 </div>
               </div>

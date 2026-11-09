@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -179,7 +180,7 @@ export default function ArticleEditor() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container-wide py-8 pt-24 flex items-center justify-center">
+        <main id="main-content" tabIndex={-1} className="container-wide py-8 pt-24 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </main>
       </div>
@@ -190,7 +191,7 @@ export default function ArticleEditor() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container-wide py-8 pt-24">
+      <main id="main-content" tabIndex={-1} className="container-wide py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -206,9 +207,7 @@ export default function ArticleEditor() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-display font-bold">
-                  {isEditing ? 'Edit Article' : 'Create Article'}
-                </h1>
+                <PageHeading size="workspace" className="" title={<> {isEditing ? 'Edit Article' : 'Create Article'} </>}/>
                 <p className="text-muted-foreground mt-1">
                   {isEditing ? 'Update your article content' : 'Write educational content for pet owners'}
                 </p>

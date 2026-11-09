@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -20,7 +21,7 @@ const Groomers = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {/* Hero */}
         <section className="relative py-20 lg:py-28 bg-gradient-hero overflow-hidden">
           <div className="container-wide relative z-10">
@@ -33,9 +34,7 @@ const Groomers = () => {
               <div className="inline-flex p-3 rounded-xl bg-secondary text-secondary-foreground mb-6">
                 <Scissors className="w-8 h-8" />
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6">
-                Pet Grooming Services
-              </h1>
+              <PageHeading size="workspace" className="mb-6" title={<> Pet Grooming Services </>}/>
               <p className="text-lg md:text-xl text-primary-foreground/80 mb-8">
                 Professional groomers to keep your furry friends looking and feeling their best.
               </p>

@@ -1,3 +1,5 @@
+import careImage from '@/assets/marketing/welcome-care-1100.webp';
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Heart, Sprout, Stethoscope } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
@@ -18,17 +20,10 @@ export default function About() {
         tabIndex={-1}
         className="container-wide pt-32 md:pt-40 pb-20"
       >
-        <p className="eyebrow mb-5">Our purpose</p>
-        <h1 className="text-4xl md:text-6xl max-w-3xl">
-          Care that reaches
-          <br />
-          beyond the clinic.
-        </h1>
-        <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mt-7">
-          1Vet’s mission is to make veterinary guidance more accessible to pet
-          owners and farmers. We’re building connections between people, animal
-          health records, and veterinary professionals.
-        </p>
+        <div className="public-intro public-intro-grid">
+          <PageHeading size="display" eyebrow="Our purpose" title={<>Care that reaches<br/><em>beyond the clinic.</em></>} description="1Vet’s mission is to make veterinary guidance more accessible to pet owners and farmers. We’re building connections between people, animal health records, and veterinary professionals."/>
+          <img className="public-intro-image" src={careImage} alt="A veterinarian examining a cat with its owner" width="1100" height="825" decoding="async"/>
+        </div>
         <div className="grid md:grid-cols-3 gap-6 mt-12">
           {[
             {

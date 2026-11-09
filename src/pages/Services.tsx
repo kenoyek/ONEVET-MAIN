@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -97,11 +98,11 @@ const faqs = [
 
 const Services = () => {
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {/* Hero Section */}
-        <section className="relative py-24 md:py-32 lg:py-40 bg-gradient-premium overflow-hidden liquid-bg">
+        <section className="relative py-24 md:py-32 lg:py-40 bg-primary overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
@@ -118,20 +119,18 @@ const Services = () => {
               <Badge variant="outline" className="mb-6 border-white/30 text-white px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">
                 Premium Ecosystem
               </Badge>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-primary-foreground mb-8 tracking-tighter heading-safe">
-                Complete care for your <span className="text-secondary">animal family.</span>
-              </h1>
+              <PageHeading size="workspace" className="mb-8" title={<> Complete care for your <span className="text-secondary">animal family.</span> </>}/>
               <p className="text-xl md:text-2xl text-primary-foreground/90 mb-10 font-medium leading-relaxed">
                 From immediate 24/7 medical support to professional lifestyle services, we've built the ultimate platform for animal health.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Button size="xl" className="bg-white text-primary hover:bg-white/90 font-black shadow-soft rounded-full px-10 hover:scale-105 transition-all" asChild>
+                <Button size="xl" className="bg-white text-primary hover:bg-white/90 font-semibold shadow-soft rounded-full px-10 hover:scale-105 transition-all" asChild>
                   <Link to="/consultations/new">
                     <MessageCircle className="w-5 h-5 mr-3" />
                     Consult a Vet Now
                   </Link>
                 </Button>
-                <Button variant="outline" size="xl" className="border-white/30 text-white hover:bg-white/10 font-black rounded-full px-10 hover:scale-105 transition-all" asChild>
+                <Button variant="outline" size="xl" className="border-white/30 text-white hover:bg-white/10 font-semibold rounded-full px-10 hover:scale-105 transition-all" asChild>
                   <Link to="/auth">Register Facility</Link>
                 </Button>
               </div>
@@ -147,17 +146,17 @@ const Services = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="glass-card rounded-[3rem] p-8 md:p-16 overflow-hidden relative"
+              className="card-elevated rounded-3xl p-8 md:p-16 overflow-hidden relative"
             >
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
               <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center relative z-10">
                 <div>
-                  <div className="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest mb-6 border border-success/20">
+                  <div className="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-widest mb-6 border border-success/20">
                     <Clock className="w-4 h-4" />
                     Active Availability
                   </div>
-                  <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tight">
+                  <h2 className="text-4xl md:text-5xl font-semibold mb-6 tracking-tight">
                     24/7 Digital Veterinary Consultations
                   </h2>
                   <p className="text-muted-foreground text-lg mb-8 font-medium leading-relaxed">
@@ -179,14 +178,14 @@ const Services = () => {
                       </div>
                     ))}
                   </div>
-                  <Button size="xl" className="rounded-full font-black px-10 shadow-glow" asChild>
+                  <Button size="xl" className="rounded-full font-semibold px-10 shadow-sm" asChild>
                     <Link to="/consultations/new">
                       Initialize Consultation <ArrowRight className="ml-2 w-5 h-5" />
                     </Link>
                   </Button>
                 </div>
                 <div className="hidden md:block relative">
-                  <div className="rounded-[2.5rem] overflow-hidden shadow-elevated border-8 border-background aspect-square">
+                  <div className="rounded-3xl overflow-hidden shadow-elevated border-8 border-background aspect-square">
                     <img
                     src={vetTeleconsultImage}
                     alt="Veterinary professional on tablet"
@@ -266,7 +265,7 @@ const Services = () => {
                   src={livestockCareImage}
                   alt="Service providers" 
                   loading="lazy"
-                  className="rounded-[2.5rem] shadow-elevated w-full h-80 object-cover border-8 border-primary-foreground/10"
+                  className="rounded-3xl shadow-elevated w-full h-80 object-cover border-8 border-primary-foreground/10"
                 />
               </motion.div>
             </div>

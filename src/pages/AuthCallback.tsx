@@ -26,7 +26,7 @@ export default function AuthCallback() {
   }, [user, role, loading, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-mesh-gradient">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <h2 className="text-xl font-bold">Verifying authorization...</h2>

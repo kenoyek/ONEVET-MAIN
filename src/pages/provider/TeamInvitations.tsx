@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link,useNavigate } from 'react-router-dom';
 import { useQuery,useQueryClient } from '@tanstack/react-query';
@@ -14,4 +15,4 @@ function TeamAccess(){
   {error&&<p role="alert" className="text-destructive my-4">{error}</p>}<Button variant="outline" className="mt-6" disabled={busy} onClick={()=>void refresh()}>Refresh team access</Button>
  </>;
 }
-export default function TeamInvitations(){const {user}=useAuth();return <div className="min-h-screen bg-background"><Navbar/><main className="container-wide max-w-4xl pt-32 pb-20"><h1 className="text-3xl mb-4">Team invitations and workspaces</h1><TeamAccess key={user?.id}/></main></div>;}
+export default function TeamInvitations(){const {user}=useAuth();return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container-wide max-w-4xl pt-32 pb-20"><PageHeading size="workspace" className="mb-4" title={<> Team invitations and workspaces </>}/><TeamAccess key={user?.id}/></main></div>;}

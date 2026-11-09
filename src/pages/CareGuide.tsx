@@ -1,3 +1,6 @@
+import petCareImage from '@/assets/marketing/welcome-pets-760.webp';
+import farmCareImage from '@/assets/marketing/welcome-farm-760.webp';
+import { PageHeading } from '@/components/layout/PageHeading';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -127,21 +130,13 @@ export default function CareGuide() {
       <Navbar />
       <main id="main-content" tabIndex={-1} className="pt-32 md:pt-40 pb-20">
         <div className="container-wide">
-          <p className="eyebrow mb-5">
-            {urgent
-              ? 'Urgent care guidance'
-              : farm
-                ? 'For livestock farmers'
-                : services
-                  ? 'Care, connected'
-                  : 'For pet owners'}
-          </p>
-          <h1 className="text-4xl md:text-6xl max-w-3xl leading-tight">
-            {title}
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-2xl leading-relaxed">
-            {description}
-          </p>
+          <div className={`public-intro ${urgent?'':'public-intro-grid'}`}>
+            <PageHeading size="display"
+              eyebrow={urgent?'Urgent care guidance':farm?'For livestock farmers':services?'Care, connected':'For pet owners'}
+              title={urgent?title:services?<>The next step in <em>animal care.</em></>:farm?<>Healthy animals.<br/><em>Stronger livelihoods.</em></>:<>Better care<br/><em>for every paw.</em></>}
+              description={description}/>
+            {!urgent&&<img className="public-intro-image" src={farm?farmCareImage:petCareImage} alt={farm?'Veterinary care for farm animals':'An owner spending time with her pets'} width="760" height="570" decoding="async"/>}
+          </div>
           <div className="grid md:grid-cols-2 gap-6 mt-12">
             {items.map(({ icon: Icon, title: heading, text, href, action }) => (
               <article className="care-path" key={heading}>

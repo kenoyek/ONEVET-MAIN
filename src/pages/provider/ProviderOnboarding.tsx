@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/layout/Navbar';
@@ -12,9 +13,9 @@ export default function ProviderOnboarding() {
   const cache = useQueryClient();
   const organizations = useQuery({ queryKey: ['provider-drafts', user?.id], queryFn: () => providerDraftService.list(user!.id), enabled: !!user });
   return <div className="min-h-screen bg-background"><Navbar />
-    <main className="container-wide pt-32 pb-20 max-w-4xl">
+    <main id="main-content" tabIndex={-1} className="container-wide pt-32 pb-20 max-w-4xl">
       <p className="eyebrow mb-4">Veterinary & service partners</p>
-      <h1 className="text-3xl mb-4">Register your organization</h1>
+      <PageHeading size="workspace" className="mb-4" title={<> Register your organization </>}/>
       <p className="text-muted-foreground mb-8">Save your business details as a private draft. Registration does not grant professional approval or publish your business. After saving, attach documents and submit your organization for review. After approval, publish services and opt into booking requests. Owners can also invite a team.</p>
       <Button asChild variant="outline" className="mb-6"><Link to="/provider/invitations">Team invitations and workspaces</Link></Button>
       <section className="care-path mb-8" aria-labelledby="your-organizations">

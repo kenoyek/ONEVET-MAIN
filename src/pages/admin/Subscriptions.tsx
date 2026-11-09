@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -201,7 +202,7 @@ export default function AdminSubscriptions() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container-wide py-8 pt-24">
+      <main id="main-content" tabIndex={-1} className="container-wide py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -215,7 +216,7 @@ export default function AdminSubscriptions() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-display font-bold">Subscription Management</h1>
+              <PageHeading size="workspace" className="" title={<> Subscription Management </>}/>
               <p className="text-muted-foreground mt-1">
                 View and manage user subscriptions
               </p>

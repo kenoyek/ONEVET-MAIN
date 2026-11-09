@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/layout/Navbar';
@@ -69,8 +70,8 @@ export default function ProviderVerificationQueue() {
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState('');
   const queue = useQuery({ queryKey: ['provider-review-queue', user?.id, filter, page], enabled: !!user, queryFn: () => service.queue(filters[filter], page) });
-  return <div className="min-h-screen bg-background"><Navbar /><main className="container-wide max-w-5xl pt-32 pb-20">
-    <h1 className="text-3xl mb-4">Organization verification</h1>
+  return <div className="min-h-screen bg-background"><Navbar /><main id="main-content" tabIndex={-1} className="container-wide max-w-5xl pt-32 pb-20">
+    <PageHeading size="workspace" className="mb-4" title={<> Organization verification </>}/>
     <p className="text-muted-foreground mb-6">Review the submitted business snapshot and private documents. Each decision is recorded in the audit trail and review history.</p>
     <Label htmlFor="queue-filter">Applications</Label><select id="queue-filter" value={filter} onChange={e => { setFilter(e.target.value as keyof typeof filters); setPage(0); setSelected(''); }} className="border rounded-md bg-background p-3 block mb-6"><option value="pending">Pending review</option><option value="returned">Returned or rejected</option><option value="approved">Approved</option><option value="suspended">Suspended</option></select>
     {queue.isPending ? <p role="status">Loading applications…</p> : queue.isError ? <><p role="alert">Could not load applications.</p><Button onClick={() => void queue.refetch()}>Retry applications</Button></> : queue.data?.cases.length ? <ul className="space-y-3">{queue.data.cases.map(application => <li key={application.id} className="border rounded-lg p-4 flex flex-wrap justify-between items-center gap-3"><div><p className="font-medium">{application.organization?.name ?? 'Organization unavailable'}</p><p className="text-sm text-muted-foreground">{application.status.replaceAll('_',' ')} · revision {application.revision}</p></div><Button variant="outline" onClick={() => setSelected(application.provider_id)}>Review application</Button></li>)}</ul> : <p>No applications in this view.</p>}

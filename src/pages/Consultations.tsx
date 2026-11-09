@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -115,10 +116,10 @@ export default function Consultations() {
   });
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="pt-28 md:pt-32 pb-20">
+      <main id="main-content" tabIndex={-1} className="pt-28 md:pt-32 pb-20">
         <div className="container-wide">
           {/* Header */}
           <motion.div
@@ -130,14 +131,14 @@ export default function Consultations() {
               <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
                 Medical Records
               </Badge>
-              <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tight mb-2">Consultations</h1>
+              <PageHeading size="workspace" className="mb-2" title={<> Consultations </>}/>
               <p className="text-muted-foreground font-medium">
                 {isVet ? 'Review and manage your patient consultation history.' : 'Access your professional medical consultation history.'}
               </p>
             </div>
 
             {!isVet && (
-              <Button size="lg" className="rounded-full font-black px-8 shadow-glow" asChild>
+              <Button size="lg" className="rounded-full font-semibold px-8 shadow-sm" asChild>
                 <Link to="/consultations/new">
                   <Plus className="mr-3 h-5 w-5" />
                   New Consultation

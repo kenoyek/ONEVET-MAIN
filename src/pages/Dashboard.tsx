@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Link } from 'react-router-dom';
 import {
   PawPrint,
@@ -30,10 +31,8 @@ export default function Dashboard() {
         <header className="flex flex-col md:flex-row gap-6 justify-between items-start md:items-end mb-10">
           <div>
             <p className="eyebrow mb-3">Your care workspace</p>
-            <h1 className="text-3xl md:text-4xl">
-              Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}
-              .
-            </h1>
+            <PageHeading size="workspace" className="" title={<> Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}
+              . </>}/>
             <p className="text-muted-foreground mt-3">
               A little more clarity for the animals in your care.
             </p>

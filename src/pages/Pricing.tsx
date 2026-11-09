@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -136,20 +137,18 @@ export default function Pricing() {
   const yearlyPlan = plans.find(p => p.duration_months >= 12);
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-28 md:pt-32 pb-20">
+      <main id="main-content" tabIndex={-1} className="pt-28 md:pt-32 pb-20">
         {!paymentsEnabled && <p role="status" className="container-wide text-sm text-muted-foreground py-4">Online payments are currently unavailable. Please contact support for assistance.</p>}
         {/* Hero */}
         <section className="py-12 text-center">
-          <div className="container-wide max-w-3xl mx-auto px-4">
+          <div className="container-wide max-w-3xl mx-auto page-heading-center px-4">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <Badge variant="outline" className="mb-6 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
                 <Sparkles className="w-3 h-3 mr-2" /> Memberships
               </Badge>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-6 tracking-tighter heading-safe">
-                Healthcare without <span className="text-gradient-brand">boundaries.</span>
-              </h1>
+              <PageHeading size="display" className="mb-6" title={<> Healthcare without <em>boundaries.</em> </>}/>
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto font-medium">
                 Review available membership plans and included services. Provider response times and consultation availability may vary.
               </p>
@@ -162,13 +161,13 @@ export default function Pricing() {
           <section className="pb-12">
             <div className="container-wide max-w-4xl mx-auto px-4">
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                <Card className="border-primary/20 bg-primary/5 glass-card overflow-hidden">
+                <Card className="border-primary/20 bg-primary/5 card-elevated overflow-hidden">
                   <CardContent className="flex flex-col sm:flex-row items-center gap-6 p-8 text-center sm:text-left">
-                    <div className="p-4 rounded-2xl bg-primary text-white shadow-glow">
+                    <div className="p-4 rounded-2xl bg-primary text-primary-foreground shadow-sm">
                       <Crown className="h-8 w-8" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-2xl font-black text-foreground tracking-tight mb-1">
+                      <p className="text-2xl font-semibold text-foreground tracking-tight mb-1">
                         You're a <span className="text-primary">{subscription.plan?.name || 'Valued'}</span> Member
                       </p>
                       <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 text-sm font-bold text-muted-foreground uppercase tracking-widest">
@@ -208,19 +207,19 @@ export default function Pricing() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: i * 0.15 }}
                     >
-                      <Card className={`glass-card relative h-full flex flex-col rounded-[3rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 ${isPopular ? 'border-primary/50 shadow-elevated bg-primary/[0.03]' : 'border-border/50 shadow-soft'}`}>
+                      <Card className={`card-elevated relative h-full flex flex-col rounded-3xl overflow-hidden transition-all duration-500 hover:-translate-y-2 ${isPopular ? 'border-primary/50 shadow-elevated bg-primary/[0.03]' : 'border-border/50 shadow-soft'}`}>
                         {isPopular && (
                           <div className="absolute top-0 right-0">
-                            <div className="bg-primary text-white px-8 py-2 rounded-bl-[2rem] font-black text-[10px] uppercase tracking-widest shadow-soft">
+                            <div className="bg-primary text-primary-foreground px-8 py-2 rounded-bl-[2rem] font-semibold text-[10px] uppercase tracking-widest shadow-soft">
                               Best Value
                             </div>
                           </div>
                         )}
                         <CardHeader className="p-10 pb-6">
-                          <CardTitle className="text-2xl font-black tracking-tight mb-2 uppercase tracking-widest text-muted-foreground">{plan.name}</CardTitle>
+                          <CardTitle className="text-2xl font-semibold tracking-tight mb-2 uppercase tracking-widest text-muted-foreground">{plan.name}</CardTitle>
                           {plan.description && <CardDescription className="text-base font-medium">{plan.description}</CardDescription>}
                           <div className="pt-8">
-                            <span className="text-6xl font-black text-foreground tracking-tighter">{formatNGN(plan.price)}</span>
+                            <span className="text-6xl font-semibold text-foreground tracking-tight">{formatNGN(plan.price)}</span>
                             <span className="text-muted-foreground font-bold ml-2 uppercase tracking-widest text-xs">
                               / {plan.duration_months >= 12 ? 'year' : 'month'}
                             </span>
@@ -239,12 +238,12 @@ export default function Pricing() {
                           </ul>
                           {user ? (
                             isActive && subscription?.plan_id === plan.id ? (
-                              <Button variant="outline" className="w-full h-14 rounded-full font-black border-2" disabled>
+                              <Button variant="outline" className="w-full h-14 rounded-full font-semibold border-2" disabled>
                                 Currently Active
                               </Button>
                             ) : (
                               <Button
-                                className="w-full h-16 rounded-full font-black text-lg shadow-glow hover:scale-105 transition-all"
+                                className="w-full h-16 rounded-full font-semibold text-lg shadow-sm hover:scale-105 transition-all"
                                 onClick={() => handleSubscribe(plan)}
                                 disabled={isProcessing !== null || !paymentsEnabled}
                               >
@@ -258,7 +257,7 @@ export default function Pricing() {
                               </Button>
                             )
                           ) : (
-                            <Button className="w-full h-16 rounded-full font-black text-lg shadow-glow hover:scale-105 transition-all" asChild>
+                            <Button className="w-full h-16 rounded-full font-semibold text-lg shadow-sm hover:scale-105 transition-all" asChild>
                               <Link to="/auth?mode=signup">
                                 Get Started <ArrowRight className="ml-2 h-5 w-5" />
                               </Link>
@@ -279,7 +278,7 @@ export default function Pricing() {
           <div className="container-wide max-w-5xl mx-auto px-4 text-center relative z-10">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">Process</Badge>
-              <h2 className="font-display text-4xl font-black text-foreground mb-16 tracking-tight">Simple activation flow.</h2>
+              <h2 className="font-display text-4xl font-semibold text-foreground mb-16 tracking-tight">Simple activation flow.</h2>
             </motion.div>
             <div className="grid md:grid-cols-3 gap-12">
               {steps.map((step, i) => (
@@ -291,7 +290,7 @@ export default function Pricing() {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.15 }}
                 >
-                  <div className="w-20 h-20 rounded-[2rem] bg-card border border-border/50 flex items-center justify-center mb-6 shadow-soft group-hover:shadow-glow group-hover:-translate-y-1 transition-all duration-500">
+                  <div className="w-20 h-20 rounded-[2rem] bg-card border border-border/50 flex items-center justify-center mb-6 shadow-soft group-hover:shadow-sm group-hover:-translate-y-1 transition-all duration-500">
                     <step.icon className="h-8 w-8 text-primary" />
                   </div>
                   <h3 className="text-xl font-bold text-foreground mb-3 tracking-tight">{step.title}</h3>
@@ -304,15 +303,15 @@ export default function Pricing() {
 
         {/* FAQ */}
         <section className="section-padding">
-          <div className="container-wide max-w-3xl mx-auto px-4">
+          <div className="container-wide max-w-3xl mx-auto page-heading-center px-4">
             <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold">Support</Badge>
-              <h2 className="font-display text-4xl font-black text-foreground mb-4 tracking-tight">Common questions.</h2>
+              <h2 className="font-display text-4xl font-semibold text-foreground mb-4 tracking-tight">Common questions.</h2>
               <p className="text-muted-foreground font-medium">Everything you need to know about our premium memberships.</p>
             </motion.div>
             <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, i) => (
-                <AccordionItem key={i} value={`faq-${i}`} className="glass-card rounded-2xl px-6 overflow-hidden">
+                <AccordionItem key={i} value={`faq-${i}`} className="card-elevated rounded-2xl px-6 overflow-hidden">
                   <AccordionTrigger className="text-left py-6 font-bold text-lg hover:no-underline group">
                     <div className="flex items-center gap-4">
                       <div className="p-2 rounded-lg bg-primary/5 text-primary group-data-[state=open]:bg-primary group-data-[state=open]:text-white transition-colors">

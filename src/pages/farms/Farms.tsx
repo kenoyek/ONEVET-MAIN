@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -48,7 +49,7 @@ function FarmsContent() {
         <div className="flex flex-col sm:flex-row gap-5 justify-between items-start sm:items-center mt-7 mb-9">
           <div>
             <p className="eyebrow mb-3">Your farm workspace</p>
-            <h1 className="text-3xl md:text-4xl">Farms & livestock</h1>
+            <PageHeading size="workspace" className="" title={<> Farms & livestock </>}/>
             <p className="text-muted-foreground mt-3">
               Manage a herd, flock, pond, or batch without adding every animal
               individually.

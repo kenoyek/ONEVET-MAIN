@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import type { PlannedRows } from '@/integrations/supabase/planned-types';
 type ProviderOrganization=PlannedRows['provider_organizations'];
 type ProviderLocation=PlannedRows['provider_locations'];
@@ -211,7 +212,7 @@ export default function OrganizationSettings() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-3xl font-bold tracking-tight">{organization.name}</h1>
+              <PageHeading size="workspace" className="" title={<> {organization.name} </>}/>
               <Badge variant={organization.verification_status === 'approved' ? 'default' : 'secondary'}>
                 {organization.verification_status.toUpperCase()}
               </Badge>

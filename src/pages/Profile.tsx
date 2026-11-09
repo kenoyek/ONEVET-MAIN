@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -231,10 +232,10 @@ export default function Profile() {
   const VerificationIcon = verificationStatus.icon;
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container-wide py-12 pt-28 md:pt-32 pb-20">
+      <main id="main-content" tabIndex={-1} className="container-wide py-12 pt-28 md:pt-32 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -246,7 +247,7 @@ export default function Profile() {
             <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
               Settings
             </Badge>
-            <h1 className="text-4xl font-black text-foreground tracking-tight mb-2">Profile Settings</h1>
+            <PageHeading size="workspace" className="mb-2" title={<> Profile Settings </>}/>
             <p className="text-muted-foreground font-medium">
               Update your presence and professional identity on the platform.
             </p>
@@ -254,7 +255,7 @@ export default function Profile() {
 
           <div className="space-y-8">
             {/* Avatar Section */}
-            <Card className="glass-card overflow-hidden">
+            <Card className="card-elevated overflow-hidden">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg flex items-center gap-2 font-bold">
                   <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -268,7 +269,7 @@ export default function Profile() {
                   <div className="relative group">
                     <Avatar className="h-32 w-32 border-4 border-background shadow-elevated transition-transform duration-500 group-hover:scale-105">
                       <AvatarImage src={profile?.avatar_url || undefined} alt={formData.first_name} className="object-cover" />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-black">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-3xl font-semibold">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
@@ -282,7 +283,7 @@ export default function Profile() {
                       ) : (
                         <div className="flex flex-col items-center gap-1">
                           <Camera className="h-6 w-6 text-white" />
-                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Update</span>
+                          <span className="text-[10px] font-semibold text-white uppercase tracking-wider">Update</span>
                         </div>
                       )}
                     </button>
@@ -295,16 +296,16 @@ export default function Profile() {
                     />
                   </div>
                   <div className="text-center sm:text-left">
-                    <p className="text-2xl font-black text-foreground tracking-tight">{formData.first_name} {formData.last_name}</p>
+                    <p className="text-2xl font-semibold text-foreground tracking-tight">{formData.first_name} {formData.last_name}</p>
                     <p className="text-sm font-bold text-muted-foreground mb-4 uppercase tracking-widest">{user?.email}</p>
-                    <Badge className="rounded-full px-5 py-1.5 font-black uppercase tracking-widest text-[10px] shadow-soft">{role?.replace('_', ' ')}</Badge>
+                    <Badge className="rounded-full px-5 py-1.5 font-semibold uppercase tracking-widest text-[10px] shadow-soft">{role?.replace('_', ' ')}</Badge>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Personal Information */}
-            <Card className="glass-card">
+            <Card className="card-elevated">
               <CardHeader>
                 <CardTitle className="font-bold tracking-tight">Core Information</CardTitle>
                 <CardDescription className="font-medium">Public and contact details.</CardDescription>
@@ -312,7 +313,7 @@ export default function Profile() {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="first_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">First Name</Label>
+                    <Label htmlFor="first_name" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">First Name</Label>
                     <Input
                       id="first_name"
                       name="first_name"
@@ -323,7 +324,7 @@ export default function Profile() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="last_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name</Label>
+                    <Label htmlFor="last_name" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Last Name</Label>
                     <Input
                       id="last_name"
                       name="last_name"
@@ -336,7 +337,7 @@ export default function Profile() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
+                    <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
                     <Input
                       id="phone"
                       name="phone"
@@ -347,7 +348,7 @@ export default function Profile() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="location" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Location</Label>
+                    <Label htmlFor="location" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Location</Label>
                     <Input
                       id="location"
                       name="location"
@@ -359,7 +360,7 @@ export default function Profile() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Professional Bio</Label>
+                  <Label htmlFor="bio" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Professional Bio</Label>
                   <Textarea
                     id="bio"
                     name="bio"
@@ -375,7 +376,7 @@ export default function Profile() {
 
             {/* Vet-specific: License Verification */}
             {isVet && (
-              <Card className="glass-card overflow-hidden">
+              <Card className="card-elevated overflow-hidden">
                 <CardHeader className="bg-primary/5 pb-6">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-center sm:text-left">
@@ -398,7 +399,7 @@ export default function Profile() {
                 <CardContent className="space-y-8 pt-8">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="specialty" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Medical Specialty</Label>
+                      <Label htmlFor="specialty" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Medical Specialty</Label>
                       <Input
                         id="specialty"
                         name="specialty"
@@ -409,7 +410,7 @@ export default function Profile() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="license_number" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">License ID (VCN)</Label>
+                      <Label htmlFor="license_number" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">License ID (VCN)</Label>
                       <Input
                         id="license_number"
                         name="license_number"
@@ -422,12 +423,12 @@ export default function Profile() {
                   </div>
 
                   <div className="space-y-4">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">License Documentation</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">License Documentation</Label>
                     {profile?.license_url ? (
                       <div className="p-6 rounded-3xl border border-primary/20 bg-primary/5 shadow-soft">
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
                           <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <div className="p-3 rounded-2xl bg-primary text-white shadow-glow">
+                            <div className="p-3 rounded-2xl bg-primary text-primary-foreground shadow-sm">
                               <FileText className="h-8 w-8" />
                             </div>
                             <div>
@@ -460,15 +461,15 @@ export default function Profile() {
                         {isUploadingLicense ? (
                           <div className="flex flex-col items-center gap-3">
                             <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                            <p className="font-black text-sm uppercase tracking-widest text-primary">Uploading...</p>
+                            <p className="font-semibold text-sm uppercase tracking-widest text-primary">Uploading...</p>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-4">
-                            <div className="p-5 rounded-[2rem] bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-soft group-hover:shadow-glow group-hover:-translate-y-1">
+                            <div className="p-5 rounded-[2rem] bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-soft group-hover:shadow-sm group-hover:-translate-y-1">
                               <Upload className="h-10 w-10" />
                             </div>
                             <div>
-                              <p className="font-black text-lg tracking-tight">Upload Digital License</p>
+                              <p className="font-semibold text-lg tracking-tight">Upload Digital License</p>
                               <p className="text-sm text-muted-foreground font-medium">
                                 High-quality PDF or JPG recommended (Max 10MB)
                               </p>
@@ -491,14 +492,14 @@ export default function Profile() {
 
             {/* Service Provider-specific */}
             {isServiceProvider && (
-              <Card className="glass-card">
+              <Card className="card-elevated">
                 <CardHeader>
                   <CardTitle className="font-bold tracking-tight">Professional Services</CardTitle>
                   <CardDescription className="font-medium">Information about your establishment.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="business_name" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Facility / Business Name</Label>
+                    <Label htmlFor="business_name" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Facility / Business Name</Label>
                     <Input
                       id="business_name"
                       name="business_name"
@@ -509,7 +510,7 @@ export default function Profile() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="business_address" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Physical Address</Label>
+                    <Label htmlFor="business_address" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Physical Address</Label>
                     <Textarea
                       id="business_address"
                       name="business_address"
@@ -526,7 +527,7 @@ export default function Profile() {
 
             {/* Save Button */}
             <div className="flex justify-center sm:justify-end pt-4">
-              <Button onClick={handleSaveProfile} disabled={isSaving} size="xl" className="rounded-full font-black px-12 shadow-glow hover:scale-105 transition-all">
+              <Button onClick={handleSaveProfile} disabled={isSaving} size="xl" className="rounded-full font-semibold px-12 shadow-sm hover:scale-105 transition-all">
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />

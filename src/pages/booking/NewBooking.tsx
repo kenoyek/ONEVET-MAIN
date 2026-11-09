@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -19,8 +20,8 @@ export default function NewBooking() {
   const item=catalog.data;const home=item?.delivery_mode==='home_visit';const selected=choices.data?.find(choice=>`${choice.kind}:${choice.id}`===animal);
   const options=choices.data?.filter(choice=>choice.kind==='pet' || ['veterinary','diagnostics'].includes(item?.category ?? '')) ?? [];
   const limit=watDate(new Date(Date.parse(watDate()+'T12:00:00+01:00')+90*86400000));
-  return <div className="min-h-screen bg-background"><Navbar/><main className="container-wide max-w-3xl pt-32 pb-20"><Link className="text-primary underline" to="/my-bookings">Your booking requests</Link>
-    <h1 className="text-3xl my-6">Request a service appointment</h1>
+  return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container-wide max-w-3xl pt-32 pb-20"><Link className="text-primary underline" to="/my-bookings">Your booking requests</Link>
+    <PageHeading size="workspace" className="my-6" title={<> Request a service appointment </>}/>
     {!id?<p>Select a service from the <Link className="underline text-primary" to="/provider-marketplace">care directory</Link>.</p>:catalog.isPending?<p role="status">Loading service…</p>:catalog.isError || !item?<><p role="alert">This service is unavailable or could not be loaded.</p><Button onClick={()=>void catalog.refetch()}>Refresh service</Button></>:<>
       <section className="care-path mb-6"><h2 className="text-xl">{item.name}</h2><p>{item.organization_name} · {item.city}, {item.state}</p><p className="mt-3">Base fee: {item.currency} {Number(item.base_price).toLocaleString('en-NG',{minimumFractionDigits:2})} · {item.duration_minutes} minutes</p><p className="text-sm text-muted-foreground mt-3">No online payment is collected. The provider must confirm this request; submitting does not reserve a slot. Any additional costs must be agreed separately before care.</p><Button type="button" variant="outline" className="mt-4" disabled={busy} onClick={()=>{void catalog.refetch();void slots.refetch();setAcceptedVersion(null);setStart('');}}>Refresh service details and times</Button></section>
       {!item.booking_enabled?<p>This provider is not accepting booking requests right now.</p>:choices.isPending?<p role="status">Loading your animals…</p>:choices.isError?<><p role="alert">Could not load your animals.</p><Button onClick={()=>void choices.refetch()}>Retry animals</Button></>:!options.length?<p>Add an owned <Link className="underline text-primary" to="/pets">animal profile</Link>{['veterinary','diagnostics'].includes(item.category ?? '')?' or farm group':''} before requesting this service.</p>:<form className="care-path space-y-5" onSubmit={async event=>{

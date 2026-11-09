@@ -10,17 +10,17 @@
 @layer base {
   :root {
     /* Core Brand Colors */
-    --background: 80 27% 98%;
-    --foreground: 160 21% 11%;
+    --background: 60 30% 95.5%;
+    --foreground: 162 34% 16.5%;
 
-    --card: 0 0% 100%;
+    --card: 50 100% 99%;
     --card-foreground: 170 30% 12%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 170 30% 12%;
 
     /* Primary: Deep Teal - Trust & Health */
-    --primary: 166 54% 15%;
+    --primary: 162 45% 16.5%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary: Warm Coral - Energy & Warmth */
@@ -28,8 +28,8 @@
     --secondary-foreground: 0 0% 100%;
 
     /* Muted: Soft sage backgrounds */
-    --muted: 150 15% 95%;
-    --muted-foreground: 145 8% 38%;
+    --muted: 78 22% 90%;
+    --muted-foreground: 147 10% 37.5%;
 
     /* Accent: Amber for CTAs */
     --accent: 150 55% 91%;
@@ -38,11 +38,11 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 15% 88%;
-    --input: 150 15% 88%;
+    --border: 87 16% 85.5%;
+    --input: 87 16% 80%;
     --ring: 166 54% 15%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Extended palette */
     --success: 152 60% 42%;
@@ -74,10 +74,10 @@
   }
 
   .dark {
-    --background: 170 25% 7%;
-    --foreground: 150 15% 95%;
+    --background: 157 29% 8.8%;
+    --foreground: 88 27% 91%;
 
-    --card: 170 22% 10%;
+    --card: 151 25% 13%;
     --card-foreground: 150 15% 95%;
 
     --popover: 170 22% 12%;
@@ -87,19 +87,19 @@
     --primary-foreground: 166 54% 10%;
 
     --secondary: 161 50% 55%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary-foreground: 166 54% 10%;
 
-    --muted: 170 18% 14%;
-    --muted-foreground: 150 15% 65%;
+    --muted: 144 23% 18%;
+    --muted-foreground: 139 10% 73%;
 
-    --accent: 35 85% 55%;
+    --accent: 144 23% 18%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 65% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 170 15% 20%;
-    --input: 170 15% 14%;
+    --border: 142 16% 24%;
+    --input: 142 16% 31%;
     --ring: 168 55% 45%;
 
     --sidebar-background: 170 25% 10%;
@@ -134,7 +134,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-bold tracking-tight;
+    @apply font-display font-semibold tracking-tight;
   }
 
   h1, h2 {
@@ -338,7 +338,8 @@
 /* Shared care surfaces, keyboard access and motion preferences. */
 @layer components {
   .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.16em] text-primary; }
-  .care-path { @apply block rounded-2xl border bg-card p-7 md:p-10 transition-colors hover:border-primary/40; }
+  .care-path { @apply block rounded-2xl border bg-card p-6 md:p-8; }
+  a.care-path { @apply transition-colors hover:border-primary/40; }
 }
 @layer base {
   :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 4px; }

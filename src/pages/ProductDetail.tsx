@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,9 +85,9 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-28 md:pt-32 pb-16">
+      <main id="main-content" tabIndex={-1} className="pt-28 md:pt-32 pb-16">
         <div className="container-wide">
           <Button
             variant="ghost"
@@ -100,7 +101,7 @@ const ProductDetail = () => {
           <div className="grid lg:grid-cols-2 gap-16">
             {/* Image Gallery */}
             <div className="space-y-6">
-              <div className="aspect-square rounded-[3rem] overflow-hidden bg-white shadow-elevated border-8 border-background">
+              <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-elevated border-8 border-background">
                 {product.images?.[selectedImage] ? (
                   <img
                     src={product.images[selectedImage]}
@@ -117,7 +118,7 @@ const ProductDetail = () => {
                     <button
                       key={idx}
                       className={`aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 ${
-                        selectedImage === idx ? 'border-primary shadow-glow' : 'border-background shadow-soft opacity-60 hover:opacity-100'
+                        selectedImage === idx ? 'border-primary shadow-sm' : 'border-background shadow-soft opacity-60 hover:opacity-100'
                       }`}
                       onClick={() => setSelectedImage(idx)}
                     >
@@ -132,7 +133,7 @@ const ProductDetail = () => {
             <div className="flex flex-col pt-4">
               <div className="mb-8">
                 <Badge className="mb-4 bg-primary/10 text-primary border-none px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest">{product.category}</Badge>
-                <h1 className="text-4xl md:text-5xl font-black text-foreground mb-4 tracking-tighter heading-safe">{product.title}</h1>
+                <PageHeading size="display" className="mb-4" title={<> {product.title} </>}/>
                 <div className="flex items-center gap-4 mb-6">
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50 border border-border/50">
                     <Store className="w-4 h-4 text-primary" />
@@ -140,11 +141,11 @@ const ProductDetail = () => {
                       Sold by <span className="text-foreground">{product.seller?.business_name || `${product.seller?.first_name} ${product.seller?.last_name}`}</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-amber-500 font-black text-sm">
+                  <div className="flex items-center gap-1 text-amber-500 font-semibold text-sm">
                     <Star className="w-4 h-4 fill-current" /> 5.0
                   </div>
                 </div>
-                <div className="text-4xl font-black text-primary tracking-tighter">
+                <div className="text-4xl font-semibold text-primary tracking-tight">
                   ₦{product.price.toLocaleString()}
                 </div>
               </div>
@@ -186,7 +187,7 @@ const ProductDetail = () => {
               <div className="mt-12 flex gap-4">
                 <Button
                   size="xl"
-                  className="flex-grow h-16 text-lg font-black gap-3 rounded-full shadow-glow hover:scale-[1.02] transition-all"
+                  className="flex-grow h-16 text-lg font-semibold gap-3 rounded-full shadow-sm hover:scale-[1.02] transition-all"
                   onClick={handleAddToCart}
                   disabled={(product.stock_quantity ?? 0) <= 0}
                 >

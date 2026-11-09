@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -97,7 +98,7 @@ function FarmDetailContent() {
             <header className="mt-7 mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div>
                 <p className="eyebrow mb-3">Farm health workspace</p>
-                <h1 className="text-3xl md:text-4xl">{data.farm.farm_name}</h1>
+                <PageHeading size="workspace" className="" title={<> {data.farm.farm_name} </>}/>
                 <p className="text-muted-foreground mt-3">
                   {data.farm.city}, {data.farm.state} ·{' '}
                   <span className="capitalize">

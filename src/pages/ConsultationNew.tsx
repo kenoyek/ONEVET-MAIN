@@ -121,12 +121,12 @@ export default function ConsultationNew() {
   // Redirect if no subscription
   if (!subscriptionLoading && !isActive) {
     return (
-      <div className="min-h-screen bg-mesh-gradient">
+      <div className="min-h-screen">
         <Navbar />
-        <main className="pt-24 pb-16">
+        <main id="main-content" tabIndex={-1} className="pt-24 pb-16">
           <div className="container-tight py-8">
-            <Card className="glass-card max-w-md mx-auto overflow-hidden">
-              <div className="h-2 bg-gradient-brand" />
+            <Card className="card-elevated max-w-md mx-auto overflow-hidden">
+              <div className="h-2 bg-primary" />
               <CardHeader className="text-center pt-8">
                 <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertCircle className="h-8 w-8 text-destructive" />
@@ -149,18 +149,18 @@ export default function ConsultationNew() {
   }
 
   return (
-    <div className="min-h-screen bg-mesh-gradient">
+    <div className="min-h-screen">
       <Navbar />
       
-      <main className="pt-24 pb-16">
+      <main id="main-content" tabIndex={-1} className="pt-24 pb-16">
         <div className="container-wide py-8 max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="glass-card overflow-hidden">
-              <div className="h-1.5 bg-gradient-brand" />
+            <Card className="card-elevated overflow-hidden">
+              <div className="h-1.5 bg-primary" />
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-4">
                   <div className="p-3.5 rounded-2xl bg-primary/10 shadow-inner">
@@ -207,7 +207,7 @@ export default function ConsultationNew() {
                                 <SelectValue placeholder={loadingPets ? 'Loading pets...' : 'Choose a pet'} />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="glass-card">
+                            <SelectContent className="card-elevated">
                               {pets.map((pet) => (
                                 <SelectItem key={pet.id} value={pet.id}>
                                   {pet.name} ({pet.species})
@@ -246,7 +246,7 @@ export default function ConsultationNew() {
 
                     <Button
                       type="submit"
-                      className="w-full h-12 text-lg font-semibold bg-gradient-brand hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 disabled:opacity-70"
+                      className="w-full h-12 text-lg font-semibold bg-primary hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 disabled:opacity-70"
                       disabled={submitting}
                     >
                       {submitting ? (

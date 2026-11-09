@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import type { Database } from '@/integrations/supabase/types';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -142,7 +143,7 @@ const Analytics = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+        <main id="main-content" tabIndex={-1} className="container-wide py-20 flex flex-col items-center justify-center text-center">
           <TrendingUp className="h-12 w-12 text-primary animate-pulse mb-4" />
           <h2 className="text-xl font-bold mb-2">Preparing Analytics</h2>
           <p className="text-muted-foreground max-w-xs">Aggregating platform data for your review. This may take a few seconds...</p>
@@ -155,7 +156,7 @@ const Analytics = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+        <main id="main-content" tabIndex={-1} className="container-wide py-20 flex flex-col items-center justify-center text-center">
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-2xl font-bold mb-2">Analytics Error</h2>
           <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
@@ -176,10 +177,10 @@ const Analytics = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container-wide py-8 pt-24">
+      <main id="main-content" tabIndex={-1} className="container-wide py-8 pt-24">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
+            <PageHeading size="workspace" className="" title={<> Analytics Dashboard </>}/>
             <p className="text-muted-foreground mt-1">
               Real-time platform growth and user registration insights.
             </p>

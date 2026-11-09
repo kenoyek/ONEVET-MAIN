@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -214,7 +215,7 @@ const PetDetailContent = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container max-w-4xl pt-28 pb-16">
+        <main id="main-content" tabIndex={-1} className="container max-w-4xl pt-28 pb-16">
           <Skeleton className="h-8 w-32 mb-6" />
           <Skeleton className="h-[600px]" />
         </main>
@@ -222,7 +223,7 @@ const PetDetailContent = () => {
     );
   }
 
-  if(loadError||!pet)return <div className="min-h-screen bg-background"><Navbar/><main className="container max-w-4xl pt-32"><p role="alert">Pet profile unavailable. Check your connection and account access.</p><Button variant="outline" onClick={()=>void fetchPetAndPassport()}>Retry pet profile</Button></main></div>;
+  if(loadError||!pet)return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container max-w-4xl pt-32"><p role="alert">Pet profile unavailable. Check your connection and account access.</p><Button variant="outline" onClick={()=>void fetchPetAndPassport()}>Retry pet profile</Button></main></div>;
 
   const petAge = pet.date_of_birth ? (() => {
     const dob = new Date(pet.date_of_birth);
@@ -238,7 +239,7 @@ const PetDetailContent = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container max-w-5xl pt-28 md:pt-36 pb-16 px-4">
+      <main id="main-content" tabIndex={-1} className="container max-w-5xl pt-28 md:pt-36 pb-16 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -302,7 +303,7 @@ const PetDetailContent = () => {
 
                 <div className="flex-1 text-center md:text-left">
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                    <h1 className="text-3xl font-bold">{pet.name}</h1>
+                    <PageHeading size="workspace" className="" title={<> {pet.name} </>}/>
                     <Badge variant="default">Pet profile</Badge>
                     {pet.is_livestock && pet.livestock_count && pet.livestock_count > 1 && (
                       <Badge variant="secondary">×{pet.livestock_count} Herd</Badge>

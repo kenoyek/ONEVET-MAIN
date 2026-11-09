@@ -1,3 +1,4 @@
+import authImage from '@/assets/marketing/welcome-care-1100.webp';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -62,10 +63,10 @@ const Auth = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-mesh-gradient">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="font-black text-sm uppercase tracking-widest text-primary">Synchronizing...</p>
+          <p className="font-semibold text-sm uppercase tracking-widest text-primary">Synchronizing...</p>
         </div>
       </div>
     );
@@ -74,18 +75,12 @@ const Auth = () => {
   return (
     <main id="main-content" tabIndex={-1} className="min-h-screen flex bg-background">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-premium text-primary-foreground p-16 flex-col justify-between relative overflow-hidden">
-          {/* Background patterns */}
-          <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <div className="absolute top-1/4 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black rounded-full blur-3xl -translate-x-1/2" />
-          </div>
-
+      <div className="hidden lg:flex lg:w-1/2 auth-story p-12 xl:p-16 flex-col justify-between relative overflow-hidden">
           <Link to="/" className="flex items-center gap-3 group relative z-10">
             <div className="p-2.5 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-soft">
               <Stethoscope className="w-6 h-6 text-white" />
             </div>
-            <span className="font-display text-3xl font-black tracking-tighter">1vet</span>
+            <span className="font-display text-3xl font-semibold tracking-tight">1vet</span>
           </Link>
 
         <div className="space-y-8 relative z-10">
@@ -94,19 +89,19 @@ const Auth = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-5xl lg:text-7xl font-black leading-[1.05] tracking-tighter mb-8">
+            <h2 className="text-5xl xl:text-6xl font-medium leading-[1.1] tracking-tight mb-7">
               {isProviderFlow ? (
                 <>
-                  Scale your <br />
-                  <span className="text-secondary">practice.</span>
+                  Your expertise.<br />
+                  <em>A little more reach.</em>
                 </>
               ) : (
                 <>
-                  Health care <br />
-                  <span className="text-secondary">reimagined.</span>
+                  Their wellbeing.<br />
+                  <em>Your peace of mind.</em>
                 </>
               )}
-            </h1>
+            </h2>
             <p className="text-xl text-primary-foreground/90 max-w-md font-medium leading-relaxed">
               {isProviderFlow
                 ? 'Apply to join 1Vet and submit your professional details for review.'
@@ -114,7 +109,8 @@ const Auth = () => {
             </p>
           </motion.div>
 
-          <div className="pt-10 border-t border-white/20">
+          <img src={authImage} className="auth-story-image" alt="Veterinary care for a cat alongside its owner" width="1100" height="825"/>
+          <div className="pt-7 border-t border-white/20">
             <p className="font-semibold text-lg">For pet owners, farmers, and veterinary professionals.</p>
             <p className="text-sm text-primary-foreground/80 mt-2">One place to start your animal’s care journey.</p>
           </div>
@@ -126,15 +122,15 @@ const Auth = () => {
       </div>
 
       {/* Right side - Forms */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-mesh-gradient">
-        <div className="w-full max-w-md">
+      <div className="auth-form-panel w-full lg:w-1/2 flex items-center justify-center">
+        <div className="w-full max-w-md"><h1 className="sr-only">{(mode==='reset'||mode==='forgot')?'Reset your password':mode==='signup'?'Create your 1Vet account':'Sign in to 1Vet'}</h1>
           {/* Mobile logo */}
           <div className="lg:hidden mb-12 text-center">
             <Link to="/" className="inline-flex items-center gap-3 group">
-              <div className="p-2.5 rounded-2xl bg-primary text-white shadow-glow transition-transform group-hover:scale-110">
+              <div className="p-2.5 rounded-2xl bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-110">
                 <Stethoscope className="w-6 h-6" />
               </div>
-              <span className="font-display text-2xl font-black tracking-tighter">
+              <span className="font-display text-2xl font-semibold tracking-tight">
                 1<span className="text-primary">vet</span>
               </span>
             </Link>
@@ -149,10 +145,10 @@ const Auth = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}
               >
-                <Card className="glass-card p-4 sm:p-8 rounded-[2.5rem]">
+                <Card className="card-elevated p-4 sm:p-8 rounded-3xl">
                   <CardHeader className="px-0 pt-0 text-center mb-8">
-                    <CardTitle className="text-3xl font-black tracking-tighter">Reset Access</CardTitle>
-                    <CardDescription className="font-medium">Enter your new credentials below.</CardDescription>
+                    <CardTitle className="text-3xl font-semibold tracking-tight">Reset your password</CardTitle>
+                    <CardDescription className="font-medium">Choose a new password for your account.</CardDescription>
                   </CardHeader>
                   <CardContent className="px-0 pb-0">
                     <NewPasswordForm />
@@ -167,7 +163,7 @@ const Auth = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}
               >
-                <Card className="glass-card p-4 sm:p-8 rounded-[2.5rem]">
+                <Card className="card-elevated p-4 sm:p-8 rounded-3xl">
                   <CardContent className="px-0 py-0">
                     <PasswordResetForm onBack={() => setMode('signin')} />
                   </CardContent>
@@ -181,25 +177,25 @@ const Auth = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.4 }}
               >
-                <Card className="glass-card p-4 sm:p-8 rounded-[2.5rem]">
+                <Card className="card-elevated p-4 sm:p-8 rounded-3xl">
                   <CardHeader className="px-0 pt-0 text-center mb-8">
                     <div className="flex justify-center mb-6">
-                       <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest">Secure Gateway v2.6</div>
+                       <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-widest">Welcome to 1Vet</div>
                     </div>
-                    <CardTitle className="text-3xl font-black tracking-tighter mb-2">
-                      {mode === 'signin' 
-                        ? 'Welcome Back' 
+                    <CardTitle className="text-3xl font-semibold tracking-tight mb-2">
+                      {mode === 'signin'
+                        ? 'Welcome back'
                         : selectedRole === 'provider'
-                          ? 'Provider Access'
+                          ? 'Create a provider account'
                           : selectedRole === 'client'
-                            ? 'Owner Registration'
-                            : 'Initialize Account'}
+                            ? 'Create your account'
+                            : 'Join 1Vet'}
                     </CardTitle>
                     <CardDescription className="font-medium">
                       {mode === 'signin'
-                        ? 'Sign in to your professional dashboard.'
+                        ? 'Sign in to continue your animal’s care.'
                         : selectedRole === 'provider'
-                          ? 'Register your facility on 1vet.'
+                          ? 'Create an account to start your provider application.'
                           : selectedRole === 'client'
                             ? 'Join Nigeria\'s animal health network.'
                             : 'Select your preferred account type.'}
@@ -208,8 +204,8 @@ const Auth = () => {
                   <CardContent className="px-0 pb-0">
                     <Tabs value={mode === 'signup' ? 'signup' : 'signin'} onValueChange={(v) => { setMode(v as AuthMode); if (v === 'signin') setSelectedRole(null); }} className="w-full">
                       <TabsList className="grid w-full grid-cols-2 mb-10 bg-muted/50 p-1.5 h-auto rounded-2xl">
-                        <TabsTrigger value="signin" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">Identity Login</TabsTrigger>
-                        <TabsTrigger value="signup" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">New Account</TabsTrigger>
+                        <TabsTrigger value="signin" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">Sign in</TabsTrigger>
+                        <TabsTrigger value="signup" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">Create account</TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="signin" className="mt-0 focus-visible:ring-0">
@@ -237,9 +233,9 @@ const Auth = () => {
                                     <PawPrint className="h-7 w-7 text-primary" />
                                   </div>
                                   <div>
-                                    <div className="font-black text-foreground tracking-tight">Owner / Farmer</div>
+                                    <div className="font-semibold text-foreground tracking-tight">Owner / Farmer</div>
                                     <p className="mt-0.5 text-xs font-medium text-muted-foreground leading-relaxed">
-                                      Book services, track health records, and connect with doctors.
+                                      Book services, track health records, and connect with veterinarians.
                                     </p>
                                   </div>
                                 </button>
@@ -253,7 +249,7 @@ const Auth = () => {
                                     <Briefcase className="h-7 w-7 text-accent" />
                                   </div>
                                   <div>
-                                    <div className="font-black text-foreground tracking-tight">Professional Provider</div>
+                                    <div className="font-semibold text-foreground tracking-tight">Professional Provider</div>
                                     <p className="mt-0.5 text-xs font-medium text-muted-foreground leading-relaxed">
                                       Manage clinic, list services, and handle patient consultations.
                                     </p>
@@ -272,10 +268,10 @@ const Auth = () => {
                               <button
                                 type="button"
                                 onClick={() => setSelectedRole(null)}
-                                className="mb-6 inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+                                className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
                               >
                                 <ArrowLeft className="h-4 w-4" />
-                                Return to Role selection
+                                Choose a different account type
                               </button>
                               {selectedRole === 'provider' ? <ProviderSignUpForm /> : <SignUpForm />}
                             </motion.div>
@@ -289,18 +285,8 @@ const Auth = () => {
             )}
           </AnimatePresence>
 
-          <div className="mt-10 text-center space-y-3">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] px-4">
-              By accessing the 1Vet platform, you agree to our{' '}
-              <Link to="/terms" className="text-primary hover:underline">
-                Terms of Protocol
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="text-primary hover:underline">
-                Privacy Standard
-              </Link>
-            </p>
-          </div>
+          <p className="mt-8 text-center text-sm text-muted-foreground">Questions about your account? <Link to="/contact" className="text-primary underline underline-offset-4">Contact support</Link>.</p>
+
         </div>
       </div>
     </main>

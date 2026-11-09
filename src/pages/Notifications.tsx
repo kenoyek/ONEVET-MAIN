@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
@@ -13,4 +14,4 @@ function Inbox(){
     <div className="flex gap-4 items-center mt-6"><Button variant="outline" disabled={page===0||inbox.loading} onClick={()=>setPage(previous=>previous-1)}>Previous</Button><span>Page {page+1}</span><Button variant="outline" disabled={!inbox.hasNext||inbox.loading} onClick={()=>setPage(previous=>previous+1)}>Next</Button></div>
   </>;
 }
-export default function Notifications(){const {user}=useAuth();return <div className="min-h-screen bg-background"><Navbar/><main className="container-wide max-w-4xl pt-32 pb-20"><h1 className="text-3xl mb-4">Your notifications</h1><p className="text-muted-foreground mb-6">Booking updates and account alerts appear here. Open an alert to review the current details.</p><Inbox key={user?.id}/></main></div>;}
+export default function Notifications(){const {user}=useAuth();return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container-wide max-w-4xl pt-32 pb-20"><PageHeading size="workspace" className="mb-4" title={<> Your notifications </>}/><p className="text-muted-foreground mb-6">Booking updates and account alerts appear here. Open an alert to review the current details.</p><Inbox key={user?.id}/></main></div>;}

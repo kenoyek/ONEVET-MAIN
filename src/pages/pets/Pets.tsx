@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -56,7 +57,7 @@ const Pets = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-display font-bold">My Pets</h1>
+              <PageHeading size="workspace" className="" title={<> My Pets </>}/>
               <p className="text-muted-foreground mt-1">
                 Manage your pet profiles and health records
               </p>

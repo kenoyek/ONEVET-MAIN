@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ServerCrash, Home, ArrowLeft } from 'lucide-react';
@@ -8,12 +9,12 @@ export default function Error500() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center p-6">
+      <main id="main-content" tabIndex={-1} className="flex-1 flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center">
           <div className="w-24 h-24 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-8">
             <ServerCrash className="w-12 h-12 text-destructive" />
           </div>
-          <h1 className="text-4xl font-bold mb-4">500 - Server Error</h1>
+          <PageHeading size="workspace" className="mb-4" title={<> 500 - Server Error </>}/>
           <p className="text-muted-foreground text-lg mb-8">
             Oops! Something went wrong on our end. We're working on fixing it.
             Please try again later.

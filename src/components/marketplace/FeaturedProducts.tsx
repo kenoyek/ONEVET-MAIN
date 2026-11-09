@@ -61,7 +61,7 @@ export function FeaturedProducts() {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
             >
-              <Card className="glass-card h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
+              <Card className="card-elevated h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
                 <div className="relative aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]">
                   {product.images?.[0] ? (
                     <img
@@ -93,13 +93,13 @@ export function FeaturedProducts() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0 flex-grow">
-                  <div className="text-2xl font-black text-primary tracking-tighter">
+                  <div className="text-2xl font-semibold text-primary tracking-tight">
                     ₦{product.price.toLocaleString()}
                   </div>
                 </CardContent>
                 <CardFooter className="p-6 pt-0">
                   <Button
-                    className="w-full gap-2 rounded-full font-bold shadow-soft hover:shadow-glow transition-all"
+                    className="w-full gap-2 rounded-full font-bold shadow-soft hover:shadow-sm transition-all"
                     onClick={() => addItem({
                       id: product.id,
                       title: product.title,

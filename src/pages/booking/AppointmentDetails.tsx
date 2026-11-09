@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/layout/Navbar';
@@ -13,7 +14,7 @@ export default function AppointmentDetails() {
   }});
   async function refresh(){await Promise.all([cache.invalidateQueries({queryKey:['appointment-detail',user?.id]}),cache.invalidateQueries({queryKey:['booking-requests',user?.id]}),cache.invalidateQueries({queryKey:['appointment-slots']}),cache.invalidateQueries({queryKey:['reschedule-slots',user?.id]})]);}
   const booking=details.data?.booking;
-  return <div className="min-h-screen bg-background"><Navbar/><main className="container-wide max-w-4xl pt-32 pb-20"><Link className="text-primary underline" to="/my-bookings">Your booking requests</Link><h1 className="text-3xl my-6">Appointment details</h1>
+  return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container-wide max-w-4xl pt-32 pb-20"><Link className="text-primary underline" to="/my-bookings">Your booking requests</Link><PageHeading size="workspace" className="my-6" title={<> Appointment details </>}/>
     {details.isPending?<p role="status">Loading appointment…</p>:details.isError||!booking?<><p role="alert">Appointment unavailable. Check your connection and that you are signed into a participating account.</p><Button onClick={()=>void details.refetch()}>Retry appointment</Button></>:<>
       {booking.provider_access===true&&<Link className="text-primary underline block mb-4" to={`/provider/organization/${snapshotText(booking.service_snapshot,'provider_slug')}`}>Organization workspace</Link>}
       <BookingRequestCard key={`${user?.id}-${booking.id}`} booking={booking} provider={booking.provider_access===true&&booking.customer_id!==user?.id} readOnly={booking.provider_access!==true&&booking.customer_id!==user?.id} refresh={refresh}/>

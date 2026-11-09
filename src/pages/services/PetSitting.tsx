@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -20,7 +21,7 @@ const PetSitting = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {/* Hero */}
         <section className="relative py-20 lg:py-28 bg-gradient-hero overflow-hidden">
           <div className="container-wide relative z-10">
@@ -33,9 +34,7 @@ const PetSitting = () => {
               <div className="inline-flex p-3 rounded-xl bg-accent text-accent-foreground mb-6">
                 <Home className="w-8 h-8" />
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6">
-                Pet Sitting & Boarding
-              </h1>
+              <PageHeading size="workspace" className="mb-6" title={<> Pet Sitting & Boarding </>}/>
               <p className="text-lg md:text-xl text-primary-foreground/80 mb-8">
                 Trusted care for your pets when you're away. Verified sitters providing love and attention.
               </p>

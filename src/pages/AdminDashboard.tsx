@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -157,7 +158,7 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+        <main id="main-content" tabIndex={-1} className="container-wide py-20 flex flex-col items-center justify-center text-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
           <h2 className="text-xl font-bold mb-2">Loading Admin Panel</h2>
           <p className="text-muted-foreground font-medium">Fetching platform statistics...</p>
@@ -173,7 +174,7 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+        <main id="main-content" tabIndex={-1} className="container-wide py-20 flex flex-col items-center justify-center text-center">
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-2xl font-bold mb-2">Dashboard Error</h2>
           <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
@@ -192,10 +193,10 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container-wide py-12 pt-28 md:pt-32">
+      <main id="main-content" tabIndex={-1} className="container-wide py-12 pt-28 md:pt-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -204,9 +205,7 @@ const AdminDashboard = () => {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-10">
             <div>
-              <h1 className="text-4xl font-black text-foreground tracking-tight mb-2">
-                Admin Center
-              </h1>
+              <PageHeading size="workspace" className="mb-2" title={<> Admin Center </>}/>
               <p className="text-muted-foreground font-medium">
                 Comprehensive platform management and oversight.
               </p>
@@ -227,68 +226,68 @@ const AdminDashboard = () => {
 
           {/* Stats Grid */}
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6 mb-10">
-            <Card className="glass-card p-4">
+            <Card className="card-elevated p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-primary/10 text-primary shadow-sm">
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-black tracking-tight">{stats.totalUsers}</p>
+                  <p className="text-xl font-semibold tracking-tight">{stats.totalUsers}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Users</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-4">
+            <Card className="card-elevated p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-info/10 text-info shadow-sm">
                   <Stethoscope className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-black tracking-tight">{stats.totalVets}</p>
+                  <p className="text-xl font-semibold tracking-tight">{stats.totalVets}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Vets</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-4">
+            <Card className="card-elevated p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-warning/10 text-warning shadow-sm">
                   <AlertCircle className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-black tracking-tight">{stats.pendingVets}</p>
+                  <p className="text-xl font-semibold tracking-tight">{stats.pendingVets}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pending</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-4">
+            <Card className="card-elevated p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-success/10 text-success shadow-sm">
                   <CreditCard className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-black tracking-tight">{stats.activeSubscriptions}</p>
+                  <p className="text-xl font-semibold tracking-tight">{stats.activeSubscriptions}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Subs</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-4">
+            <Card className="card-elevated p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-secondary/10 text-secondary shadow-sm">
                   <MessageCircle className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-black tracking-tight">{stats.totalConsultations}</p>
+                  <p className="text-xl font-semibold tracking-tight">{stats.totalConsultations}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Consults</p>
                 </div>
               </div>
             </Card>
-            <Card className="glass-card p-4">
+            <Card className="card-elevated p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-accent/10 text-accent shadow-sm">
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-black tracking-tight">{stats.consultationsToday}</p>
+                  <p className="text-xl font-semibold tracking-tight">{stats.consultationsToday}</p>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Today</p>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { motion } from 'framer-motion';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useState } from "react";
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCart } from "@/hooks/use-cart";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { usePaystack } from "@/hooks/use-paystack";
@@ -141,26 +142,26 @@ const Checkout = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-background bg-mesh-gradient flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <main className="flex-1 flex items-center justify-center p-6 pt-32 pb-20">
+        <main id="main-content" tabIndex={-1} className="flex-1 flex items-center justify-center p-6 pt-32 pb-20">
           <div className="container-tight text-center">
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-32 h-32 bg-success/10 text-success rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-soft border-4 border-background"
+              className="w-32 h-32 bg-success/10 text-success rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-soft border-4 border-background"
             >
               <CheckCircle2 className="w-16 h-16" />
             </motion.div>
-            <h1 className="text-4xl font-black mb-4 tracking-tighter">Order Confirmed!</h1>
+            <PageHeading size="workspace" className="mb-4" title={<> Order Confirmed! </>}/>
             <p className="text-muted-foreground mb-10 text-lg font-medium max-w-md mx-auto">
               Your high-priority order <span className="text-foreground font-bold">#{orderId?.slice(0, 8).toUpperCase()}</span> has been securely processed.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="xl" className="rounded-full font-black px-10 shadow-glow" onClick={() => navigate('/dashboard')}>
+              <Button size="xl" className="rounded-full font-semibold px-10 shadow-sm" onClick={() => navigate('/dashboard')}>
                 Go to Dashboard
               </Button>
-              <Button size="xl" variant="outline" className="rounded-full font-black px-10 border-2" onClick={() => navigate('/marketplace')}>
+              <Button size="xl" variant="outline" className="rounded-full font-semibold px-10 border-2" onClick={() => navigate('/marketplace')}>
                 Continue Shopping
               </Button>
             </div>
@@ -172,14 +173,13 @@ const Checkout = () => {
   }
 
   if (items.length === 0) {
-    navigate('/marketplace');
-    return null;
+    return <Navigate to="/marketplace" replace/>;
   }
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-28 md:pt-32 pb-20">
+      <main id="main-content" tabIndex={-1} className="pt-28 md:pt-32 pb-20">
         {!paymentsEnabled && <p role="status" className="container-wide text-sm text-muted-foreground py-4">Online payments are currently unavailable. Please contact support for assistance.</p>}
         <div className="container-wide">
           <div className="flex items-center gap-2 mb-10">
@@ -189,14 +189,14 @@ const Checkout = () => {
             </Button>
           </div>
 
-          <h1 className="text-4xl font-black mb-10 tracking-tighter text-foreground">Secure Checkout</h1>
+          <PageHeading size="workspace" className="mb-10" title={<> Secure Checkout </>}/>
 
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Checkout Form */}
             <form onSubmit={handleCheckout} className="lg:col-span-2 space-y-8">
-              <Card className="glass-card rounded-[2.5rem] overflow-hidden">
+              <Card className="card-elevated rounded-3xl overflow-hidden">
                 <CardHeader className="p-8 pb-0">
-                  <CardTitle className="flex items-center gap-3 text-2xl font-black tracking-tight">
+                  <CardTitle className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
                     <div className="p-2 rounded-lg bg-primary/10 text-primary">
                       <Truck className="w-6 h-6" />
                     </div>
@@ -206,7 +206,7 @@ const Checkout = () => {
                 <CardContent className="p-8 space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="fullName" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Recipient Name</Label>
+                      <Label htmlFor="fullName" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Recipient Name</Label>
                       <Input
                         id="fullName"
                         name="fullName"
@@ -217,7 +217,7 @@ const Checkout = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Contact Phone</Label>
+                      <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Contact Phone</Label>
                       <Input
                         id="phone"
                         name="phone"
@@ -230,7 +230,7 @@ const Checkout = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Complete Delivery Address</Label>
+                    <Label htmlFor="address" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Complete Delivery Address</Label>
                     <Input
                       id="address"
                       name="address"
@@ -242,7 +242,7 @@ const Checkout = () => {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <Label htmlFor="city" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">City / Hub</Label>
+                      <Label htmlFor="city" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">City / Hub</Label>
                       <Input
                         id="city"
                         name="city"
@@ -253,7 +253,7 @@ const Checkout = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="state" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">State / Province</Label>
+                      <Label htmlFor="state" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">State / Province</Label>
                       <Input
                         id="state"
                         name="state"
@@ -267,9 +267,9 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
-              <Card className="glass-card rounded-[2.5rem] overflow-hidden">
+              <Card className="card-elevated rounded-3xl overflow-hidden">
                 <CardHeader className="p-8 pb-0">
-                  <CardTitle className="flex items-center gap-3 text-2xl font-black tracking-tight">
+                  <CardTitle className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
                     <div className="p-2 rounded-lg bg-primary/10 text-primary">
                       <CreditCard className="w-6 h-6" />
                     </div>
@@ -283,14 +283,14 @@ const Checkout = () => {
                         <CreditCard className="w-7 h-7 text-primary" />
                       </div>
                       <div>
-                        <p className="font-black text-lg tracking-tight">Paystack Secure</p>
+                        <p className="font-semibold text-lg tracking-tight">Paystack Secure</p>
                         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Debit / Credit Cards & Transfer</p>
                       </div>
                     </div>
                     <CheckCircle2 className="w-7 h-7 text-primary" />
                   </div>
                   <p className="mt-6 text-sm font-medium text-muted-foreground leading-relaxed">
-                    You will be redirected to the secure Paystack gateway to complete your premium transaction. Your data is protected with 256-bit encryption.
+                    {paymentsEnabled?'Payments are handled through Paystack. Review your order details before continuing.':'Online payments are currently unavailable. You can review your items in the cart.'}
                   </p>
                 </CardContent>
               </Card>
@@ -298,35 +298,35 @@ const Checkout = () => {
               <Button
                 type="submit"
                 size="xl"
-                className="w-full h-18 text-xl font-black rounded-full shadow-glow hover:scale-[1.02] transition-all"
+                className="w-full h-18 text-xl font-semibold rounded-full shadow-sm hover:scale-[1.02] transition-all"
                 disabled={isProcessing || !paymentsEnabled}
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                    Validating Gateway...
+                    Preparing payment…
                   </>
                 ) : (
-                  `Authorize Payment: ₦${totalPrice.toLocaleString()}`
+                  paymentsEnabled?`Pay ₦${totalPrice.toLocaleString()}`:'Payments unavailable'
                 )}
               </Button>
             </form>
 
             {/* Order Review */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-28 glass-card rounded-[2.5rem] overflow-hidden bg-primary/[0.01]">
+              <Card className="sticky top-28 card-elevated rounded-3xl overflow-hidden bg-primary/[0.01]">
                 <CardHeader className="p-8 pb-0">
-                  <CardTitle className="text-2xl font-black tracking-tight">Final Review</CardTitle>
+                  <CardTitle className="text-2xl font-semibold tracking-tight">Final Review</CardTitle>
                 </CardHeader>
                 <CardContent className="p-8">
                   <div className="space-y-5 mb-8">
                     {items.map((item) => (
                       <div key={item.id} className="flex justify-between items-center group">
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <span className="font-black text-primary p-1 bg-primary/5 rounded-lg text-xs min-w-[24px] text-center">{item.quantity}x</span>
+                          <span className="font-semibold text-primary p-1 bg-primary/5 rounded-lg text-xs min-w-[24px] text-center">{item.quantity}x</span>
                           <span className="text-sm font-bold text-foreground/80 line-clamp-1 group-hover:text-foreground transition-colors">{item.title}</span>
                         </div>
-                        <span className="font-black text-sm tracking-tight whitespace-nowrap ml-4">₦{(item.price * item.quantity).toLocaleString()}</span>
+                        <span className="font-semibold text-sm tracking-tight whitespace-nowrap ml-4">₦{(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -342,12 +342,12 @@ const Checkout = () => {
                     </div>
                     <Separator className="bg-border/60 my-2" />
                     <div className="flex justify-between items-center text-foreground">
-                      <span className="text-lg font-black tracking-tight">Total</span>
-                      <span className="text-3xl font-black text-primary tracking-tighter">₦{totalPrice.toLocaleString()}</span>
+                      <span className="text-lg font-semibold tracking-tight">Total</span>
+                      <span className="text-3xl font-semibold text-primary tracking-tight">₦{totalPrice.toLocaleString()}</span>
                     </div>
                   </div>
 
-                  <div className="mt-12 flex items-start gap-3 p-5 rounded-2xl bg-background/50 border border-border/40 text-[10px] font-black uppercase tracking-widest text-muted-foreground leading-relaxed">
+                  <div className="mt-12 flex items-start gap-3 p-5 rounded-2xl bg-background/50 border border-border/40 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-relaxed">
                     <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
                     Enterprise-grade security. 1Vet does not store your card information.
                   </div>

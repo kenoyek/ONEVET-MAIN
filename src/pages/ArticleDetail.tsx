@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -135,7 +136,7 @@ export default function ArticleDetail() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="pt-20">
+        <main id="main-content" tabIndex={-1} className="pt-20">
           <div className="container-tight py-12">
             <Skeleton className="h-8 w-32 mb-8" />
             <Skeleton className="h-12 w-3/4 mb-4" />
@@ -157,10 +158,10 @@ export default function ArticleDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-1 pt-28 md:pt-32 pb-16">
+      <main id="main-content" tabIndex={-1} className="flex-1 pt-28 md:pt-32 pb-16">
         <article className="container-tight">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -187,11 +188,9 @@ export default function ArticleDetail() {
                 ))}
               </div>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground mb-8 tracking-tighter heading-safe">
-                {article.title}
-              </h1>
+              <PageHeading size="workspace" className="mb-8" title={<> {article.title} </>}/>
 
-              <div className="glass-card flex items-center justify-between flex-wrap gap-6 p-6 rounded-[2rem] shadow-soft">
+              <div className="card-elevated flex items-center justify-between flex-wrap gap-6 p-6 rounded-[2rem] shadow-soft">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
                     <AvatarImage src={article.author?.avatar_url || undefined} />
@@ -227,7 +226,7 @@ export default function ArticleDetail() {
                         Share
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="glass-card">
+                    <DropdownMenuContent align="end" className="card-elevated">
                       <DropdownMenuItem onClick={handleCopyLink} className="font-medium cursor-pointer">
                         {copied ? <Check className="h-4 w-4 mr-2 text-success" /> : <Copy className="h-4 w-4 mr-2" />}
                         Copy Link
@@ -252,7 +251,7 @@ export default function ArticleDetail() {
 
             {/* Featured Image */}
             {article.image_url && (
-              <div className="rounded-[3rem] overflow-hidden mb-12 shadow-elevated border-8 border-background bg-muted">
+              <div className="rounded-3xl overflow-hidden mb-12 shadow-elevated border-8 border-background bg-muted">
                 <img
                   src={article.image_url}
                   alt={article.title}
@@ -262,7 +261,7 @@ export default function ArticleDetail() {
             )}
 
             {/* Content */}
-            <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:tracking-tighter prose-headings:font-black prose-p:font-medium prose-p:leading-relaxed prose-p:text-foreground/80 prose-strong:text-foreground prose-strong:font-bold prose-img:rounded-3xl">
+            <div className="prose prose-lg dark:prose-invert max-w-none prose-headings:tracking-tight prose-headings:font-semibold prose-p:font-medium prose-p:leading-relaxed prose-p:text-foreground/80 prose-strong:text-foreground prose-strong:font-bold prose-img:rounded-3xl">
               {article.content.split('\n').map((paragraph, index) => (
                 paragraph.trim() ? (
                   <p key={index}>
@@ -291,7 +290,7 @@ export default function ArticleDetail() {
                             />
                           </div>
                         ) : (
-                          <div className="h-32 bg-gradient-brand rounded-t-lg flex items-center justify-center">
+                          <div className="h-32 bg-primary rounded-t-lg flex items-center justify-center">
                             <BookOpen className="h-8 w-8 text-primary-foreground/50" />
                           </div>
                         )}

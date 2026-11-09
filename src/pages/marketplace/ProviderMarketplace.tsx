@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Footer } from '@/components/layout/Footer';
@@ -106,20 +107,18 @@ export default function ProviderMarketplace() {
       <Navbar />
       <main id="main-content" tabIndex={-1} className="pt-20">
         {/* Hero Banner */}
-        <div className="bg-primary/5 border-b py-12 px-4">
-          <div className="container max-w-6xl mx-auto text-center space-y-4">
+        <div className="discovery-intro">
+          <div className="container-wide space-y-4">
             <Badge
               variant="outline"
               className="px-3 py-1 text-sm bg-background"
             >
               Care for pets & livestock
             </Badge>
-            <h1 className="text-4xl font-bold tracking-tight">
-              {veterinaryOnly
+            <PageHeading size="display" className="" title={<> {veterinaryOnly
                 ? 'Find the right veterinary care.'
-                : 'Find care for your animal.'}
-            </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+                : 'Find care for your animal.'} </>}/>
+            <p className="text-muted-foreground max-w-2xl leading-relaxed">
               Explore provider services and listed fees. Confirm species
               expertise and availability directly with the provider.
             </p>
@@ -127,7 +126,7 @@ export default function ProviderMarketplace() {
             {/* Search Bar */}
             <form
               onSubmit={handleSearchSubmit}
-              className="max-w-3xl mx-auto flex flex-col sm:flex-row gap-2 pt-2"
+              className="discovery-search flex flex-col sm:flex-row gap-3"
             >
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />

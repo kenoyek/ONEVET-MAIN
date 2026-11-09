@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -199,7 +200,7 @@ export default function AdminUsers() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container-wide py-20 flex flex-col items-center justify-center text-center">
+        <main id="main-content" tabIndex={-1} className="container-wide py-20 flex flex-col items-center justify-center text-center">
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h2 className="text-2xl font-bold mb-2">User Management Error</h2>
           <p className="text-muted-foreground mb-6 max-w-md">{error}</p>
@@ -221,7 +222,7 @@ export default function AdminUsers() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container-wide py-8 pt-24">
+      <main id="main-content" tabIndex={-1} className="container-wide py-8 pt-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -235,7 +236,7 @@ export default function AdminUsers() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-display font-bold">User Management</h1>
+              <PageHeading size="workspace" className="" title={<> User Management </>}/>
               <p className="text-muted-foreground mt-1">
                 View and manage all platform participants
               </p>

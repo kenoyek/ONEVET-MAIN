@@ -1,3 +1,4 @@
+import {PageHeading} from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -63,7 +64,7 @@ const PetNew = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="container max-w-2xl py-8">
+      <main id="main-content" tabIndex={-1} className="container max-w-2xl pt-28 md:pt-36 pb-20"><PageHeading title="Add a new pet" eyebrow="Your animal’s story" description="Start with the essentials. You can update their profile and add owner observations as you go." className="mb-8"/>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -80,7 +81,7 @@ const PetNew = () => {
 
           <Card>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Add a New Pet</CardTitle>
+              <CardTitle className="text-2xl">Pet details</CardTitle>
               <CardDescription>
                 Create a profile for your pet to manage their health records
               </CardDescription>

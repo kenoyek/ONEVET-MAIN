@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -84,9 +85,9 @@ const Marketplace = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background bg-mesh-gradient">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="pt-28 md:pt-32 pb-20">
+      <main id="main-content" tabIndex={-1} className="pt-28 md:pt-32 pb-20">
         <div className="container-wide">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
@@ -94,7 +95,7 @@ const Marketplace = () => {
               <Badge variant="outline" className="mb-4 border-primary/30 text-primary px-4 py-1 rounded-full uppercase tracking-widest text-[10px] font-bold bg-background">
                 Storefront
               </Badge>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">1Vet Marketplace</h1>
+              <PageHeading size="display" className="" title={<> 1Vet Marketplace </>}/>
               <p className="text-muted-foreground mt-2 font-medium">
                 Premium veterinary supplies and pet products from verified sellers.
               </p>
@@ -122,7 +123,7 @@ const Marketplace = () => {
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
                 className={`rounded-full whitespace-nowrap px-6 font-bold transition-all ${
-                  selectedCategory === category ? 'shadow-glow scale-105' : 'hover:bg-primary/5'
+                  selectedCategory === category ? 'shadow-sm scale-105' : 'hover:bg-primary/5'
                 }`}
                 onClick={() => setSelectedCategory(category)}
               >
@@ -148,7 +149,7 @@ const Marketplace = () => {
                   transition={{ duration: 0.4 }}
                 >
                   <Link to={`/marketplace/${item.id}`}>
-                    <Card className="glass-card h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
+                    <Card className="card-elevated h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
                       <div className="relative aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]">
                         {item.images?.[0] ? (
                           <img
@@ -166,7 +167,7 @@ const Marketplace = () => {
                       </div>
                       <CardHeader className="p-6 pb-2">
                         <CardTitle className="text-lg font-bold line-clamp-1 group-hover:text-primary transition-colors tracking-tight">{item.title}</CardTitle>
-                        <div className="text-2xl font-black text-primary tracking-tighter mt-1">
+                        <div className="text-2xl font-semibold text-primary tracking-tight mt-1">
                           ₦{item.price.toLocaleString()}
                         </div>
                       </CardHeader>
@@ -181,14 +182,14 @@ const Marketplace = () => {
                               {item.location}
                             </div>
                           )}
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${(item.stock_quantity ?? 0) > 0 ? 'text-success' : 'text-destructive'}`}>
+                          <span className={`text-[10px] font-semibold uppercase tracking-widest ${(item.stock_quantity ?? 0) > 0 ? 'text-success' : 'text-destructive'}`}>
                             {(item.stock_quantity ?? 0) > 0 ? `${item.stock_quantity} available` : 'Out of stock'}
                           </span>
                         </div>
                       </CardContent>
                       <CardFooter className="p-6 pt-0">
                         <Button
-                          className="w-full gap-2 rounded-full font-bold shadow-soft hover:shadow-glow transition-all"
+                          className="w-full gap-2 rounded-full font-bold shadow-soft hover:shadow-sm transition-all"
                           onClick={(e) => handleAddToCart(e, item)}
                           disabled={(item.stock_quantity ?? 0) <= 0}
                         >

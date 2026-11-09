@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -20,10 +21,10 @@ export default function ProviderDraftWorkspace() {
   const organization = draft.data?.organization;
   const location = draft.data?.location;
   const isOwner = organization?.created_by === user?.id;
-  return <div className="min-h-screen bg-background"><Navbar /><main className="container-wide max-w-4xl pt-32 pb-20">
+  return <div className="min-h-screen bg-background"><Navbar /><main id="main-content" tabIndex={-1} className="container-wide max-w-4xl pt-32 pb-20">
     <Link to="/provider/register" className="text-primary underline">Your organizations</Link>
     {draft.isPending ? <p role="status" className="mt-8">Loading organization…</p> : draft.isError || !organization || !location ? <section className="care-path mt-8"><h1 className="text-2xl mb-4">Organization unavailable</h1><p className="mb-5">This organization could not be loaded. Check your connection and that you are signed into the account that registered it.</p><Button onClick={() => void draft.refetch()}>Try again</Button></section> : <>
-      <h1 className="text-3xl my-6">{organization.name}</h1>
+      <PageHeading size="workspace" className="my-6" title={<> {organization.name} </>}/>
       <section className="care-path mb-8"><h2 className="text-xl mb-3">Private organization workspace</h2>
         <p className="mb-2">Status: {organization.verification_status.replaceAll('_', ' ')}</p>
         <p className="text-muted-foreground">Submit registration evidence for organization review, then choose which services to publish below. Set availability below to accept booking requests. Owners can manage team access below.</p>

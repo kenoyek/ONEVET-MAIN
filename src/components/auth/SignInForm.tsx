@@ -63,11 +63,11 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Account Email</FormLabel>
+              <FormLabel className="text-sm font-medium text-foreground">Email address</FormLabel>
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="name@company.com"
+                  placeholder="you@example.com"
                   autoComplete="email"
                   className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                   {...field}
@@ -84,30 +84,31 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
           render={({ field }) => (
             <FormItem>
               <div className="flex justify-between items-center mb-1">
-                <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Security Key</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground">Password</FormLabel>
                 <Button
                   type="button"
                   variant="link"
-                  className="px-0 h-auto text-[10px] font-black uppercase tracking-widest text-primary hover:text-secondary transition-colors"
+                  className="px-0 min-h-11 text-xs font-medium text-primary hover:text-secondary transition-colors"
                   onClick={onForgotPassword}
                 >
-                  Lost Access?
+                  Forgot password?
                 </Button>
               </div>
-              <FormControl>
-                <div className="relative">
-                  <Input
+              <div className="relative">
+                  <FormControl><Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••••••"
                     autoComplete="current-password"
                     className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all pr-12"
                     {...field}
-                  />
+                  /></FormControl>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="absolute right-0 top-0 h-full px-4 hover:bg-transparent text-muted-foreground hover:text-primary transition-colors"
+                    aria-label={showPassword?'Hide password':'Show password'}
+                    aria-pressed={showPassword}
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -117,20 +118,19 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
                     )}
                   </Button>
                 </div>
-              </FormControl>
               <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}
         />
 
-        <Button type="submit" size="xl" className="w-full rounded-full font-black shadow-glow hover:scale-[1.02] transition-all" disabled={isLoading}>
+        <Button type="submit" size="xl" className="w-full rounded-full font-semibold shadow-none  transition-all" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-3 h-5 w-5 animate-spin" />
               Verifying...
             </>
           ) : (
-            'Authorize Entry'
+            'Sign in'
           )}
         </Button>
       </form>

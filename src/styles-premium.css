@@ -1,0 +1,42 @@
+/* Shared visual language: warm surfaces, deliberate hierarchy, quiet controls. */
+.page-heading { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; min-width:0; }
+.page-heading-copy { min-width:0; }
+.page-heading h1 { font-size:clamp(28px,3vw,42px); font-weight:500; letter-spacing:-.045em; line-height:1.18; overflow-wrap:anywhere; }
+.page-heading-display h1 { font-size:clamp(38px,4.5vw,64px); max-width:900px; line-height:1.12; }
+.page-heading-compact h1 { font-size:clamp(25px,2.6vw,34px); }
+.page-heading h1 em { font-family:Georgia,'Times New Roman',serif; font-weight:400; color:hsl(var(--primary)); }
+.page-heading-eyebrow { text-transform:uppercase; font-size:10px; font-weight:600; letter-spacing:.15em; color:hsl(var(--muted-foreground)); margin-bottom:15px; }
+.page-heading-description { color:hsl(var(--muted-foreground)); font-size:15px; line-height:1.8; max-width:640px; margin-top:20px; }
+.page-heading-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; flex-shrink:0; }
+.public-intro { padding-bottom:40px; border-bottom:1px solid hsl(var(--border)); margin-bottom:40px; }
+.public-intro-grid { display:grid; grid-template-columns:1.25fr 1fr; gap:65px; align-items:center; }
+.public-intro-image { width:100%; aspect-ratio:1.4; object-fit:cover; border-radius:120px 120px 20px 20px; background:hsl(var(--muted)); }
+.public-intro .page-heading { margin-bottom:0; }
+.workspace-kicker { font-size:10px; text-transform:uppercase; letter-spacing:.14em; color:hsl(var(--muted-foreground)); font-weight:600; margin-bottom:12px; }
+.discovery-intro { background:hsl(var(--background)); padding:48px 0 32px; border-bottom:1px solid hsl(var(--border)); }
+.discovery-search { background:hsl(var(--card)); padding:12px; border:1px solid hsl(var(--border)); border-radius:20px; margin-top:30px; }
+.workspace-surface { border:1px solid hsl(var(--border)); background:hsl(var(--card)); border-radius:20px; }
+.empty-care-state { border:1px dashed hsl(var(--border)); background:hsl(var(--card)); border-radius:20px; padding:40px 24px; }
+.auth-story { background:#173d32; color:#f7f7f0; }
+.auth-story h1 { font-weight:500; letter-spacing:-.045em; }
+.auth-story h1 em { font-family:Georgia,'Times New Roman',serif; font-weight:400; color:#dce9b4; }
+.auth-story p { color:#d2ddcc; }
+.auth-story-image { width:100%; aspect-ratio:1.85; object-fit:cover; border-radius:90px 90px 15px 15px; margin-top:28px; }
+.auth-form-panel { padding:48px 28px; }
+/* Existing elevated surfaces now share the same solid material as the new care pages. */
+.card-elevated { border-radius:20px; border:1px solid hsl(var(--border)); background:hsl(var(--card)); box-shadow:0 4px 18px hsl(var(--shadow-color)/.025); }
+nav[aria-label="Main navigation"] { box-shadow:none; background:hsl(var(--background)/.95); border-bottom:1px solid hsl(var(--border)); color:hsl(var(--foreground)); }
+@media(max-width:767px) {
+ .page-heading { align-items:flex-start; flex-direction:column; gap:18px; }
+ .page-heading-description { font-size:14px; margin-top:16px; }
+ .page-heading-actions { width:100%; }
+ .public-intro-grid { grid-template-columns:1fr; gap:28px; }
+ .public-intro-image { max-height:260px; }
+ .public-intro { margin-bottom:28px; padding-bottom:28px; }
+ .discovery-intro { padding-top:32px; }
+ .discovery-search { padding:10px; border-radius:16px; }
+ .auth-form-panel { padding:32px 20px; }
+}
+.page-heading-center { justify-content:center; text-align:center; }
+.page-heading-center .page-heading-eyebrow { text-align:center; }
+.page-heading-center .page-heading-description { margin-left:auto; margin-right:auto; }

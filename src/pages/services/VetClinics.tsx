@@ -1,3 +1,4 @@
+import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -20,7 +21,7 @@ const VetClinics = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         {/* Hero */}
         <section className="relative py-20 lg:py-28 bg-gradient-hero overflow-hidden">
           <div className="container-wide relative z-10">
@@ -33,9 +34,7 @@ const VetClinics = () => {
               <div className="inline-flex p-3 rounded-xl bg-success text-success-foreground mb-6">
                 <MapPin className="w-8 h-8" />
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6">
-                Find a Vet Clinic Near You
-              </h1>
+              <PageHeading size="workspace" className="mb-6" title={<> Find a Vet Clinic Near You </>}/>
               <p className="text-lg md:text-xl text-primary-foreground/80 mb-8">
                 Discover verified veterinary clinics. Read reviews, check availability, and book appointments.
               </p>
