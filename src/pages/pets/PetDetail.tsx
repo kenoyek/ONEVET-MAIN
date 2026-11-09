@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Edit, Trash2, MessageCircle, PawPrint, Calendar, Weight, Stethoscope, Shield, Syringe, Activity, Pill, Users, Plus } from 'lucide-react';
@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { PetForm } from '@/components/pets/PetForm';
 import { PetPhotoUpload } from '@/components/pets/PetPhotoUpload';
+import { PetHealthJournal } from '@/components/pets/PetHealthJournal';
 import { PetPassportTimeline } from '@/components/pets/PetPassportTimeline';
 import { PetCaregiversManager } from '@/components/pets/PetCaregiversManager';
 import type { PetProfile, PassportRecord } from '@/lib/services/pet-passport-service';
@@ -25,7 +26,7 @@ import { PetValues } from '@/lib/validation';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-const PetDetail = () => {
+const PetDetailContent = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -38,6 +39,11 @@ const PetDetail = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const active=useRef(true);
+  useEffect(()=>{active.current=true;return()=>{active.current=false;};},[]);
+  const [loadError,setLoadError]=useState(false);
+  const [consultationsError,setConsultationsError]=useState(false);
+
   // Dialog state for records
   const [vaccineOpen, setVaccineOpen] = useState(false);
   const [vaccineName, setVaccineName] = useState('');
@@ -49,8 +55,10 @@ const PetDetail = () => {
 
   const fetchPetAndPassport = useCallback(async () => {
     if (!id || !user) return;
+    setLoadError(false);
     try {
       const data = await petPassportService.getPetPassport(id);
+      if(!active.current)return;
       if (!data.pet) {
         toast.error('Pet not found');
         navigate('/pets');
@@ -59,15 +67,16 @@ const PetDetail = () => {
       setPet(data.pet);
       setPassportData(data);
     } catch (error) {
-      console.error('Error fetching pet passport:', error);
-      toast.error('Failed to load pet health passport');
+      if(!active.current)return;
+      setLoadError(true);
     } finally {
-      setIsLoading(false);
+      if(active.current)setIsLoading(false);
     }
   }, [id, user, navigate]);
 
   const fetchConsultations = useCallback(async () => {
-    if (!id) return;
+    if (!id || !user) return;
+    setConsultationsError(false);
     try {
       const { data, error } = await supabase
         .from('consultations')
@@ -77,11 +86,11 @@ const PetDetail = () => {
         .limit(5);
 
       if (error) throw error;
-      setConsultations(data || []);
+      if(active.current)setConsultations(data || []);
     } catch (error) {
-      console.error('Error fetching consultations:', error);
+      if(active.current){setConsultations([]);setConsultationsError(true);}
     }
-  }, [id]);
+  }, [id,user]);
 
   useEffect(() => {
     if (id && user) {
@@ -213,7 +222,7 @@ const PetDetail = () => {
     );
   }
 
-  if (!pet) return null;
+  if(loadError||!pet)return <div className="min-h-screen bg-background"><Navbar/><main className="container max-w-4xl pt-32"><p role="alert">Pet profile unavailable. Check your connection and account access.</p><Button variant="outline" onClick={()=>void fetchPetAndPassport()}>Retry pet profile</Button></main></div>;
 
   const petAge = pet.date_of_birth ? (() => {
     const dob = new Date(pet.date_of_birth);
@@ -294,7 +303,7 @@ const PetDetail = () => {
                 <div className="flex-1 text-center md:text-left">
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
                     <h1 className="text-3xl font-bold">{pet.name}</h1>
-                    <Badge variant="default">Digital Passport Active</Badge>
+                    <Badge variant="default">Pet profile</Badge>
                     {pet.is_livestock && pet.livestock_count && pet.livestock_count > 1 && (
                       <Badge variant="secondary">×{pet.livestock_count} Herd</Badge>
                     )}
@@ -367,7 +376,8 @@ const PetDetail = () => {
             </Card>
           ) : (
             <>
-            {!passportData?.advancedAvailable && <p role="status" className="rounded-xl border bg-muted p-4 mb-6 text-sm">Pet profile and consultations are available. Structured vaccination, caregiver, and passport records are not available yet.</p>}
+            <PetHealthJournal petId={pet.id}/>
+            {!passportData?.advancedAvailable && <p role="status" className="rounded-xl border bg-muted p-4 mb-6 text-sm">Your owner health journal and consultations are available. Verified clinical passport records, documents and caregiver sharing are not available yet.</p>}
             <Tabs defaultValue="consultations" className="space-y-6">
               <TabsList className="grid w-full grid-cols-4 max-w-xl">
                 <TabsTrigger disabled={!passportData?.advancedAvailable} value="timeline" className="gap-2">
@@ -560,7 +570,7 @@ const PetDetail = () => {
                     </Link>
                   </CardHeader>
                   <CardContent>
-                    {consultations.length > 0 ? (
+                    {consultationsError?<><p role="alert">Could not load recent consultations.</p><Button variant="outline" onClick={()=>void fetchConsultations()}>Retry consultations</Button></>:consultations.length > 0 ? (
                       <div className="space-y-3">
                         {consultations.map((consultation) => (
                           <Link
@@ -595,4 +605,4 @@ const PetDetail = () => {
   );
 };
 
-export default PetDetail;
+export default function PetDetail(){const{id}=useParams();const{user}=useAuth();return user?<PetDetailContent key={`${user.id}:${id}`}/>:null;}

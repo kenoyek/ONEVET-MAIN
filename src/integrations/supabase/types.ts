@@ -808,6 +808,62 @@ export type Database = {
         }
         Relationships: []
       }
+      pet_owner_health_entries: {
+        Row: {
+          client_nonce: string
+          created_at: string
+          entry_type: string
+          id: string
+          next_due_on: string | null
+          notes: string
+          occurred_on: string
+          pet_id: string
+          recorded_by: string
+          title: string
+          void_reason: string | null
+          voided_at: string | null
+          weight_kg: number | null
+        }
+        Insert: {
+          client_nonce: string
+          created_at?: string
+          entry_type: string
+          id?: string
+          next_due_on?: string | null
+          notes?: string
+          occurred_on: string
+          pet_id: string
+          recorded_by: string
+          title: string
+          void_reason?: string | null
+          voided_at?: string | null
+          weight_kg?: number | null
+        }
+        Update: {
+          client_nonce?: string
+          created_at?: string
+          entry_type?: string
+          id?: string
+          next_due_on?: string | null
+          notes?: string
+          occurred_on?: string
+          pet_id?: string
+          recorded_by?: string
+          title?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pet_owner_health_entries_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pets: {
         Row: {
           avatar_url: string | null
@@ -2050,8 +2106,25 @@ export type Database = {
       }
     }
     Functions: {
+      add_pet_owner_health_entry: {
+        Args: {
+          due_date: string
+          entry_kind: string
+          entry_notes: string
+          entry_title: string
+          event_date: string
+          pet_uuid: string
+          request_key: string
+          weight_value: number
+        }
+        Returns: string
+      }
       can_edit_provider_evidence: {
         Args: { provider_uuid: string }
+        Returns: boolean
+      }
+      can_manage_pet_health_journal: {
+        Args: { pet_uuid: string }
         Returns: boolean
       }
       can_read_booking_thread: {
@@ -2347,6 +2420,10 @@ export type Database = {
           member_uuid: string
           requested_role: string
         }
+        Returns: undefined
+      }
+      void_pet_owner_health_entry: {
+        Args: { entry_uuid: string; reason: string }
         Returns: undefined
       }
     }

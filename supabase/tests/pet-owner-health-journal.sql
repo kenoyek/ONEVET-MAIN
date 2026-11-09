@@ -1,0 +1,74 @@
+INSERT INTO auth.users(id,email,raw_user_meta_data) VALUES
+('eb111111-1111-4111-8111-111111111111','journal-owner@example.invalid','{}'),
+('eb222222-2222-4222-8222-222222222222','journal-other@example.invalid','{}'),
+('eb333333-3333-4333-8333-333333333333','journal-admin@example.invalid','{}');
+INSERT INTO user_roles(user_id,role) VALUES('eb333333-3333-4333-8333-333333333333','admin');
+INSERT INTO pets(id,owner_id,name,species) VALUES
+('ec111111-1111-4111-8111-111111111111',get_profile_id('eb111111-1111-4111-8111-111111111111'),'Journal pet','dog'),
+('ec222222-2222-4222-8222-222222222222',get_profile_id('eb222222-2222-4222-8222-222222222222'),'Other journal pet','cat');
+CREATE FUNCTION public.journal_test_assert(ok boolean,message text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'FAIL: %',message; END IF; RAISE NOTICE 'PASS: %',message; END $$;
+CREATE FUNCTION public.journal_test_reject(statement text,code text,message text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN BEGIN EXECUTE statement; EXCEPTION WHEN OTHERS THEN IF SQLSTATE<>code THEN RAISE EXCEPTION 'FAIL: expected %, got %: %',code,SQLSTATE,message; END IF; RAISE NOTICE 'PASS: %',message; RETURN; END; RAISE EXCEPTION 'FAIL: expected rejection: %',message; END $$;
+SELECT journal_test_assert(NOT has_table_privilege('authenticated','pet_owner_health_entries','INSERT,UPDATE,DELETE'),'journal has no direct client writes');
+SELECT journal_test_assert(NOT has_function_privilege('anon','add_pet_owner_health_entry(uuid,text,date,text,text,numeric,date,uuid)','EXECUTE'),'anonymous journal creation denied');
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','eb111111-1111-4111-8111-111111111111',true);
+SELECT set_config('journal_test.day',(now() AT TIME ZONE 'Africa/Lagos')::date::text,true);
+SELECT journal_test_assert(can_manage_pet_health_journal('ec111111-1111-4111-8111-111111111111'),'actual owner can open journal');
+SELECT journal_test_assert(NOT can_manage_pet_health_journal('ec222222-2222-4222-8222-222222222222'),'profile ownership is required');
+SELECT set_config('journal_test.key',gen_random_uuid()::text,true);
+SELECT set_config('journal_test.entry',add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'  Weight observation  ','  Ate normally  ',12.5,NULL,current_setting('journal_test.key')::uuid)::text,true);
+SELECT journal_test_assert((SELECT recorded_by=auth.uid() AND weight_kg=12.5 AND title='Weight observation' AND notes='Ate normally' AND voided_at IS NULL FROM pet_owner_health_entries WHERE id=current_setting('journal_test.entry')::uuid),'server attributes and normalizes owner observation');
+SELECT journal_test_assert(add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'Weight observation','Ate normally',12.5,NULL,current_setting('journal_test.key')::uuid)=current_setting('journal_test.entry')::uuid,'unchanged retry returns same record');
+SELECT journal_test_assert((SELECT count(*)=1 FROM pet_owner_health_entries),'retries never duplicate entries');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'Weight observation','Ate normally',13,NULL,current_setting('journal_test.key')::uuid)$q$,'22023','changed payload cannot reuse key');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec222222-2222-4222-8222-222222222222','note',current_setting('journal_test.day')::date,'Outsider','',NULL,NULL,gen_random_uuid())$q$,'42501','owner cannot write to another pet');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','diagnosis',current_setting('journal_test.day')::date,'Clinical claim','',NULL,NULL,gen_random_uuid())$q$,'22023','unavailable clinical entry type rejected');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'Weight','',NULL,NULL,gen_random_uuid())$q$,'22023','weight requires a measurement');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'Weight','',0,NULL,gen_random_uuid())$q$,'22023','zero weight rejected');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'Weight','','NaN',NULL,gen_random_uuid())$q$,'22023','non-finite weight rejected');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','note',current_setting('journal_test.day')::date,'Note','',12,NULL,gen_random_uuid())$q$,'22023','note cannot disguise a weight payload');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','vaccination',current_setting('journal_test.day')::date+1,'Vaccine','',NULL,NULL,gen_random_uuid())$q$,'22023','future administration date rejected in WAT');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','vaccination',current_setting('journal_test.day')::date,'Vaccine','',NULL,current_setting('journal_test.day')::date-1,gen_random_uuid())$q$,'22023','due date cannot precede administration');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','note',current_setting('journal_test.day')::date,E'\t  ','',NULL,NULL,gen_random_uuid())$q$,'22023','blank titles rejected');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','note',current_setting('journal_test.day')::date,'Note',repeat('x',2001),NULL,NULL,gen_random_uuid())$q$,'22023','oversize notes rejected');
+SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','vaccination',current_setting('journal_test.day')::date,'Rabies owner report','',NULL,current_setting('journal_test.day')::date+365,gen_random_uuid());
+SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','note',current_setting('journal_test.day')::date,'Appetite observation','Eating normally',NULL,NULL,gen_random_uuid());
+SELECT journal_test_assert((SELECT count(*)=3 FROM pet_owner_health_entries),'all supported owner entry types retained');
+SELECT set_config('request.jwt.claim.sub','eb222222-2222-4222-8222-222222222222',true);
+SELECT journal_test_assert((SELECT count(*)=0 FROM pet_owner_health_entries),'cross-owner history denied');
+SELECT journal_test_reject($q$SELECT void_pet_owner_health_entry(current_setting('journal_test.entry')::uuid,'Malicious void')$q$,'42501','cross-owner correction denied');
+SELECT set_config('request.jwt.claim.sub','eb333333-3333-4333-8333-333333333333',true);
+SELECT journal_test_assert((SELECT count(*)=0 FROM pet_owner_health_entries),'global administrator role does not grant journal access');
+SELECT journal_test_reject($q$SELECT void_pet_owner_health_entry(current_setting('journal_test.entry')::uuid,'Admin correction')$q$,'42501','administrator cannot impersonate owner');
+SELECT set_config('request.jwt.claim.sub','eb111111-1111-4111-8111-111111111111',true);
+SELECT journal_test_reject($q$SELECT void_pet_owner_health_entry(current_setting('journal_test.entry')::uuid,'bad')$q$,'22023','correction explanation required');
+SELECT void_pet_owner_health_entry(current_setting('journal_test.entry')::uuid,'Wrong measurement entered');
+SELECT void_pet_owner_health_entry(current_setting('journal_test.entry')::uuid,'Retry with other reason');
+SELECT journal_test_assert((SELECT voided_at IS NOT NULL AND void_reason='Wrong measurement entered' AND weight_kg=12.5 AND notes='Ate normally' FROM pet_owner_health_entries WHERE id=current_setting('journal_test.entry')::uuid),'correction preserves original content and first reason');
+SELECT journal_test_assert((SELECT count(*)=3 FROM pet_owner_health_entries),'correction retains historical rows');
+RESET ROLE;
+SELECT journal_test_assert((SELECT count(*)=4 FROM audit_logs WHERE user_id='eb111111-1111-4111-8111-111111111111' AND action IN ('pet_owner_health_entry_added','pet_owner_health_entry_voided')),'idempotent journal actions have one audit event each');
+SELECT journal_test_assert(NOT EXISTS(SELECT 1 FROM audit_logs WHERE user_id='eb111111-1111-4111-8111-111111111111' AND details::text LIKE '%Ate normally%'),'audit metadata excludes health content');
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','eb111111-1111-4111-8111-111111111111',true);
+DO $$ BEGIN FOR i IN 1..47 LOOP PERFORM add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','note',current_setting('journal_test.day')::date,'Rate fixture '||i,'',NULL,NULL,gen_random_uuid()); END LOOP; END $$;
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','note',current_setting('journal_test.day')::date,'Rate excess','',NULL,NULL,gen_random_uuid())$q$,'23514','per-account daily limit enforced');
+SELECT journal_test_assert(add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'Weight observation','Ate normally',12.5,NULL,current_setting('journal_test.key')::uuid)=current_setting('journal_test.entry')::uuid,'retry at the daily limit remains idempotent');
+SELECT journal_test_reject($q$UPDATE pet_owner_health_entries SET recorded_by='eb222222-2222-4222-8222-222222222222'$q$,'42501','direct author impersonation rejected');
+RESET ROLE;
+UPDATE profiles SET is_active=false WHERE user_id='eb111111-1111-4111-8111-111111111111';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','eb111111-1111-4111-8111-111111111111',true);
+SELECT journal_test_assert((SELECT count(*)=0 FROM pet_owner_health_entries),'suspended owner loses journal reads');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','note',current_setting('journal_test.day')::date,'Suspended','',NULL,NULL,gen_random_uuid())$q$,'42501','suspended owner cannot add');
+RESET ROLE;
+UPDATE profiles SET is_active=true WHERE user_id='eb111111-1111-4111-8111-111111111111';
+-- Ownership checks stay current, including on idempotent retries.
+UPDATE pets SET owner_id=get_profile_id('eb222222-2222-4222-8222-222222222222') WHERE id='ec111111-1111-4111-8111-111111111111';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','eb111111-1111-4111-8111-111111111111',true);
+SELECT journal_test_assert((SELECT count(*)=0 FROM pet_owner_health_entries),'prior owner loses reads after ownership change');
+SELECT journal_test_reject($q$SELECT add_pet_owner_health_entry('ec111111-1111-4111-8111-111111111111','weight',current_setting('journal_test.day')::date,'Weight observation','Ate normally',12.5,NULL,current_setting('journal_test.key')::uuid)$q$,'42501','prior owner cannot replay an old request');
+SELECT set_config('request.jwt.claim.sub','eb222222-2222-4222-8222-222222222222',true);
+SELECT journal_test_assert((SELECT count(*)=50 FROM pet_owner_health_entries),'current owner can see pet history');
+RESET ROLE;

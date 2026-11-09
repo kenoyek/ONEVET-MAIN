@@ -30,3 +30,7 @@ Four repair migrations are now applied and tracked on main. Payment helpers are 
 
 ## Type-safety release update
 Strict TypeScript and the npm advisory backlog are now resolved; see `1vet-type-safety-release.md`. Main’s generated schema remains authoritative. Undeployed modules are compile-checked separately and blocked before network access; they are not enabled by type generation. Node 24 is the required runtime. No main-project migration or payment activation occurred in this phase.
+
+## Owner health journal update
+
+The owner-recorded pet health journal is deployed on main with isolated owner access, idempotent entries and preserved correction history. This is distinct from the still-unavailable clinician-authored passport and caregiver sharing. See `1vet-owner-health-journal-release.md` for scope and validation. Payments remain unavailable.

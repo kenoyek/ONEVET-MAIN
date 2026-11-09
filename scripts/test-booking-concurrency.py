@@ -74,3 +74,19 @@ with tempfile.TemporaryFile(mode='w+t') as output:
  if first.wait(timeout=10)!=0 or second.returncode==0 or '42501' not in second.stderr:raise SystemExit('A revoked coordinator must not send a queued message')
 if sql("SELECT count(*) FROM provider_booking_messages WHERE sender_id='c8555555-5555-4555-8555-555555555555';")!='0':raise SystemExit('A revoked coordinator message was committed')
 print('PASS: concurrent membership revocation blocks a queued appointment message')
+# Retrying a health entry while its original request is still committing must append once.
+journal_add="BEGIN;SET LOCAL ROLE authenticated;SELECT set_config('request.jwt.claim.sub','b8222222-2222-4222-8222-222222222222',true);SELECT add_pet_owner_health_entry('b9111111-1111-4111-8111-111111111111','weight',(now() AT TIME ZONE 'Africa/Lagos')::date,'Weight observation','Concurrent retry fixture',12.5,NULL,'ed111111-1111-4111-8111-111111111111');"
+with tempfile.TemporaryFile(mode='w+t') as output:
+ first=subprocess.Popen(base,stdin=subprocess.PIPE,stdout=output,stderr=output,text=True)
+ first.stdin.write("SET application_name='onevet-journal-retry-first';"+journal_add+"SELECT pg_sleep(4);COMMIT;")
+ first.stdin.close()
+ for attempt in range(40):
+  if sql("SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name='onevet-journal-retry-first' AND wait_event='PgSleep');")=='t':break
+  if first.poll() is not None:raise SystemExit('Journal creation did not reach its transaction hold')
+  time.sleep(.1)
+ else:raise SystemExit('Timed out waiting for journal creation')
+ second=subprocess.run(base,input=journal_add+'COMMIT;',text=True,capture_output=True)
+ if first.wait(timeout=10)!=0 or second.returncode!=0:raise SystemExit('Concurrent journal retry failed')
+if sql("SELECT count(*) FROM pet_owner_health_entries WHERE client_nonce='ed111111-1111-4111-8111-111111111111';")!='1':raise SystemExit('Concurrent retry duplicated the health entry')
+if sql("SELECT count(*) FROM audit_logs WHERE action='pet_owner_health_entry_added' AND entity_id='b9111111-1111-4111-8111-111111111111';")!='1':raise SystemExit('Concurrent retry duplicated the journal audit')
+print('PASS: concurrent health journal retries create exactly one entry and audit event')

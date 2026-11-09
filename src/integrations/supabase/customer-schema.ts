@@ -70,7 +70,13 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
         Relationships: [];
       };
     };
-    Functions: Database['public']['Functions'] & {
+    Functions: Omit<Database['public']['Functions'],'add_pet_owner_health_entry'> & {
+      // PostgREST generation omits SQL argument nullability. These two values
+      // must be explicitly null for entry kinds that do not use them.
+      add_pet_owner_health_entry: {
+        Args: Omit<Database['public']['Functions']['add_pet_owner_health_entry']['Args'],'weight_value'|'due_date'> & {weight_value:number|null;due_date:string|null};
+        Returns: Database['public']['Functions']['add_pet_owner_health_entry']['Returns'];
+      };
       claim_consultation: {
         Args: { consultation_uuid: string };
         Returns: string;
