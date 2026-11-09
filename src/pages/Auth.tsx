@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Stethoscope, PawPrint, Briefcase, ArrowLeft, Loader2 } from 'lucide-react';
-import { getAuthReturnPath } from '@/lib/auth-navigation';
+import { getAccountHome, getAuthReturnPath } from '@/lib/auth-navigation';
 import { useAuth } from '@/lib/auth-context';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
@@ -21,7 +21,7 @@ const Auth = () => {
   const location = useLocation();
   const returnPath = getAuthReturnPath(location.state);
   const [searchParams] = useSearchParams();
-  const { user, role, loading, passwordRecovery, permissionsError } = useAuth();
+  const { user, role, roles, loading, passwordRecovery, permissionsError } = useAuth();
   const [mode, setMode] = useState<AuthMode>(()=>searchParams.get('mode')==='reset'?'reset':searchParams.get('mode')==='signup'?'signup':searchParams.get('mode')==='recover'?'forgot':'signin');
   const [selectedRole, setSelectedRole] = useState<SelectedRole>(()=>searchParams.get('role')==='provider'?'provider':null);
 
@@ -47,23 +47,12 @@ const Auth = () => {
   // Database permissions are verified by ProtectedRoute before opening a portal.
   useEffect(() => {
     if(passwordRecovery){if(searchParams.get('mode')!=='reset')navigate('/auth?mode=reset',{replace:true});return;}
-    if (!loading && user && (role!==null||permissionsError) && mode !== 'reset' && searchParams.get('mode') !== 'reset') {
-      // Only database roles determine the portal destination.
-      const effectiveRole = role;
-      if (returnPath) {
-        navigate(returnPath, { replace: true });
-      } else if (effectiveRole === 'admin') {
-        navigate('/admin');
-      } else if (effectiveRole === 'veterinarian') {
-        navigate('/vet-dashboard');
-      } else {
-        // Default: pet_owner / service_provider → /dashboard
-        navigate('/dashboard');
-      }
+    if (!loading && user && (role!==null||permissionsError) && mode !== 'reset' && mode !== 'forgot' && searchParams.get('mode') !== 'reset' && searchParams.get('mode') !== 'recover') {
+      navigate(returnPath??getAccountHome(role,roles),{replace:true});
     }
-  }, [user, loading, role, navigate, mode, returnPath, searchParams, passwordRecovery, permissionsError]);
+  }, [user, loading, role, roles, navigate, mode, returnPath, searchParams, passwordRecovery, permissionsError]);
 
-  if (loading||(user&&!passwordRecovery&&mode!=='reset'&&searchParams.get('mode')!=='reset')) {
+  if (loading||(user&&!passwordRecovery&&mode!=='reset'&&mode!=='forgot'&&searchParams.get('mode')!=='reset'&&searchParams.get('mode')!=='recover')) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">

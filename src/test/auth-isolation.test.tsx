@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 
 const mock = vi.hoisted(() => ({
+  roleList:['pet_owner'] as string[],
   roleStatus: 'ok' as 'ok' | 'error' | 'empty',
   listener: null as null | ((event: string, session: Session | null) => void),
   profiles: new Map<string, Promise<{ data: unknown; error: null }>>(),
@@ -24,7 +25,7 @@ vi.mock('@/integrations/supabase/client', () => ({
           table === 'profiles'
             ? { maybeSingle: () => mock.profiles.get(id) }
             : Promise.resolve({
-                data: mock.roleStatus === 'ok' ? [{ role: 'pet_owner' }] : [],
+                data: mock.roleStatus === 'ok' ? mock.roleList.map(role=>({role})) : [],
                 error:
                   mock.roleStatus === 'error' ? { message: 'offline' } : null,
               }),
@@ -35,7 +36,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 function Probe() {
   const a = useAuth();
   return (
-    <p data-testid="identity" data-permissions-error={a.permissionsError} data-password-recovery={a.passwordRecovery}>
+    <p data-testid="identity" data-permissions-error={a.permissionsError} data-password-recovery={a.passwordRecovery} data-primary-role={a.role??''}>
       {a.user?.id ?? 'none'}|{a.profile?.first_name ?? 'none'}|
       {a.roles.join(',')}
     </p>
@@ -48,6 +49,7 @@ afterEach(() => {
   mock.profiles.clear();
   mock.listener = null;
   mock.roleStatus = 'ok';
+  mock.roleList=['pet_owner'];
 });
 describe('Account transition isolation', () => {
   it('clears cached data and ignores a profile response from the previous account', async () => {
@@ -140,3 +142,5 @@ it('retains password recovery through token refresh and clears it for another ac
  await act(async()=>{mock.listener?.('TOKEN_REFRESHED',session('recovery-a'));});expect(screen.getByTestId('identity')).toHaveAttribute('data-password-recovery','true');
  await act(async()=>{mock.listener?.('SIGNED_IN',session('recovery-b'));});expect(screen.getByTestId('identity')).toHaveAttribute('data-password-recovery','false');
 });
+
+it('selects the verified administrator role when user_roles returns the owner role first',async()=>{mock.roleList=['pet_owner','admin'];mock.profiles.set('ordered-admin',Promise.resolve({data:{id:'profile-admin',first_name:'Admin'},error:null}));const client=new QueryClient();render(<QueryClientProvider client={client}><AuthProvider><Probe/></AuthProvider></QueryClientProvider>);await act(async()=>{});await act(async()=>{mock.listener?.('SIGNED_IN',session('ordered-admin'));});await waitFor(()=>expect(screen.getByTestId('identity')).toHaveAttribute('data-primary-role','admin'));});

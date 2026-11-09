@@ -11,3 +11,5 @@ describe('Customer portal access',()=>{
  it('waits for authoritative roles before rendering records',()=>{view();expect(screen.getByText('Verifying Permissions...')).toBeInTheDocument();expect(screen.queryByText('Private customer record')).not.toBeInTheDocument();});
  it('supports the existing client role on customer routes',()=>{auth.role='client';auth.roles=['client'];view();expect(screen.getByText('Private customer record')).toBeInTheDocument();});
 });
+
+it('shows an access error instead of redirecting repeatedly to the same home route',()=>{auth.role='clinic_admin';auth.roles=['clinic_admin'];render(<MemoryRouter initialEntries={['/dashboard']}><ProtectedRoute allowedRoles={['pet_owner','client']}><p>Private record</p></ProtectedRoute></MemoryRouter>);expect(screen.getByRole('alert')).toHaveTextContent('This account cannot open this page');expect(screen.queryByText('Private record')).not.toBeInTheDocument();});

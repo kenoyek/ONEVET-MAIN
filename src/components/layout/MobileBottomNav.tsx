@@ -1,3 +1,4 @@
+import {getAccountHome} from '@/lib/auth-navigation';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -28,7 +29,7 @@ export function MobileBottomNav() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, profile, role, signOut } = useAuth();
+  const { user, profile, role, roles, signOut } = useAuth();
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
@@ -130,7 +131,7 @@ export function MobileBottomNav() {
                   My Profile
                 </Link>
                 <Link
-                  to={role === 'veterinarian' ? '/vet-dashboard' : role === 'admin' ? '/admin' : '/dashboard'}
+                  to={getAccountHome(role,roles)}
                   onClick={() => setSheetOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive('/dashboard') || isActive('/vet-dashboard') || isActive('/admin') ? 'text-primary bg-primary/10' : 'text-foreground hover:bg-muted'

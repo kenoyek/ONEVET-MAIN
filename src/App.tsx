@@ -1,5 +1,7 @@
 import { PlannedModuleGate } from '@/components/shared/PlannedModuleGate';
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
+import {lazyRoute} from "@/lib/lazy-route";
+import AuthCallback from "./pages/AuthCallback";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,56 +12,55 @@ import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/hooks/use-cart";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
 import { PageLoader } from "@/components/shared/PageLoader";
-import ErrorBoundary from "./components/shared/ErrorBoundary";
+import {RouteErrorBoundary} from "./components/shared/RouteErrorBoundary";
 import { LiveChatWidget } from "./components/chat/LiveChatWidget";
 import { MobileBottomNav } from "./components/layout/MobileBottomNav";
 
-// Route-level code splitting using React.lazy()
-const CareGuide = lazy(() => import("./pages/CareGuide"));
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const Farms = lazy(() => import("./pages/farms/Farms"));
-const FarmDetail = lazy(() => import("./pages/farms/FarmDetail"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const VetDashboard = lazy(() => import("./pages/VetDashboard"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminAnalytics = lazy(() => import("./pages/admin/Analytics"));
-const AdminUsers = lazy(() => import("./pages/admin/Users"));
-const ProviderVerificationQueue = lazy(() => import("./pages/admin/ProviderVerificationQueue"));
-const Consultations = lazy(() => import("./pages/Consultations"));
-const ConsultationNew = lazy(() => import("./pages/ConsultationNew"));
-const ConsultationChat = lazy(() => import("./pages/ConsultationChat"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Pets = lazy(() => import("./pages/pets/Pets"));
-const PetNew = lazy(() => import("./pages/pets/PetNew"));
-const PetDetail = lazy(() => import("./pages/pets/PetDetail"));
-const AdminSubscriptions = lazy(() => import("./pages/admin/Subscriptions"));
-const AdminConversations = lazy(() => import("./pages/admin/Conversations"));
-const AdminArticles = lazy(() => import("./pages/admin/Articles"));
-const ArticleEditor = lazy(() => import("./pages/admin/ArticleEditor"));
-const Articles = lazy(() => import("./pages/Articles"));
-const ArticleDetail = lazy(() => import("./pages/ArticleDetail"));
-const Groomers = lazy(() => import("./pages/services/Groomers"));
-const PetSitting = lazy(() => import("./pages/services/PetSitting"));
-const VetClinics = lazy(() => import("./pages/services/VetClinics"));
-const Marketplace = lazy(() => import("./pages/Marketplace"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const About = lazy(() => import("./pages/About"));
-const Contact = lazy(() => import("./pages/Contact"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const TeamInvitations = lazy(() => import("./pages/provider/TeamInvitations"));
-const ProviderOnboarding = lazy(() => import("./pages/provider/ProviderOnboarding"));
-const ProviderDraftWorkspace = lazy(() => import("./pages/provider/ProviderDraftWorkspace"));
-const ProviderMarketplace = lazy(() => import("./pages/marketplace/ProviderMarketplace"));
-const PublicProviderProfile = lazy(() => import("./pages/provider/PublicProviderProfile"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const AppointmentDetails = lazy(() => import("./pages/booking/AppointmentDetails"));
-const MyBookings = lazy(() => import("./pages/booking/MyBookings"));
-const NewBooking = lazy(() => import("./pages/booking/NewBooking"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Route-level splitting with bounded recovery for failed page downloads.
+const CareGuide = lazyRoute(() => import("./pages/CareGuide"));
+const Index = lazyRoute(() => import("./pages/Index"));
+const Auth = lazyRoute(() => import("./pages/Auth"));
+const Farms = lazyRoute(() => import("./pages/farms/Farms"));
+const FarmDetail = lazyRoute(() => import("./pages/farms/FarmDetail"));
+const Dashboard = lazyRoute(() => import("./pages/Dashboard"));
+const VetDashboard = lazyRoute(() => import("./pages/VetDashboard"));
+const AdminDashboard = lazyRoute(() => import("./pages/AdminDashboard"));
+const AdminAnalytics = lazyRoute(() => import("./pages/admin/Analytics"));
+const AdminUsers = lazyRoute(() => import("./pages/admin/Users"));
+const ProviderVerificationQueue = lazyRoute(() => import("./pages/admin/ProviderVerificationQueue"));
+const Consultations = lazyRoute(() => import("./pages/Consultations"));
+const ConsultationNew = lazyRoute(() => import("./pages/ConsultationNew"));
+const ConsultationChat = lazyRoute(() => import("./pages/ConsultationChat"));
+const Profile = lazyRoute(() => import("./pages/Profile"));
+const Pets = lazyRoute(() => import("./pages/pets/Pets"));
+const PetNew = lazyRoute(() => import("./pages/pets/PetNew"));
+const PetDetail = lazyRoute(() => import("./pages/pets/PetDetail"));
+const AdminSubscriptions = lazyRoute(() => import("./pages/admin/Subscriptions"));
+const AdminConversations = lazyRoute(() => import("./pages/admin/Conversations"));
+const AdminArticles = lazyRoute(() => import("./pages/admin/Articles"));
+const ArticleEditor = lazyRoute(() => import("./pages/admin/ArticleEditor"));
+const Articles = lazyRoute(() => import("./pages/Articles"));
+const ArticleDetail = lazyRoute(() => import("./pages/ArticleDetail"));
+const Groomers = lazyRoute(() => import("./pages/services/Groomers"));
+const PetSitting = lazyRoute(() => import("./pages/services/PetSitting"));
+const VetClinics = lazyRoute(() => import("./pages/services/VetClinics"));
+const Marketplace = lazyRoute(() => import("./pages/Marketplace"));
+const ProductDetail = lazyRoute(() => import("./pages/ProductDetail"));
+const Cart = lazyRoute(() => import("./pages/Cart"));
+const Checkout = lazyRoute(() => import("./pages/Checkout"));
+const About = lazyRoute(() => import("./pages/About"));
+const Contact = lazyRoute(() => import("./pages/Contact"));
+const Pricing = lazyRoute(() => import("./pages/Pricing"));
+const TeamInvitations = lazyRoute(() => import("./pages/provider/TeamInvitations"));
+const ProviderOnboarding = lazyRoute(() => import("./pages/provider/ProviderOnboarding"));
+const ProviderDraftWorkspace = lazyRoute(() => import("./pages/provider/ProviderDraftWorkspace"));
+const ProviderMarketplace = lazyRoute(() => import("./pages/marketplace/ProviderMarketplace"));
+const PublicProviderProfile = lazyRoute(() => import("./pages/provider/PublicProviderProfile"));
+const Notifications = lazyRoute(() => import("./pages/Notifications"));
+const AppointmentDetails = lazyRoute(() => import("./pages/booking/AppointmentDetails"));
+const MyBookings = lazyRoute(() => import("./pages/booking/MyBookings"));
+const NewBooking = lazyRoute(() => import("./pages/booking/NewBooking"));
+const NotFound = lazyRoute(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -73,7 +74,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <a href="#main-content" onClick={(event) => { const main = document.querySelector('main'); if (main) { event.preventDefault(); main.tabIndex = -1; main.focus(); main.scrollIntoView({ block: 'start' }); } }} className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-card focus:p-4 focus:rounded-lg">Skip to main content</a>
-              <ErrorBoundary>
+              <RouteErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     {/* Public & Informational Routes */}
@@ -263,7 +264,7 @@ const App = () => (
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
-              </ErrorBoundary>
+              </RouteErrorBoundary>
               <LiveChatWidget />
               <MobileBottomNav />
             </BrowserRouter>

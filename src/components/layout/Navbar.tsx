@@ -1,3 +1,4 @@
+import {getAccountHome} from '@/lib/auth-navigation';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -33,7 +34,7 @@ const navLinks = [
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, profile, role, signOut, loading } = useAuth();
+  const { user, profile, role, roles, signOut, loading } = useAuth();
   const { theme, setTheme } = useTheme();
   const { totalItems } = useCart();
   const navigate = useNavigate();
@@ -155,7 +156,7 @@ export function Navbar() {
                   </DropdownMenuItem>
                   
                   <DropdownMenuItem asChild className="rounded-md focus:bg-primary/10 cursor-pointer py-2">
-                    <Link to={role === 'veterinarian' ? '/vet-dashboard' : role === 'admin' ? '/admin' : '/dashboard'}>
+                    <Link to={getAccountHome(role,roles)}>
                       <LayoutDashboard className="mr-3 h-4 w-4 text-primary" />
                       <span className="font-medium">Dashboard</span>
                     </Link>

@@ -1,3 +1,4 @@
+import {primaryAccountRole} from '@/lib/auth-navigation';
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
@@ -166,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!roleError && rolesData && rolesData.length > 0) {
         const fetchedRoles = rolesData.map((r) => r.role as AppRole);
         setRoles(fetchedRoles);
-        setRole(fetchedRoles[0] ?? null);
+        setRole(primaryAccountRole(fetchedRoles));
       } else {
         throw new Error('Account permissions could not be verified');
       }

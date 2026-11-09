@@ -140,7 +140,7 @@ const AdminDashboard = () => {
       if (profileErr) throw profileErr;
 
       if (!updatedProfiles || updatedProfiles.length === 0) {
-        throw new Error('Failed to update verification status. Please run the SQL migration in Supabase to grant Admin update permissions.');
+        throw new Error('This action could not be completed. Your access may have changed; refresh and try again.');
       }
 
       // Verification changes are audited atomically by the trusted database trigger.
@@ -163,7 +163,7 @@ const AdminDashboard = () => {
           <h2 className="text-xl font-bold mb-2">Loading Admin Panel</h2>
           <p className="text-muted-foreground font-medium">Fetching platform statistics...</p>
           <p className="text-xs text-muted-foreground mt-2 italic max-w-xs">
-            If this takes too long, ensure you have executed the master migration in your Supabase SQL Editor.
+            Loading the latest records for your account.
           </p>
         </main>
       </div>

@@ -24,3 +24,13 @@ export function getAuthReturnPath(state: unknown): string | null {
       : '';
   return path + search + hash;
 }
+
+/** Database-verified roles may arrive in any order; portal priority is stable. */
+export function primaryAccountRole<T extends string>(roles:readonly T[]):T|null{
+ return roles.find(role=>role==='admin')??roles.find(role=>role==='veterinarian')??roles[0]??null;
+}
+export function getAccountHome(role:string|null|undefined,roles:readonly string[]=[]):'/admin'|'/vet-dashboard'|'/dashboard'{
+ if(role==='admin'||roles.includes('admin'))return '/admin';
+ if(role==='veterinarian'||roles.includes('veterinarian'))return '/vet-dashboard';
+ return '/dashboard';
+}

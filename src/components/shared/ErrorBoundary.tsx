@@ -1,3 +1,4 @@
+import {isRouteLoadError} from '@/lib/route-recovery';
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
@@ -37,17 +38,16 @@ class ErrorBoundary extends Component<Props, State> {
           <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-6">
             <AlertTriangle className="w-8 h-8 text-destructive" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Something went wrong</h2>
+          <h2 className="text-2xl font-bold mb-2">{isRouteLoadError(this.state.error)?'This page could not be downloaded':'Something went wrong'}</h2>
           <p className="text-muted-foreground mb-8 max-w-md">
-            We encountered an unexpected error. Our team has been notified.
-            Please try refreshing the page.
+            {isRouteLoadError(this.state.error)?'Check your connection, then refresh to load the latest version. Your sign-in is preserved.':'This page encountered an unexpected error. Try again, or refresh the page.'}
           </p>
           <div className="flex gap-4">
             <Button onClick={() => window.location.reload()} className="gap-2">
               <RefreshCcw className="w-4 h-4" />
               Refresh Page
             </Button>
-            <Button variant="outline" onClick={() => this.setState({ hasError: false })}>
+            <Button variant="outline" onClick={() => {if(isRouteLoadError(this.state.error))window.location.reload();else this.setState({hasError:false,error:null});}}>
               Try Again
             </Button>
           </div>

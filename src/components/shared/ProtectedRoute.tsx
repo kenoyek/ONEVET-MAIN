@@ -1,3 +1,5 @@
+import {getAccountHome} from '@/lib/auth-navigation';
+import {Link} from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -82,12 +84,8 @@ export function ProtectedRoute({
     : true;
 
   if (allowedRoles && !hasAccess) {
-    const dashboardPath =
-      role === 'admin' || (roles && roles.includes('admin'))
-        ? '/admin'
-        : role === 'veterinarian' || (roles && roles.includes('veterinarian'))
-          ? '/vet-dashboard'
-          : '/dashboard';
+    const dashboardPath=getAccountHome(role,roles);
+    if(dashboardPath===location.pathname)return <main className="min-h-screen flex items-center justify-center p-6 bg-background"><section role="alert" className="max-w-md text-center space-y-4"><h1 className="text-2xl">This account cannot open this page</h1><p className="text-muted-foreground">Your account does not have the required access. Contact support if you believe this is incorrect.</p><Link className="block text-primary underline" to="/">Back to home</Link><Link className="block text-primary underline" to="/contact">Contact support</Link></section></main>;
     return <Navigate to={dashboardPath} replace />;
   }
 
