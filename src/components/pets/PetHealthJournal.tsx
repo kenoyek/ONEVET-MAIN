@@ -1,4 +1,4 @@
-import {useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
 import {useAuth} from '@/lib/auth-context';
 import {Button} from '@/components/ui/button';
@@ -11,8 +11,9 @@ function Journal({petId,userId}:{petId:string;userId:string}){
  const cache=useQueryClient();const[page,setPage]=useState(0);const[kind,setKind]=useState<OwnerHealthInput['kind']>('weight');const[date,setDate]=useState(watDate());const[title,setTitle]=useState('');const[notes,setNotes]=useState('');const[weight,setWeight]=useState('');const[due,setDue]=useState('');const[busy,setBusy]=useState(false);const[error,setError]=useState('');const[feedback,setFeedback]=useState('');const[correcting,setCorrecting]=useState<string|null>(null);const[reason,setReason]=useState('');const retry=useRef({payload:'',key:''});const today=watDate();
  const access=useQuery({queryKey:['pet-health-journal',userId,petId,'access'],queryFn:()=>service.access(petId),refetchInterval:30_000});
  const entries=useQuery({queryKey:['pet-health-journal',userId,petId,'entries',page],enabled:access.data===true&&!access.isError,queryFn:()=>service.list(petId,page)});
- async function refresh(){await cache.invalidateQueries({queryKey:['pet-health-journal',userId,petId]});}
- return <section className="care-path mb-6 space-y-5" aria-labelledby="pet-journal-title">
+ useEffect(()=>{if(access.isSuccess&&window.location.hash==='#health-journal')document.getElementById('health-journal')?.scrollIntoView?.({block:'start'});},[access.isSuccess]);
+ async function refresh(){await Promise.all([cache.invalidateQueries({queryKey:['pet-health-journal',userId,petId]}),cache.invalidateQueries({queryKey:['care-dashboard',userId]})]);}
+ return <section id="health-journal" className="care-path scroll-mt-24 mb-6 space-y-5" aria-labelledby="pet-journal-title">
   <h2 id="pet-journal-title" className="text-xl">Owner health journal</h2>
   <p className="text-sm text-muted-foreground">Record observations, weight and vaccinations you report. These entries are not verified clinical records or vaccination certificates. Due dates come from you; confirm them with your veterinarian. No automatic reminders are sent.</p>
   {access.isPending?<p role="status">Checking journal access…</p>:access.isError?<><p role="alert">This journal could not be loaded, or your access changed.</p><Button variant="outline" onClick={()=>void access.refetch()}>Retry journal</Button></>:<>

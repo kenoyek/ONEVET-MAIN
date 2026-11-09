@@ -38,7 +38,8 @@ done
  supabase/tests/booking-notifications.sql \
  supabase/tests/provider-team.sql \
  supabase/tests/appointment-messaging.sql \
- supabase/tests/pet-owner-health-journal.sql
+ supabase/tests/pet-owner-health-journal.sql \
+ supabase/tests/care-dashboard.sql
  echo 'ROLLBACK;'
 } | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet
 python scripts/test-booking-concurrency.py "$core_test_container"

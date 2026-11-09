@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useCustomerOverview } from '@/hooks/useCustomerOverview';
 import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
+import { CareDashboard } from '@/components/customer/CareDashboard';
 import { CarePreferences } from '@/components/farms/CarePreferences';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 
@@ -79,6 +80,7 @@ export default function Dashboard() {
             </span>
           </Link>
         </div>
+        <CareDashboard/>
         {!profile || query.isLoading ? (
           <p role="status" className="py-8">
             Loading your care overview…
