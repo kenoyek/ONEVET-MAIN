@@ -195,12 +195,12 @@ export default function ArticleDetail() {
                   <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
                     <AvatarImage src={article.author?.avatar_url || undefined} />
                     <AvatarFallback className="bg-primary/5 text-primary font-bold">
-                      {article.author?.first_name?.[0]}{article.author?.last_name?.[0]}
+                      {article.author ? `${article.author.first_name?.[0] || ''}${article.author.last_name?.[0] || ''}` : '1V'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="font-bold text-sm leading-none mb-1">
-                      {article.author?.first_name} {article.author?.last_name}
+                      {article.author ? `${article.author.first_name || ''} ${article.author.last_name || ''}`.trim() : '1Vet'}
                     </p>
                     <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                       <span className="flex items-center gap-1.5">
