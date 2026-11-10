@@ -1,5 +1,5 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ArticleEditor from './ArticleEditor';
 
@@ -66,5 +66,65 @@ describe('ArticleEditor preview', () => {
     expect(screen.getByLabelText('Title')).toHaveValue('');
     expect(screen.getByLabelText('Content')).toHaveValue('');
     expect(from).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('ArticleEditor publishing', () => {
+  const article = { id: 'article-one', title: 'Flock care', slug: 'flock-care', content: 'Check clean water.', category: 'Livestock', excerpt: '', tags: [], image_url: null, is_published: false, published_at: null as string | null };
+  function renderExisting(data = article, result: Promise<unknown> = Promise.resolve({ data: { id: article.id }, error: null })) {
+    const single = vi.fn(() => result);
+    const mutation = { eq: vi.fn(), select: vi.fn(), single };
+    mutation.eq.mockReturnValue(mutation);
+    mutation.select.mockReturnValue(mutation);
+    const update = vi.fn((_data: unknown) => mutation);
+    const fetch = { select: vi.fn(), eq: vi.fn(), single: vi.fn(async () => ({ data, error: null })) };
+    fetch.select.mockReturnValue(fetch);
+    fetch.eq.mockReturnValue(fetch);
+    from.mockReturnValueOnce(fetch).mockReturnValue({ update });
+    const view = render(<MemoryRouter initialEntries={['/admin/articles/article-one/edit']}><Routes>
+      <Route path="/admin/articles/:id/edit" element={<ArticleEditor />} />
+      <Route path="/admin/articles" element={<p>Returned to article library</p>} />
+    </Routes></MemoryRouter>);
+    return { ...view, update };
+  }
+
+  it('publishes a saved draft once, assigns its first date and locks edits while saving', async () => {
+    let finish!: (result: unknown) => void;
+    const result = new Promise(resolve => { finish = resolve; });
+    const { container, update } = renderExisting(article, result);
+    await screen.findByLabelText('Title');
+    fireEvent.click(screen.getByRole('switch', { name: 'Published' }));
+    expect(screen.getByRole('button', { name: 'Publish article' })).toBeInTheDocument();
+    const form = container.querySelector('form')!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_published: true, published_at: expect.any(String) }));
+    expect(screen.getByLabelText('Title')).toBeDisabled();
+    finish({ data: { id: article.id }, error: null });
+    await screen.findByText('Returned to article library');
+  });
+
+  it('retains an original publication date on unpublish', async () => {
+    const date = '2026-11-09T10:00:00.000Z';
+    const { container, update } = renderExisting({ ...article, is_published: true, published_at: date });
+    await screen.findByLabelText('Title');
+    fireEvent.click(screen.getByRole('switch', { name: 'Published' }));
+    expect(screen.getByRole('button', { name: 'Unpublish article' })).toBeInTheDocument();
+    fireEvent.submit(container.querySelector('form')!);
+    await waitFor(() => expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_published: false, published_at: date })));
+    await screen.findByText('Returned to article library');
+  });
+
+  it('keeps edited content available for retry after a failed save', async () => {
+    const { container, update } = renderExisting(article, Promise.resolve({ data: null, error: { code: '42501' } }));
+    await screen.findByLabelText('Title');
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Unsaved revision' } });
+    fireEvent.submit(container.querySelector('form')!);
+    await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByLabelText('Title')).not.toBeDisabled());
+    expect(screen.getByLabelText('Title')).toHaveValue('Unsaved revision');
+    expect(screen.queryByText('Returned to article library')).not.toBeInTheDocument();
   });
 });

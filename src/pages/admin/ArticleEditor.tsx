@@ -1,8 +1,10 @@
+import { articlePublicationState } from '@/lib/article-publication';
+import { Badge } from '@/components/ui/badge';
 import { ArticleMarkdownEditor } from '@/components/articles/ArticleMarkdownEditor';
 import { ArticleDraftPreview } from '@/components/articles/ArticleDraftPreview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, useWatch } from 'react-hook-form';
@@ -66,6 +68,8 @@ export default function ArticleEditor() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const isEditing = !!id;
+  const saveInFlight = useRef(false);
+  const [savedPublication, setSavedPublication] = useState<{ is_published: boolean; published_at: string | null }>({ is_published: false, published_at: null });
   const [editorMode, setEditorMode] = useState('write');
   const [mobilePreview, setMobilePreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -97,6 +101,7 @@ export default function ArticleEditor() {
 
       if (error) throw error;
 
+      setSavedPublication({ is_published: !!data.is_published, published_at: data.published_at });
       form.reset({
         title: data.title,
         slug: data.slug,
@@ -133,7 +138,12 @@ export default function ArticleEditor() {
   };
 
   const onSubmit = async (data: ArticleFormData) => {
-    if (!profile?.id) return;
+    if (saveInFlight.current) return;
+    if (!profile?.id) {
+      toast.error('Your account is not ready to save. Please sign in again.');
+      return;
+    }
+    saveInFlight.current = true;
 
     setIsLoading(true);
     try {
@@ -145,8 +155,7 @@ export default function ArticleEditor() {
         category: data.category,
         tags: data.tags ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         image_url: data.image_url || null,
-        is_published: data.is_published,
-        published_at: data.is_published && !isEditing ? new Date().toISOString() : undefined,
+        ...articlePublicationState(data.is_published, savedPublication.published_at),
         author_id: isEditing ? undefined : profile.id,
       };
 
@@ -154,14 +163,18 @@ export default function ArticleEditor() {
         const { error } = await supabase
           .from('articles')
           .update(articleData)
-          .eq('id', id || '');
+          .eq('id', id || '')
+          .select('id')
+          .single();
 
         if (error) throw error;
         toast.success('Article updated successfully!');
       } else {
         const { error } = await supabase
           .from('articles')
-          .insert(articleData);
+          .insert(articleData)
+          .select('id')
+          .single();
 
         if (error) throw error;
         toast.success('Article created successfully!');
@@ -177,6 +190,7 @@ export default function ArticleEditor() {
         toast.error('Failed to save article');
       }
     } finally {
+      saveInFlight.current = false;
       setIsLoading(false);
     }
   };
@@ -222,6 +236,7 @@ export default function ArticleEditor() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <fieldset disabled={isLoading} className="min-w-0" aria-busy={isLoading}>
               <Tabs value={editorMode} onValueChange={setEditorMode}>
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <TabsList aria-label="Article editing mode">
@@ -329,7 +344,11 @@ export default function ArticleEditor() {
                   {/* Publish Settings */}
                   <Card>
                     <CardHeader>
-                      <CardTitle>Publish</CardTitle>
+                      <CardTitle>Publication</CardTitle>
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <Badge variant={savedPublication.is_published ? 'default' : 'secondary'}>{savedPublication.is_published ? 'Published' : 'Draft'}</Badge>
+                        {form.formState.isDirty && <span className="text-xs text-muted-foreground">Unsaved changes</span>}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <FormField
@@ -340,7 +359,7 @@ export default function ArticleEditor() {
                             <div className="space-y-0.5">
                               <FormLabel>Published</FormLabel>
                               <FormDescription>
-                                Make this article publicly visible
+                                {field.value ? 'Visible in the resource library after saving.' : 'Private and hidden from the resource library after saving.'}
                               </FormDescription>
                             </div>
                             <FormControl>
@@ -360,7 +379,7 @@ export default function ArticleEditor() {
                           ) : (
                             <Save className="h-4 w-4 mr-2" />
                           )}
-                          {isEditing ? 'Update' : 'Save'}
+                          {isLoading ? 'Saving…' : draft.is_published ? (savedPublication.is_published ? 'Save changes' : 'Publish article') : (savedPublication.is_published ? 'Unpublish article' : 'Save draft')}
                         </Button>
                       </div>
                     </CardContent>
@@ -464,6 +483,7 @@ export default function ArticleEditor() {
                   <ArticleDraftPreview article={draft} mobile={mobilePreview} />
                 </TabsContent>
               </Tabs>
+              </fieldset>
             </form>
           </Form>
         </motion.div>

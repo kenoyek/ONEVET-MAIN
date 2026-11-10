@@ -1,5 +1,6 @@
+import { articlePublicationState } from '@/lib/article-publication';
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -59,6 +60,8 @@ interface Article {
 
 export default function AdminArticles() {
   const navigate = useNavigate();
+  const publicationLocks = useRef(new Set<string>());
+  const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,22 +90,27 @@ export default function AdminArticles() {
   };
 
   const togglePublish = async (article: Article) => {
+    if (publicationLocks.current.has(article.id)) return;
+    publicationLocks.current.add(article.id);
+    setPublishingIds(new Set(publicationLocks.current));
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('articles')
-        .update({ 
-          is_published: !article.is_published,
-          published_at: !article.is_published ? new Date().toISOString() : null,
-        })
-        .eq('id', article.id);
+        .update(articlePublicationState(!article.is_published, article.published_at))
+        .eq('id', article.id)
+        .select('id, is_published, published_at')
+        .single();
 
       if (error) throw error;
 
       toast.success(article.is_published ? 'Article unpublished' : 'Article published');
-      fetchArticles();
+      setArticles(current => current.map(row => row.id === data.id ? { ...row, ...data } : row));
     } catch (error) {
       console.error('Error toggling publish:', error);
       toast.error('Failed to update article');
+    } finally {
+      publicationLocks.current.delete(article.id);
+      setPublishingIds(new Set(publicationLocks.current));
     }
   };
 
@@ -255,8 +263,8 @@ export default function AdminArticles() {
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreVertical className="h-4 w-4" />
+                                <Button variant="ghost" size="icon" disabled={publishingIds.has(article.id)} aria-label={`Actions for ${article.title}`}>
+                                  {publishingIds.has(article.id) ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
