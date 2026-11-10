@@ -1,3 +1,5 @@
+import { articleDraftKey } from '@/lib/article-browser-draft';
+import { useArticleBrowserDraft } from '@/hooks/use-article-browser-draft';
 import { articlePublicationState } from '@/lib/article-publication';
 import { Badge } from '@/components/ui/badge';
 import { ArticleMarkdownEditor } from '@/components/articles/ArticleMarkdownEditor';
@@ -64,6 +66,12 @@ const categories = [
 ];
 
 export default function ArticleEditor() {
+  const { profile } = useAuth();
+  const { id } = useParams<{ id: string }>();
+  return <ArticleEditorForm key={`${profile?.id || 'signed-out'}:${id || 'new'}`} />;
+}
+
+function ArticleEditorForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -90,6 +98,12 @@ export default function ArticleEditor() {
   });
 
   const draft = useWatch({ control: form.control });
+  const browserDraft = useArticleBrowserDraft({
+    storageKey: profile?.id ? articleDraftKey(profile.id, id) : null,
+    serializedValues: JSON.stringify(draft),
+    dirty: form.formState.isDirty,
+    paused: isFetching,
+  });
 
   const fetchArticle = useCallback(async () => {
     try {
@@ -180,6 +194,7 @@ export default function ArticleEditor() {
         toast.success('Article created successfully!');
       }
 
+      browserDraft.clear();
       navigate('/admin/articles');
     } catch (error: unknown) {
       console.error('Error saving article:', error);
@@ -234,9 +249,29 @@ export default function ArticleEditor() {
             </div>
           </div>
 
+          {browserDraft.recovery && <section aria-label="Recover browser draft" className="mb-6 space-y-4 rounded-2xl border border-border bg-card p-5">
+            <div>
+              <h2 className="font-semibold">Browser draft found</h2>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Writing saved in this browser on {new Date(browserDraft.recovery.savedAt).toLocaleString()}. Restore it to review your changes, or discard the backup to use the current article.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Restoring does not publish anything. Visibility will use the article’s current saved setting.</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" onClick={() => {
+                const recovered = browserDraft.recovery;
+                if (!recovered) return;
+                form.reset({ ...recovered.values, is_published: savedPublication.is_published }, { keepDefaultValues: true });
+                browserDraft.dismissRecovery();
+              }}>Restore draft</Button>
+              <Button type="button" variant="outline" onClick={browserDraft.dismissRecovery}>Discard backup</Button>
+            </div>
+          </section>}
+          {!browserDraft.recovery && <p role="status" className="mb-4 text-sm text-muted-foreground">
+            {browserDraft.status === 'saved' ? 'Browser backup saved. Save the article to keep changes on the site.' : browserDraft.status === 'pending' ? 'Saving a browser backup…' : browserDraft.status === 'unavailable' ? 'Browser backup unavailable. Save the article before leaving.' : 'Unsaved writing is backed up in this browser for up to 7 days.'}
+          </p>}
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <fieldset disabled={isLoading} className="min-w-0" aria-busy={isLoading}>
+              <fieldset disabled={isLoading || !!browserDraft.recovery} className="min-w-0" aria-busy={isLoading}>
               <Tabs value={editorMode} onValueChange={setEditorMode}>
                 <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <TabsList aria-label="Article editing mode">

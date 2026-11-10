@@ -1,15 +1,16 @@
+import { articleDraftKey, writeArticleDraft, readArticleDraft } from '@/lib/article-browser-draft';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ArticleEditor from './ArticleEditor';
 
-const { from } = vi.hoisted(() => ({ from: vi.fn() }));
+const { from, account } = vi.hoisted(() => ({ from: vi.fn(), account: { id: 'editor-profile' } }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { from } }));
-vi.mock('@/lib/auth-context', () => ({ useAuth: () => ({ profile: { id: 'editor-profile' } }) }));
+vi.mock('@/lib/auth-context', () => ({ useAuth: () => ({ profile: account }) }));
 vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => <nav aria-label="Site" /> }));
 
-beforeEach(() => { vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }); });
-afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
+beforeEach(() => { account.id = 'editor-profile'; localStorage.clear(); vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }); });
+afterEach(() => { cleanup(); localStorage.clear(); vi.clearAllMocks(); vi.unstubAllGlobals(); });
 const switchToPreview = () => fireEvent.mouseDown(screen.getByRole('tab', { name: 'Preview' }), { button: 0, ctrlKey: false });
 
 describe('ArticleEditor preview', () => {
@@ -102,8 +103,11 @@ describe('ArticleEditor publishing', () => {
     await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_published: true, published_at: expect.any(String) }));
     expect(screen.getByLabelText('Title')).toBeDisabled();
+    const browserKey = articleDraftKey('editor-profile', article.id);
+    writeArticleDraft(localStorage, browserKey, { title: article.title, slug: article.slug, content: article.content, category: article.category, is_published: true });
     finish({ data: { id: article.id }, error: null });
     await screen.findByText('Returned to article library');
+    expect(localStorage.getItem(browserKey)).toBeNull();
   });
 
   it('retains an original publication date on unpublish', async () => {
@@ -127,4 +131,67 @@ describe('ArticleEditor publishing', () => {
     expect(screen.getByLabelText('Title')).toHaveValue('Unsaved revision');
     expect(screen.queryByText('Returned to article library')).not.toBeInTheDocument();
   });
+});
+
+
+describe('ArticleEditor browser recovery', () => {
+  const key = articleDraftKey('editor-profile');
+  const backup = { title: 'Recovered flock notes', slug: 'recovered-flock-notes', content: '## Water\n\nKeep **fresh water** available.', category: 'Livestock', excerpt: '', tags: 'poultry', image_url: '', is_published: true };
+
+  it('restores writing only after an explicit choice and keeps a new article private', () => {
+    writeArticleDraft(localStorage, key, backup);
+    render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+    expect(screen.getByRole('region', { name: 'Recover browser draft' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Title')).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Restore draft' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('Recovered flock notes');
+    expect(screen.getByRole('switch', { name: 'Published' })).not.toBeChecked();
+    switchToPreview();
+    expect(screen.getByRole('heading', { name: 'Water' })).toBeInTheDocument();
+    expect(from).not.toHaveBeenCalled();
+  });
+
+  it('discards a backup without inserting its text into the current editor', () => {
+    writeArticleDraft(localStorage, key, backup);
+    render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Discard backup' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    expect(localStorage.getItem(key)).toBeNull();
+    expect(from).not.toHaveBeenCalled();
+  });
+
+  it('backs up unsaved fields, recovers after remount and removes reverted changes', async () => {
+    const view = render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'My unsaved article' } });
+    await waitFor(() => expect(readArticleDraft(localStorage, key)?.values.title).toBe('My unsaved article'), { timeout: 2000 });
+    view.unmount();
+    render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Restore draft' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('My unsaved article');
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Slug'), { target: { value: '' } });
+    await waitFor(() => expect(localStorage.getItem(key)).toBeNull());
+  });
+
+  it('remounts the editor on account change without copying writing into the next account', () => {
+    const view = render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Account A writing' } });
+    account.id = 'another-editor';
+    view.rerender(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+    expect(readArticleDraft(localStorage, key)?.values.title).toBe('Account A writing');
+    expect(localStorage.getItem(articleDraftKey('another-editor'))).toBeNull();
+  });
+
+  it('reports browser storage failure without preventing explicit site saving', async () => {
+    const blocked = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Storage blocked'); });
+    try {
+      render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+      fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Still editable' } });
+      await screen.findByText('Browser backup unavailable. Save the article before leaving.', {}, { timeout: 2000 });
+      expect(screen.getByLabelText('Title')).not.toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
+    } finally { blocked.mockRestore(); }
+  });
+
 });
