@@ -42,6 +42,21 @@ describe('ArticleEditor preview', () => {
     expect(from).not.toHaveBeenCalled();
   });
 
+  it('formats a selection and previews the result without submitting the article', () => {
+    const { container } = render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
+    const submit = vi.fn();
+    container.querySelector('form')!.addEventListener('submit', submit);
+    const input = screen.getByLabelText('Content') as HTMLTextAreaElement;
+    fireEvent.change(input, { target: { value: 'Provide clean water every day.' } });
+    input.setSelectionRange(8, 19);
+    fireEvent.click(screen.getByRole('button', { name: /^Bold$/ }));
+    expect(input.value).toBe('Provide **clean water** every day.');
+    switchToPreview();
+    expect(container.querySelector('strong')).toHaveTextContent('clean water');
+    expect(submit).not.toHaveBeenCalled();
+    expect(from).not.toHaveBeenCalled();
+  });
+
   it('offers a useful empty preview without treating placeholders as saved content', () => {
     render(<MemoryRouter><ArticleEditor /></MemoryRouter>);
     switchToPreview();

@@ -1,3 +1,4 @@
+import { ArticleMarkdownEditor } from '@/components/articles/ArticleMarkdownEditor';
 import { ArticleDraftPreview } from '@/components/articles/ArticleDraftPreview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -306,14 +307,14 @@ export default function ArticleEditor() {
                           <FormItem>
                             <FormLabel>Content</FormLabel>
                             <FormControl>
-                              <Textarea
+                              <ArticleMarkdownEditor
                                 placeholder="Write your article content here..."
                                 className="min-h-[400px] font-mono text-sm"
                                 {...field}
                               />
                             </FormControl>
                             <FormDescription>
-                              Use Markdown: ## for headings, **bold** for emphasis, - for lists and &gt; for callouts. Separate paragraphs with a blank line.
+                              Select text and choose a format above, or write Markdown directly. Separate paragraphs with a blank line, then check Preview.
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
