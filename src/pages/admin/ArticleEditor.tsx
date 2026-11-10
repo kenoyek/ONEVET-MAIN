@@ -1,12 +1,14 @@
+import { ArticleDraftPreview } from '@/components/articles/ArticleDraftPreview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { 
-  ArrowLeft, Save, Loader2, Eye, EyeOff, Image as ImageIcon, X
+  ArrowLeft, Save, Loader2, Eye, Pencil, Monitor, Smartphone
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -14,10 +16,8 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -65,6 +65,8 @@ export default function ArticleEditor() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const isEditing = !!id;
+  const [editorMode, setEditorMode] = useState('write');
+  const [mobilePreview, setMobilePreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(isEditing);
 
@@ -81,6 +83,8 @@ export default function ArticleEditor() {
       is_published: false,
     },
   });
+
+  const draft = useWatch({ control: form.control });
 
   const fetchArticle = useCallback(async () => {
     try {
@@ -202,7 +206,7 @@ export default function ArticleEditor() {
           <div className="flex items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-4">
               <Link to="/admin/articles">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="Back to articles">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
@@ -217,6 +221,18 @@ export default function ArticleEditor() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <Tabs value={editorMode} onValueChange={setEditorMode}>
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <TabsList aria-label="Article editing mode">
+                    <TabsTrigger value="write"><Pencil className="mr-2 h-4 w-4" aria-hidden="true" />Write</TabsTrigger>
+                    <TabsTrigger value="preview"><Eye className="mr-2 h-4 w-4" aria-hidden="true" />Preview</TabsTrigger>
+                  </TabsList>
+                  {editorMode === 'preview' && <div role="group" aria-label="Preview width" className="flex gap-1">
+                    <Button type="button" size="sm" variant={mobilePreview ? 'ghost' : 'secondary'} aria-pressed={!mobilePreview} onClick={() => setMobilePreview(false)}><Monitor className="mr-2 h-4 w-4" aria-hidden="true" />Desktop</Button>
+                    <Button type="button" size="sm" variant={mobilePreview ? 'secondary' : 'ghost'} aria-pressed={mobilePreview} onClick={() => setMobilePreview(true)}><Smartphone className="mr-2 h-4 w-4" aria-hidden="true" />Mobile</Button>
+                  </div>}
+                </div>
+                <TabsContent value="write">
               <div className="grid gap-6 lg:grid-cols-3">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
@@ -254,12 +270,10 @@ export default function ArticleEditor() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Slug</FormLabel>
-                            <FormControl>
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm text-muted-foreground">/articles/</span>
-                                <Input placeholder="article-slug" {...field} />
-                              </div>
-                            </FormControl>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">/articles/</span>
+                              <FormControl><Input placeholder="article-slug" {...field} /></FormControl>
+                            </div>
                             <FormDescription>URL-friendly identifier</FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -411,6 +425,7 @@ export default function ArticleEditor() {
                         name="image_url"
                         render={({ field }) => (
                           <FormItem>
+                            <FormLabel>Cover image URL</FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="https://example.com/image.jpg"
@@ -425,6 +440,7 @@ export default function ArticleEditor() {
                       {form.watch('image_url') && (
                         <div className="mt-3 relative rounded-lg overflow-hidden">
                           <img
+                            key={form.watch('image_url')}
                             src={form.watch('image_url')}
                             alt="Preview"
                             className="w-full h-32 object-cover"
@@ -438,6 +454,15 @@ export default function ArticleEditor() {
                   </Card>
                 </div>
               </div>
+                </TabsContent>
+                <TabsContent value="preview">
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 p-4">
+                    <p className="text-sm text-muted-foreground">Private preview of your unsaved changes. Nothing is saved or published here.</p>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setEditorMode('write')}>Continue editing</Button>
+                  </div>
+                  <ArticleDraftPreview article={draft} mobile={mobilePreview} />
+                </TabsContent>
+              </Tabs>
             </form>
           </Form>
         </motion.div>

@@ -56,3 +56,6 @@
 @media (prefers-reduced-motion: reduce) {
   .article-library-card, .article-library-card img { transition: none !important; transform: none !important; }
 }
+
+/* Narrow editor previews keep phone typography even on a desktop screen. */
+.article-draft-mobile .article-prose { font-size: 1.0625rem; }
