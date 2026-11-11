@@ -1,5 +1,6 @@
+import { bookingListFilters, bookingReturnPath } from '@/lib/booking-list-navigation';
 import { bookingStatus } from '@/lib/booking-status';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { AppointmentCalendarDownload } from './AppointmentCalendarDownload';
 import { BookingRescheduleForm } from './BookingRescheduleForm';
 import { useRef, useState } from 'react';
@@ -11,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { appointmentService as service, appointmentError, bookingTime, snapshotText, type Appointment, type BookingDecision, type BookingView } from '@/lib/services/appointment-service';
 export function BookingRequestCard({ booking, provider, refresh, readOnly = false }: { booking: Appointment; provider: boolean; refresh: () => Promise<void>; readOnly?: boolean }) {
   const { user } = useAuth();
+  const location=useLocation();
+  const returnTo=bookingReturnPath(location.state?.bookingReturnTo || location.pathname+location.search);
   const actionLock=useRef(false);
   const [rescheduling, setRescheduling] = useState(false);
   const [note, setNote] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [showHistory, setShowHistory] = useState(false);
@@ -32,10 +35,10 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
     <h3 className="text-lg font-medium">{snapshotText(booking.service_snapshot,'name')}</h3>
     <p>{snapshotText(booking.service_snapshot,'organization_name')}</p>
     <section className="rounded-xl border bg-muted/30 p-4"><h4 className="font-semibold">{statusInfo.label}</h4><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{statusInfo.text}</p></section>
-    <Link className="text-primary underline text-sm" to={`/appointments/${booking.id}`}>Open request details</Link>
-    {canAct && <Link className="text-primary underline text-sm block" to={`/appointments/${booking.id}#appointment-messages`}>View appointment messages</Link>}
+    <Link className="text-primary underline text-sm" state={{bookingReturnTo:returnTo}} to={`/appointments/${booking.id}`}>Open request details</Link>
+    {canAct && <Link className="text-primary underline text-sm block" state={{bookingReturnTo:returnTo}} to={`/appointments/${booking.id}#appointment-messages`}>View appointment messages</Link>}
     {!provider && ['cancelled','declined','completed'].includes(booking.status) && <Link className="text-primary underline text-sm block" to="/provider-marketplace">Browse care for a new request</Link>}
-    {booking.replacement_for && <p className="text-sm">Reschedule of <Link className="text-primary underline" to={`/appointments/${booking.replacement_for}`}>the original appointment</Link>. {booking.status==='pending'?'The original remains confirmed until this alternative is accepted.':''}</p>}
+    {booking.replacement_for && <p className="text-sm">Reschedule of <Link className="text-primary underline" state={{bookingReturnTo:returnTo}} to={`/appointments/${booking.replacement_for}`}>the original appointment</Link>. {booking.status==='pending'?'The original remains confirmed until this alternative is accepted.':''}</p>}
     {booking.reschedule_reason && <p className="text-sm whitespace-pre-wrap">Reschedule reason: {booking.reschedule_reason}</p>}
     <p>{bookingTime(booking.start_at)} – {new Date(booking.end_at).toLocaleTimeString('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit' })} WAT</p>
     <p className="text-sm">{snapshotText(booking.animal_snapshot,'name')} · {snapshotText(booking.animal_snapshot,'species')} · {snapshotText(booking.service_snapshot,'delivery_mode')==='home_visit' ? 'Home visit' : 'At provider location'}</p>
@@ -60,12 +63,16 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
   </article>;
 }
 export function BookingRequestList({ providerId }: { providerId?: string }) {
-  const { user } = useAuth(); const cache = useQueryClient(); const [page,setPage] = useState(0); const [view,setView] = useState<BookingView>('upcoming');
+  const { user } = useAuth(); const cache = useQueryClient();
+  const [params,setParams]=useSearchParams();
+  const {view,page}=bookingListFilters(params,!!providerId);
+  function changeView(next:BookingView){setParams(previous=>{const nextParams=new URLSearchParams(previous);const prefix=providerId?'booking_':'';if(next==='upcoming')nextParams.delete(prefix+'view');else nextParams.set(prefix+'view',next);nextParams.delete(prefix+'page');return nextParams;});}
+  function changePage(next:number){setParams(previous=>{const nextParams=new URLSearchParams(previous);const key=providerId?'booking_page':'page';if(next<=0)nextParams.delete(key);else nextParams.set(key,String(next));return nextParams;});}
   const requests = useQuery({ queryKey: ['booking-requests',user?.id,providerId ?? 'customer',view,page], enabled: !!user, refetchInterval: 60_000, queryFn: () => service.list(providerId ? { providerId } : { customerId: user!.id },page,view) });
   async function refresh() { await Promise.all([cache.invalidateQueries({ queryKey: ['booking-requests',user?.id] }),cache.invalidateQueries({ queryKey: ['appointment-slots'] }),cache.invalidateQueries({ queryKey: ['appointment-detail',user?.id] }),cache.invalidateQueries({ queryKey: ['reschedule-slots',user?.id] })]); }
   return <section className="space-y-5"><h2 className="text-xl">{providerId ? 'Customer booking requests' : 'Your booking requests'}</h2>
-    <label className="block text-sm">View requests <select aria-label="View requests" className="ml-3 rounded border bg-background p-2" value={view} onChange={event=>{setView(event.target.value as BookingView);setPage(0);}}><option value="upcoming">Upcoming</option><option value="needs_response">Needs confirmation</option><option value="past_open">Past requests still open</option><option value="history">Cancelled, declined and completed</option><option value="all">All requests</option></select></label>
-    {requests.isPending ? <p role="status">Loading requests…</p> : requests.isError ? <p role="alert">Could not load booking requests.</p> : requests.data?.rows.length ? requests.data.rows.map(booking => <BookingRequestCard key={booking.id} booking={booking} provider={!!providerId} refresh={refresh} />) : <section className="rounded-2xl border border-dashed p-6"><h3 className="font-semibold">{view==='upcoming'?'No upcoming appointments':view==='needs_response'?'No requests awaiting confirmation':view==='past_open'?'No past requests still open':'No requests in this view'}</h3><p className="mt-2 text-sm text-muted-foreground">{view==='upcoming'?'Pending requests need confirmation. Check All requests or Past requests still open for older records.':'Choose another view to find other appointments.'}</p>{!providerId&&<Button asChild variant="outline" className="mt-4"><Link to="/provider-marketplace">Find care services</Link></Button>}</section>}
-    <div className="flex flex-wrap gap-3 items-center"><Button variant="outline" onClick={() => void refresh()}>Refresh requests</Button><Button variant="outline" disabled={page===0 || requests.isFetching} onClick={() => setPage(previous=>previous-1)}>Previous</Button><span>Page {page+1}</span><Button variant="outline" disabled={!requests.data?.hasNext || requests.isFetching} onClick={() => setPage(previous=>previous+1)}>Next</Button></div>
+    <label className="block text-sm">View requests <select aria-label="View requests" className="ml-3 rounded border bg-background p-2" value={view} onChange={event=>{changeView(event.target.value as BookingView);}}><option value="upcoming">Upcoming</option><option value="needs_response">Needs confirmation</option><option value="past_open">Past requests still open</option><option value="history">Cancelled, declined and completed</option><option value="all">All requests</option></select></label>
+    {requests.isPending ? <p role="status">Loading requests…</p> : requests.isError ? <p role="alert">Could not load booking requests. Refresh to try again; your chosen view has been kept.</p> : requests.data?.rows.length ? requests.data.rows.map(booking => <BookingRequestCard key={booking.id} booking={booking} provider={!!providerId} refresh={refresh} />) : <section className="rounded-2xl border border-dashed p-6"><h3 className="font-semibold">{view==='upcoming'?'No upcoming appointments':view==='needs_response'?'No requests awaiting confirmation':view==='past_open'?'No past requests still open':'No requests in this view'}</h3><p className="mt-2 text-sm text-muted-foreground">{view==='upcoming'?'Pending requests need confirmation. Check All requests or Past requests still open for older records.':'Choose another view to find other appointments.'}</p>{!providerId&&<Button asChild variant="outline" className="mt-4"><Link to="/provider-marketplace">Find care services</Link></Button>}</section>}
+    <div className="flex flex-wrap gap-3 items-center"><Button variant="outline" onClick={() => void refresh()}>Refresh requests</Button><Button variant="outline" disabled={page===0 || requests.isFetching} onClick={() => changePage(page-1)}>Previous</Button><span>Page {page+1}</span><Button variant="outline" disabled={page>=999 || !requests.data?.hasNext || requests.isFetching} onClick={() => changePage(page+1)}>Next</Button></div>
   </section>;
 }

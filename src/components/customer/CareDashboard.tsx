@@ -1,3 +1,4 @@
+import { bookingStatus } from '@/lib/booking-status';
 import type {ReactNode} from 'react';
 import {Link} from 'react-router-dom';
 import {useQuery} from '@tanstack/react-query';
@@ -23,9 +24,9 @@ function Overview({userId,ownerId}:{userId:string;ownerId:string}){
   <div className="grid lg:grid-cols-3 gap-5">
    <Panel title="Upcoming appointments" loading={appointments.isPending} error={appointments.isError} retry={()=>void appointments.refetch()}>
     <p className="text-sm text-muted-foreground">Pending requests need provider confirmation. No online payment is collected.</p>
-    {!appointments.data?.rows.length?<p>No upcoming requests to display. <Link className="underline text-primary" to="/provider-marketplace">Browse care services</Link>.</p>:<ul className="divide-y">{appointments.data.rows.map(booking=><li key={booking.id} className="py-3 space-y-2"><Link className="font-medium text-primary underline break-words" to={`/appointments/${booking.id}`}>{snapshotText(booking.service_snapshot,'name')||'Appointment request'}</Link><p className="text-sm break-words">{snapshotText(booking.service_snapshot,'organization_name')}</p><p className="text-sm">{bookingTime(booking.start_at)}</p><p className="text-sm">{booking.status==='pending'?'Awaiting provider confirmation':'Confirmed'}</p></li>)}</ul>}
+    {!appointments.data?.rows.length?<p>No upcoming requests to display. <Link className="underline text-primary" to="/provider-marketplace">Browse care services</Link>.</p>:<ul className="divide-y">{appointments.data.rows.map(booking=><li key={booking.id} className="py-3 space-y-2"><Link className="font-medium text-primary underline break-words" to={`/appointments/${booking.id}`}>{snapshotText(booking.service_snapshot,'name')||'Appointment request'}</Link><p className="text-sm break-words">{snapshotText(booking.service_snapshot,'organization_name')}</p><p className="text-sm">{bookingTime(booking.start_at)}</p><p className="text-sm">{bookingStatus(booking.status,booking.start_at,booking.end_at).label}</p><Link className="text-primary underline text-xs" to={`/appointments/${booking.id}#appointment-messages`}>Messages and appointment details</Link></li>)}</ul>}
     {appointments.data?.hasMore&&<p className="text-xs text-muted-foreground">Showing the next four requests. More are available in your appointments.</p>}
-    <Link className="text-primary underline text-sm inline-block" to="/my-bookings">View all appointments</Link>
+    <div className="flex flex-col items-start gap-3"><Link className="text-primary underline text-sm" to="/my-bookings">View all appointments</Link><Link className="text-primary underline text-sm" to="/my-bookings?view=past_open">Past requests needing follow-up</Link></div>
    </Panel>
    <Panel title="Vaccination dates you recorded" loading={dates.isPending} error={dates.isError} retry={()=>void dates.refetch()}>
     <p className="text-sm text-muted-foreground">Past dates and the next 30 days from your journal. These dates are owner-supplied; confirm the schedule with your vet. No automatic reminders are sent.</p>

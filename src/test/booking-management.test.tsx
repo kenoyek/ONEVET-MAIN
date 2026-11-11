@@ -8,7 +8,7 @@ vi.mock('@/lib/services/appointment-service',async original=>({...await original
 import { BookingRequestList } from '@/components/provider/BookingRequestList';
 import { ProviderBookingManager } from '@/components/provider/ProviderBookingManager';
 const booking={id:'booking-id',customer_id:'customer-id',provider_owner_id:'provider-id',provider_access:true,provider_eligibility:'eligible',version:1,status:'pending',start_at:new Date(Date.now()+86400000).toISOString(),end_at:new Date(Date.now()+86400000+45*60000).toISOString(),base_fee:15000,currency:'NGN',contact_phone:'08012345678',visit_address:'',provider_address:null,customer_notes:'',response_note:'',service_snapshot:{name:'Grooming',organization_name:'Clinic',delivery_mode:'clinic_visit'},animal_snapshot:{name:'Milo',species:'dog'}};
-function mount(element:React.ReactElement){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter>{element}</MemoryRouter></QueryClientProvider>);}
+function mount(element:React.ReactElement,entries=['/']){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={entries}>{element}</MemoryRouter></QueryClientProvider>);}
 describe('Booking management',()=>{
  beforeEach(()=>{vi.clearAllMocks();identity.userId='customer-id';list.mockResolvedValue({rows:[booking],hasNext:false});history.mockResolvedValue([]);schedule.mockResolvedValue(null);saveSchedule.mockResolvedValue(1);});
  it('keeps provider confirmation controls out of the customer view',async()=>{
@@ -47,6 +47,10 @@ describe('Booking management',()=>{
   let finish!:()=>void;respond.mockReturnValue(new Promise<void>(resolve=>{finish=resolve;}));mount(<BookingRequestList/>);await screen.findByText('Grooming');
   fireEvent.change(screen.getByLabelText('Response / explanation (required for cancellation or decline)'),{target:{value:'Cannot attend this appointment.'}});
   const cancel=screen.getByRole('button',{name:'Cancel request'});fireEvent.click(cancel);fireEvent.click(cancel);expect(respond).toHaveBeenCalledTimes(1);finish();await waitFor(()=>expect(screen.getByLabelText('Response / explanation (required for cancellation or decline)')).toHaveValue(''));
+ });
+ it('restores a shared filter and page before querying and resets page when view changes',async()=>{
+  mount(<BookingRequestList/>,['/my-bookings?view=past_open&page=2']);await screen.findByText('Grooming');expect(list).toHaveBeenCalledWith({customerId:'customer-id'},2,'past_open');
+  expect(screen.getByLabelText('View requests')).toHaveValue('past_open');fireEvent.change(screen.getByLabelText('View requests'),{target:{value:'all'}});await waitFor(()=>expect(list).toHaveBeenCalledWith({customerId:'customer-id'},0,'all'));
  });
  it('starts schedules disabled and saves explicit WAT windows with their version',async()=>{
   list.mockResolvedValue({rows:[],hasNext:false});mount(<ProviderBookingManager providerId="org-id"/>);const enabled=await screen.findByLabelText('Accept booking requests for published services');expect(enabled).not.toBeChecked();fireEvent.click(enabled);fireEvent.click(screen.getByLabelText('Monday'));fireEvent.click(screen.getByRole('button',{name:'Save availability'}));await waitFor(()=>expect(saveSchedule).toHaveBeenCalledWith('org-id',true,[{weekday:1,opens:540,closes:1020}],[],0));
