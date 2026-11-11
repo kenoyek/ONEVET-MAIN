@@ -1,3 +1,4 @@
+import { farmSaveError } from '@/lib/confirmed-create';
 import { petBookingReturn } from '@/lib/pet-booking-return';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useEffect, useRef, useState } from 'react';
@@ -31,6 +32,8 @@ function FarmDetailContent() {
   const ownerId = useFarmOwner();
   const query = useFarmWorkspace(farmId);
   const client = useQueryClient();
+  const actionLock=useRef(false);
+  const draftId=useRef<string>();
   const [dialog, setDialog] = useState<'batch' | 'observation' | null>(null);
   const save = useMutation({
     mutationFn: async (
@@ -43,16 +46,18 @@ function FarmDetailContent() {
         return livestockService.createHerdBatch({
           ...input.values,
           farm_id: query.data.farm.id,
-        });
+        },draftId.current);
       if (!query.data.batches.some((b) => b.id === input.values.batch_id))
         throw new Error('Group not available');
       return livestockService.logFlockHealthRecord({
         ...input.values,
         recorded_by_id: ownerId,
         record_type: 'owner_observation',
-      });
+      },draftId.current);
     },
+    onSettled:()=>{actionLock.current=false;},
     onSuccess: async (saved,input) => {
+      draftId.current=undefined;
       await client.invalidateQueries({queryKey:['customer-farm',ownerId,farmId]});
       if(returnTo&&input.kind==='batch'&&saved?.id&&active.current)navigate(bookingPath(saved.id));
     },
@@ -61,6 +66,7 @@ function FarmDetailContent() {
     setDialog(null);
     toast.success('Record saved');
   };
+  function submit(input:{kind:'batch';values:BatchValues}|{kind:'observation';values:ObservationValues}){if(actionLock.current)return;actionLock.current=true;draftId.current??=crypto.randomUUID();save.mutate(input,{onSuccess:done});}
   const data = query.data;
   const activeGroups =
     data?.batches.filter(
@@ -250,7 +256,7 @@ function FarmDetailContent() {
             <Dialog
               open={!!dialog}
               onOpenChange={(open) => {
-                if (!open && !save.isPending) setDialog(null);
+                if (!open && !actionLock.current) {setDialog(null);draftId.current=undefined;}
               }}
             >
               <DialogContent className="max-h-[90dvh] overflow-y-auto">
@@ -268,18 +274,14 @@ function FarmDetailContent() {
                 </DialogHeader>
                 {save.isError && (
                   <p role="alert" className="text-sm text-destructive">
-                    We couldn’t save this record. Your entered details are still
-                    here. Please try again.
+                    {farmSaveError(save.error)}
                   </p>
                 )}
                 {dialog === 'batch' ? (
                   <BatchForm
                     pending={save.isPending}
                     onSave={(values) =>
-                      save.mutate(
-                        { kind: 'batch', values },
-                        { onSuccess: done },
-                      )
+                      submit({kind:'batch',values})
                     }
                   />
                 ) : (
@@ -287,10 +289,7 @@ function FarmDetailContent() {
                     batches={activeGroups}
                     pending={save.isPending}
                     onSave={(values) =>
-                      save.mutate(
-                        { kind: 'observation', values },
-                        { onSuccess: done },
-                      )
+                      submit({kind:'observation',values})
                     }
                   />
                 )}

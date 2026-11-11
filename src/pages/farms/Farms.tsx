@@ -1,3 +1,4 @@
+import { farmSaveError } from '@/lib/confirmed-create';
 import { petBookingReturn } from '@/lib/pet-booking-return';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useEffect, useRef, useState } from 'react';
@@ -30,13 +31,17 @@ function FarmsContent() {
   const farmPath=(id:string)=>`/farms/${id}${returnTo?'?'+new URLSearchParams({returnTo}):''}`;
   const ownerId = useFarmOwner();
   const client = useQueryClient();
+  const actionLock=useRef(false);
+  const draftId=useRef<string>();
   const [open, setOpen] = useState(false);
   const save = useMutation({
     mutationFn: (values: FarmValues) => {
       if (!ownerId) throw new Error('Profile not ready');
-      return livestockService.registerFarm({ ...values, owner_id: ownerId });
+      return livestockService.registerFarm({ ...values, owner_id: ownerId },draftId.current);
     },
+    onSettled:()=>{actionLock.current=false;},
     onSuccess: async saved => {
+      draftId.current=undefined;
       await client.invalidateQueries({queryKey:['customer-farms',ownerId]});
       if(returnTo&&saved?.id&&active.current)navigate(farmPath(saved.id));
     },
@@ -120,7 +125,7 @@ function FarmsContent() {
         <Dialog
           open={open}
           onOpenChange={(v) => {
-            if (!save.isPending) setOpen(v);
+            if (!actionLock.current) {setOpen(v);if(!v)draftId.current=undefined;}
           }}
         >
           <DialogContent className="max-h-[90dvh] overflow-y-auto">
@@ -132,19 +137,20 @@ function FarmsContent() {
             </DialogHeader>
             {save.isError && (
               <p role="alert" className="text-sm text-destructive">
-                We couldn’t save this farm. Check your connection and try again.
+                {farmSaveError(save.error)}
               </p>
             )}
             <FarmForm
               pending={save.isPending}
-              onSave={(values) =>
+              onSave={(values) => {
+                if(actionLock.current)return;actionLock.current=true;draftId.current??=crypto.randomUUID();
                 save.mutate(values, {
                   onSuccess: () => {
                     setOpen(false);
                     toast.success('Farm saved');
                   },
-                })
-              }
+                });
+              }}
             />
           </DialogContent>
         </Dialog>

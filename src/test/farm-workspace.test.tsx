@@ -139,7 +139,7 @@ describe('Customer farm workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save farm' }));
     const farmLink = await screen.findByRole('link', { name: /Fixture Farm/ });
     expect(livestockService.registerFarm).toHaveBeenCalledWith(
-      expect.objectContaining({ owner_id: owner }),
+      expect.objectContaining({ owner_id: owner }),expect.any(String),
     );
     fireEvent.click(farmLink);
     await screen.findByRole('heading', { name: 'Fixture Farm' });
@@ -174,7 +174,7 @@ describe('Customer farm workspace', () => {
         record_type: 'owner_observation',
         affected_count: 3,
         mortality_count: 1,
-      }),
+      }),expect.any(String),
     );
     expect(screen.getByText(/6 Nov 2026.*10:00.*WAT/)).toBeInTheDocument();
   });
@@ -185,6 +185,12 @@ describe('Customer farm workspace', () => {
     fireEvent.click(screen.getByRole('button',{name:'Save farm'}));await screen.findByRole('heading',{name:'Booking Farm'});
     fireEvent.click(await screen.findByRole('button',{name:'Add animal group'}));fireEvent.change(screen.getByLabelText('Group name'),{target:{value:'Layer flock'}});fireEvent.click(screen.getByRole('button',{name:'Save animal group'}));
     expect(await screen.findByText(/Booking restored/)).toHaveTextContent('animal=farm_group%3A'+batchId);expect(screen.getByText(/Booking restored/)).toHaveTextContent('start=time-one');
+  });
+  it('retains entered details and the same record ID after a failed farm save',async()=>{
+    vi.mocked(livestockService.registerFarm).mockRejectedValueOnce(new Error('offline'));renderPage();await screen.findByText('Start with your farm.');fireEvent.click(screen.getByRole('button',{name:'Add your first farm'}));
+    for(const [label,value] of [['Farm name','Retry Farm'],['Service location','Main road'],['City or local area','Ibadan'],['State','Oyo']] as const)fireEvent.change(screen.getByLabelText(label),{target:{value}});
+    const form=screen.getByLabelText('Farm name').closest('form')!;fireEvent.submit(form);fireEvent.submit(form);await screen.findByRole('alert');expect(livestockService.registerFarm).toHaveBeenCalledTimes(1);expect(screen.getByLabelText('Farm name')).toHaveValue('Retry Farm');
+    fireEvent.click(screen.getByRole('button',{name:'Save farm'}));await screen.findByRole('link',{name:/Retry Farm/});expect(vi.mocked(livestockService.registerFarm).mock.calls[0]?.[1]).toBe(vi.mocked(livestockService.registerFarm).mock.calls[1]?.[1]);
   });
   it('shows backend errors instead of an empty farm list and retries', async () => {
     state.fail = true;

@@ -1,3 +1,4 @@
+import { confirmedCreate } from '@/lib/confirmed-create';
 import {
   farmSchema,
   batchSchema,
@@ -41,11 +42,10 @@ export const livestockService = {
   /**
    * Register a new commercial livestock farm
    */
-  async registerFarm(input: RegisterFarmInput) {
+  async registerFarm(input: RegisterFarmInput, recordId:string=crypto.randomUUID()) {
     farmSchema.parse(input);
-    const { data, error } = await supabase
-      .from('livestock_farms')
-      .insert({
+    const payload={
+      id:recordId,
         owner_id: input.owner_id,
         farm_name: input.farm_name,
         registration_number: input.registration_number || null,
@@ -54,24 +54,25 @@ export const livestockService = {
         city: input.city,
         state: input.state,
         total_acreage: input.total_acreage || null,
-      })
+    };
+    const { data, error } = await supabase
+      .from('livestock_farms')
+      .insert(payload)
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    return confirmedCreate({data,error},()=>supabase.from('livestock_farms').select('*').eq('id',recordId).eq('owner_id',input.owner_id).maybeSingle(),payload);
   },
 
   /**
    * Create a new livestock herd / flock batch
    */
-  async createHerdBatch(input: CreateHerdBatchInput) {
+  async createHerdBatch(input: CreateHerdBatchInput, recordId:string=crypto.randomUUID()) {
     batchSchema.parse(input);
-    const batchCode = `OV-HERD-${crypto.randomUUID()}`;
+    const batchCode = `OV-HERD-${recordId}`;
 
-    const { data, error } = await supabase
-      .from('livestock_batches')
-      .insert({
+    const payload={
+      id:recordId,
         farm_id: input.farm_id,
         batch_code: batchCode,
         species: input.species,
@@ -79,27 +80,28 @@ export const livestockService = {
         head_count: input.head_count,
         purpose: input.purpose || null,
         housing_unit: input.housing_unit || null,
-        status: 'active',
-      })
+        status: 'active' as const,
+    };
+    const { data, error } = await supabase
+      .from('livestock_batches')
+      .insert(payload)
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    return confirmedCreate({data,error},()=>supabase.from('livestock_batches').select('*').eq('id',recordId).eq('farm_id',input.farm_id).maybeSingle(),payload);
   },
 
   /**
    * Log flock health record, mass vaccination, or food safety withdrawal period
    */
-  async logFlockHealthRecord(input: LogFlockHealthRecordInput) {
+  async logFlockHealthRecord(input: LogFlockHealthRecordInput, recordId:string=crypto.randomUUID()) {
     observationSchema.parse({
       ...input,
       affected_count: input.affected_count ?? 0,
       mortality_count: input.mortality_count ?? 0,
     });
-    const { data, error } = await supabase
-      .from('flock_health_records')
-      .insert({
+    const payload={
+      id:recordId,
         batch_id: input.batch_id,
         attending_vet_id: input.attending_vet_id || null,
         recorded_by_id: input.recorded_by_id,
@@ -109,12 +111,14 @@ export const livestockService = {
         observations: input.observations,
         treatment_administered: input.treatment_administered || null,
         withdrawal_period_days: input.withdrawal_period_days || 0,
-      })
+    };
+    const { data, error } = await supabase
+      .from('flock_health_records')
+      .insert(payload)
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    return confirmedCreate({data,error},()=>supabase.from('flock_health_records').select('*').eq('id',recordId).eq('batch_id',input.batch_id).eq('recorded_by_id',input.recorded_by_id).maybeSingle(),payload);
   },
 
   /**
