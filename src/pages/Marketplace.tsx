@@ -1,7 +1,7 @@
 import { useAuth } from '@/lib/auth-context';
 import { shopService } from '@/lib/services/shop-service';
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useState } from "react";
+import { discoverProducts, shopCategories, shopFilters } from '@/lib/shop-discovery';
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -21,20 +21,16 @@ import {
 import { toast } from "sonner";
 import { ProductImageFallback } from "@/components/marketplace/ProductImageFallback";
 
-import { Link } from "react-router-dom";
-
-const CATEGORIES = [
-  "All",
-  "Pet Food",
-  "Pet Health",
-  "Pet Supplies",
-  "Livestock",
-  "Accessories"
-];
+import { Link, useSearchParams } from "react-router-dom";
 
 const Marketplace = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [params, setParams] = useSearchParams();
+  const filters = shopFilters(params);
+  const {search: searchQuery, category: selectedCategory} = filters;
+  function updateFilter(key: string, value: string) {
+    setParams(previous => { const next = new URLSearchParams(previous); if (value) next.set(key, value); else next.delete(key); return next; }, {replace: true});
+  }
+  const productLink = (id: string) => `/marketplace/${id}${params.size ? `?${params}` : ''}`;
   const { addItem } = useCart();
   const { user } = useAuth();
 
@@ -44,10 +40,7 @@ const Marketplace = () => {
 
   });
 
-  const filteredListings = listings?.filter(item =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredListings = discoverProducts(listings || [], filters);
 
   const handleAddToCart = (e: React.MouseEvent, listing: { id: string; title: string; price: number; images?: string[] | null; stock_quantity: number | null; seller_id: string }) => {
     e.preventDefault();
@@ -94,7 +87,7 @@ const Marketplace = () => {
                   aria-label="Search products" placeholder="Search products..."
                   className="pl-11 rounded-full bg-card border-border/50 shadow-soft"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => updateFilter('q', e.target.value)}
                 />
               </div>
               <Button variant="outline" asChild><Link to="/cart">View cart</Link></Button>
@@ -103,20 +96,29 @@ const Marketplace = () => {
 
           {/* Categories */}
           <div className="flex gap-3 overflow-x-auto pb-6 mb-10 scrollbar-hide">
-            {CATEGORIES.map((category) => (
+            {shopCategories.map((category) => (
               <Button
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
                 className={`rounded-full whitespace-nowrap px-6 font-bold transition-all ${
                   selectedCategory === category ? 'shadow-sm scale-105' : 'hover:bg-primary/5'
                 }`}
-                onClick={() => setSelectedCategory(category)}
+                aria-pressed={selectedCategory === category}
+                onClick={() => updateFilter('category', category === 'All' ? '' : category)}
               >
                 {category}
               </Button>
             ))}
           </div>
 
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+            <p aria-live="polite" className="text-sm text-muted-foreground">{isLoading ? 'Checking products…' : isError ? 'Product count unavailable' : `${filteredListings.length} ${filteredListings.length === 1 ? 'product' : 'products'} shown`}</p>
+            <div className="flex flex-wrap items-center gap-4">
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={filters.inStock} onChange={event=>updateFilter('stock',event.target.checked?'available':'')} />In stock only</label>
+              <label className="flex items-center gap-2 text-sm">Sort by<select aria-label="Sort products" className="min-w-0 rounded-xl border bg-card p-3" value={filters.sort} onChange={event=>updateFilter('sort',event.target.value==='newest'?'':event.target.value)}><option value="newest">Newest</option><option value="price-low">Price: low to high</option><option value="price-high">Price: high to low</option><option value="name">Name: A–Z</option></select></label>
+              {(searchQuery||selectedCategory!=='All'||filters.inStock||filters.sort!=='newest')&&<Button variant="ghost" onClick={()=>setParams({})}>Reset filters</Button>}
+            </div>
+          </div>
           {/* Product Grid */}
           <p role="status" className="mb-6 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">You can browse and keep items in your cart. Online checkout is currently unavailable.</p>
           {isError ? <section role="alert" className="care-path"><h2 className="text-xl">We couldn’t load the shop.</h2><p className="my-3">Please try again to check current products and stock.</p><Button variant="outline" onClick={() => refetch()}>Try again</Button></section> : isLoading ? (
@@ -136,7 +138,7 @@ const Marketplace = () => {
                 >
                   <div>
                     <Card className="card-elevated h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
-                      <Link to={`/marketplace/${item.id}`} className="relative block aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]" aria-label={`View ${item.title}`}>
+                      <Link to={productLink(item.id)} className="relative block aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]" aria-label={`View ${item.title}`}>
                         {item.images?.[0] ? (
                           <img
                             src={item.images[0]}
@@ -152,7 +154,7 @@ const Marketplace = () => {
                         </Badge>
                       </Link>
                       <CardHeader className="p-6 pb-2">
-                        <CardTitle className="text-lg font-semibold tracking-tight"><Link className="hover:underline" to={`/marketplace/${item.id}`}>{item.title}</Link></CardTitle>
+                        <CardTitle className="text-lg font-semibold tracking-tight"><Link className="hover:underline" to={productLink(item.id)}>{item.title}</Link></CardTitle>
                         <div className="text-2xl font-semibold text-primary tracking-tight mt-1">
                           ₦{item.price.toLocaleString()}
                         </div>
@@ -191,16 +193,15 @@ const Marketplace = () => {
           ) : (
             <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
               <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-              <h3 className="text-xl font-semibold">{searchQuery || selectedCategory !== 'All' ? 'No matching products' : 'Our shop is being prepared'}</h3>
+              <h3 className="text-xl font-semibold">{searchQuery || selectedCategory !== 'All' || filters.inStock ? 'No matching products' : 'Our shop is being prepared'}</h3>
               <p className="text-muted-foreground mt-2">
-                {searchQuery || selectedCategory !== 'All' ? 'Try a different search or category.' : 'Products will appear here when stock has been added and approved.'}
+                {searchQuery || selectedCategory !== 'All' || filters.inStock ? 'Try a different search, category or availability filter.' : 'Products will appear here when stock has been added and approved.'}
               </p>
               <Button
                 variant="link"
                 className="mt-4"
                 onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("All");
+                  setParams({});
                 }}
               >
                 Clear all filters

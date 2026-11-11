@@ -1,7 +1,7 @@
 import { shopService } from '@/lib/services/shop-service';
 import { Link } from 'react-router-dom';
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -24,8 +24,11 @@ import { ProductImageFallback } from "@/components/marketplace/ProductImageFallb
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const shopPath = `/marketplace${location.search}`;
   const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
+  useEffect(() => { setSelectedImage(0); }, [id]);
 
   const { data: product, isLoading, isError, refetch } = useQuery({
     queryKey: ['product', id],
@@ -51,13 +54,13 @@ const ProductDetail = () => {
     );
   }
 
-  if (isError) return <div className="min-h-screen bg-background"><Navbar /><main id="main-content" className="container-tight pt-32 pb-20" role="alert"><h1 className="text-2xl mb-4">We couldn’t load this product.</h1><Button onClick={() => refetch()}>Try again</Button><Button asChild variant="ghost"><Link to="/marketplace">Back to shop</Link></Button></main><Footer /></div>;
+  if (isError) return <div className="min-h-screen bg-background"><Navbar /><main id="main-content" className="container-tight pt-32 pb-20" role="alert"><h1 className="text-2xl mb-4">We couldn’t load this product.</h1><Button onClick={() => refetch()}>Try again</Button><Button asChild variant="ghost"><Link to={shopPath}>Back to shop</Link></Button></main><Footer /></div>;
 
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <h1 className="text-2xl font-bold">Product not found</h1>
-        <Button onClick={() => navigate('/marketplace')}>Back to Marketplace</Button>
+        <Button onClick={() => navigate(shopPath)}>Back to Marketplace</Button>
       </div>
     );
   }
@@ -83,7 +86,7 @@ const ProductDetail = () => {
           <Button
             variant="ghost"
             className="mb-8 font-bold rounded-full hover:bg-primary/5 group"
-            onClick={() => navigate('/marketplace')}
+            onClick={() => navigate(shopPath)}
           >
             <ArrowLeft className="w-4 h-4 mr-2 transition-transform group-hover:-translate-x-1" />
             Back to Store
@@ -108,6 +111,8 @@ const ProductDetail = () => {
                   {product.images.map((img: string, idx: number) => (
                     <button
                       key={idx}
+                      aria-label={`View product image ${idx + 1}`}
+                      aria-pressed={selectedImage === idx}
                       className={`aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-300 ${
                         selectedImage === idx ? 'border-primary shadow-sm' : 'border-background shadow-soft opacity-60 hover:opacity-100'
                       }`}
