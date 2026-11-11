@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+import { ProductImage } from '@/components/marketplace/ProductImage';
+import { cartChanges } from '@/lib/cart-changes';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { shopService } from '@/lib/services/shop-service';
 import { cartQuantityLimit } from '@/lib/cart-rules';
@@ -25,10 +27,19 @@ const Cart = () => {
   const { items, removeItem, updateQuantity, totalPrice, totalItems, refreshItems } = useCart();
 
   const { user } = useAuth();
+  const [changes, setChanges] = useState<string[]>([]);
   const ids = [...new Set(items.map(item => item.id))].sort().join(',');
-  const catalogue = useQuery({ queryKey: ['cart-catalogue', user?.id, ids], queryFn: () => shopService.cart(ids.split(',')), enabled: !!ids, staleTime: 15_000 });
-  useEffect(() => { if (catalogue.data) refreshItems(catalogue.data); }, [catalogue.data, refreshItems]);
-  const unavailable = items.some(item => item.available === false);
+  const catalogue = useQuery({ queryKey: ['cart-catalogue', user?.id, ids], queryFn: () => shopService.cart(ids.split(',')), enabled: !!ids, staleTime: 15_000, refetchInterval: 30_000 });
+  useEffect(() => {
+    if (catalogue.data) {
+      const notices = cartChanges(items, catalogue.data);
+      if (notices.length) setChanges(previous => [...new Set([...previous, ...notices])].slice(-20));
+      refreshItems(catalogue.data);
+    }
+  }, [catalogue.data, items, refreshItems]);
+  const unavailableItems = items.filter(item => item.available === false);
+  const unavailable = unavailableItems.length > 0;
+  const money = (amount: number) => amount.toLocaleString('en-NG', {minimumFractionDigits:2, maximumFractionDigits:2});
 
   if (items.length === 0) {
     return (
@@ -73,11 +84,13 @@ const Cart = () => {
           <PageHeading size="workspace" className="mb-10" title={<> Shopping Cart <span className="text-primary/40 ml-2">({totalItems})</span> </>}/>
 
           <section className="mb-6 rounded-xl border bg-card p-4 text-sm text-muted-foreground">
-            <p>Online checkout is currently unavailable. Your cart is kept in this browser for this account; items are not reserved.</p>
+            <p>Online checkout is currently unavailable. Your cart is kept in this browser; items are not reserved.</p>
             <p className="mt-2">Current stock may reduce a quantity in your cart. Prices are refreshed from the shop.</p>
             {catalogue.isFetching && <p role="status" className="mt-2">Checking current prices and stock…</p>}
             {catalogue.isError && <div role="alert" className="mt-2"><p>We couldn’t check current prices and stock. Your items have been kept.</p><Button variant="link" onClick={() => catalogue.refetch()}>Try again</Button></div>}
           </section>
+          {!!changes.length && <section role="status" className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5"><h2 className="font-semibold">Updates to your cart</h2><ul className="mt-3 space-y-2 text-sm list-disc pl-5">{changes.map(message=><li key={message}>{message}</li>)}</ul><Button variant="ghost" className="mt-3" onClick={()=>setChanges([])}>Dismiss updates</Button></section>}
+          <div className="mb-6 flex flex-wrap gap-3"><Button variant="outline" disabled={catalogue.isFetching} onClick={()=>void catalogue.refetch()}>{catalogue.isFetching?'Refreshing…':'Refresh prices and stock'}</Button>{unavailable&&<Button variant="outline" onClick={()=>unavailableItems.forEach(item=>removeItem(item.id))}>Remove unavailable items ({unavailableItems.length})</Button>}</div>
           {!user && <section className="mb-6 rounded-2xl border bg-card p-5"><h2 className="font-semibold">Keep your shopping list with you</h2><p className="mt-2 text-sm text-muted-foreground">Your cart is saved in this browser. Sign in to move these items into your account cart. Online checkout remains unavailable.</p><div className="mt-4 flex flex-wrap gap-3"><Button asChild><Link to="/auth?mode=signup" state={{from:{pathname:'/cart'}}}>Create account</Link></Button><Button asChild variant="outline"><Link to="/auth" state={{from:{pathname:'/cart'}}}>Sign in</Link></Button></div></section>}
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Cart Items */}
@@ -87,9 +100,9 @@ const Cart = () => {
                   <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row gap-6">
                       <div className="w-full sm:w-32 h-32 rounded-2xl overflow-hidden bg-muted flex-shrink-0 shadow-soft">
-                        <img
+                        <ProductImage
                           src={item.image}
-                          alt={item.title}
+                          title={item.title}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                       </div>
@@ -97,6 +110,7 @@ const Cart = () => {
                         <div className="flex justify-between items-start mb-4">
                           <div>
                             <h3 className="font-semibold text-xl tracking-tight mb-1"><Link className="hover:underline" to={`/marketplace/${item.id}`}>{item.title}</Link></h3>
+                            <p className="text-sm text-muted-foreground mb-2">₦{money(item.price)} each</p>
                             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                               <ShieldCheck className="w-3.5 h-3.5 text-success" />
                               {item.available === false ? 'Currently unavailable' : 'Marketplace item'}
@@ -117,7 +131,7 @@ const Cart = () => {
                               variant="ghost"
                               size="icon"
                               className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
-                              aria-label={`Decrease quantity of ${item.title}`} onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              aria-label={`Decrease quantity of ${item.title}`} disabled={item.available === false} onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             >
                               <Minus className="w-3.5 h-3.5" />
                             </Button>
@@ -134,7 +148,7 @@ const Cart = () => {
                             </Button>
                           </div>
                           <div className="text-2xl font-semibold text-primary tracking-tight">
-                            {item.available === false ? 'Unavailable' : `₦${(Math.round(item.price * 100) * item.quantity / 100).toLocaleString()}`}
+                            {item.available === false ? 'Unavailable' : `₦${money(Math.round(item.price * 100) * item.quantity / 100)}`}
                           </div>
                         </div>
                       </div>
@@ -153,13 +167,13 @@ const Cart = () => {
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
                       <span>Available items</span>
-                      <span className="text-foreground">₦{totalPrice.toLocaleString()}</span>
+                      <span className="text-foreground">₦{money(totalPrice)}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">Delivery and any additional charges are not yet confirmed.</p>
                     <Separator className="bg-border/60" />
                     <div className="flex justify-between items-center pt-2">
-                      <span className="text-lg font-semibold">Subtotal</span>
-                      <span className="text-3xl font-semibold text-primary tracking-tight">₦{totalPrice.toLocaleString()}</span>
+                      <span className="text-lg font-semibold">{catalogue.isError ? 'Last known subtotal' : catalogue.isFetching ? 'Checking subtotal…' : 'Subtotal'}</span>
+                      <span className="text-3xl font-semibold text-primary tracking-tight">₦{money(totalPrice)}</span>
                     </div>
                   </div>
 
