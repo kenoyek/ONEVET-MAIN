@@ -7,6 +7,7 @@ import ArticleEditor from './ArticleEditor';
 const { from, account } = vi.hoisted(() => ({ from: vi.fn(), account: { id: 'editor-profile' } }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { from } }));
 vi.mock('@/lib/auth-context', () => ({ useAuth: () => ({ profile: account }) }));
+vi.mock('@/components/media/ImageUploader', () => ({ ImageUploader: ({ onChange }: { onChange: (images: string[]) => void }) => <button type="button" onClick={() => onChange(['https://1vet.store/images/articles/poultry-morning-flock.webp'])}>Upload cover image</button> }));
 vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => <nav aria-label="Site" /> }));
 
 beforeEach(() => { account.id = 'editor-profile'; localStorage.clear(); vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} }); });
@@ -22,7 +23,7 @@ describe('ArticleEditor preview', () => {
     fireEvent.change(screen.getByLabelText('Excerpt'), { target: { value: 'A daily care routine.' } });
     fireEvent.change(screen.getByLabelText('Content'), { target: { value: '## Check the water\n\nProvide **fresh water**.\n\n> Call your vet if concerned.' } });
     fireEvent.change(screen.getByLabelText('Tags'), { target: { value: 'poultry, care' } });
-    fireEvent.change(screen.getByLabelText('Cover image URL'), { target: { value: 'https://1vet.store/images/articles/poultry-morning-flock.webp' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Upload cover image' }));
     fireEvent.click(screen.getByRole('switch', { name: 'Published' }));
     switchToPreview();
     expect(screen.getByRole('heading', { level: 2, name: 'A healthier flock' })).toBeInTheDocument();

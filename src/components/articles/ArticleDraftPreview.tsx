@@ -20,7 +20,7 @@ function PreviewCover({ url, title, mobile }: { url: string; title: string; mobi
   if (!valid || failed) {
     return <div className="mb-10 rounded-2xl border border-dashed border-border bg-muted/40 p-8 text-center text-muted-foreground" role="status">
       <ImageOff className="mx-auto mb-3 h-7 w-7" aria-hidden="true" />
-      <p className="text-sm">This cover could not be loaded. Check the image URL in the editor.</p>
+      <p className="text-sm">This cover could not be loaded. Remove it in the editor and upload another image.</p>
     </div>;
   }
   return <div className="mb-10" onErrorCapture={() => setFailed(true)}>

@@ -1,3 +1,4 @@
+import { ImageUploader } from '@/components/media/ImageUploader';
 import { articleDraftKey } from '@/lib/article-browser-draft';
 import { useArticleBrowserDraft } from '@/hooks/use-article-browser-draft';
 import { articlePublicationState } from '@/lib/article-publication';
@@ -81,6 +82,7 @@ function ArticleEditorForm() {
   const [editorMode, setEditorMode] = useState('write');
   const [mobilePreview, setMobilePreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [isFetching, setIsFetching] = useState(isEditing);
 
   const form = useForm<ArticleFormData>({
@@ -152,7 +154,7 @@ function ArticleEditorForm() {
   };
 
   const onSubmit = async (data: ArticleFormData) => {
-    if (saveInFlight.current) return;
+    if (saveInFlight.current || imageUploading) return;
     if (!profile?.id) {
       toast.error('Your account is not ready to save. Please sign in again.');
       return;
@@ -408,7 +410,7 @@ function ArticleEditorForm() {
                       />
 
                       <div className="flex gap-2">
-                        <Button type="submit" className="flex-1" disabled={isLoading}>
+                        <Button type="submit" className="flex-1" disabled={isLoading || imageUploading}>
                           {isLoading ? (
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
                           ) : (
@@ -475,36 +477,14 @@ function ArticleEditorForm() {
                       <CardTitle>Featured Image</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <FormField
-                        control={form.control}
-                        name="image_url"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cover image URL</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="https://example.com/image.jpg"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription>External image URL</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+                      <ImageUploader
+                        label="Cover image"
+                        purpose="articles"
+                        images={form.watch('image_url') ? [form.watch('image_url')!] : []}
+                        onChange={images => form.setValue('image_url', images[0] || '', { shouldDirty: true, shouldValidate: true })}
+                        onBusyChange={setImageUploading}
+                        disabled={isLoading || !!browserDraft.recovery}
                       />
-                      {form.watch('image_url') && (
-                        <div className="mt-3 relative rounded-lg overflow-hidden">
-                          <img
-                            key={form.watch('image_url')}
-                            src={form.watch('image_url')}
-                            alt="Preview"
-                            className="w-full h-32 object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </div>
