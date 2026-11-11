@@ -1,3 +1,5 @@
+import { ProductImage } from '@/components/marketplace/ProductImage';
+import { ProductCartAction } from '@/components/marketplace/ProductCartAction';
 import { useAuth } from '@/lib/auth-context';
 import { shopService } from '@/lib/services/shop-service';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -9,17 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { useCart } from "@/hooks/use-cart";
 import { motion } from "framer-motion";
 import {
   ShoppingBag,
   Search,
-  ShoppingCart,
   Loader2,
   MapPin
 } from "lucide-react";
-import { toast } from "sonner";
-import { ProductImageFallback } from "@/components/marketplace/ProductImageFallback";
 
 import { Link, useSearchParams } from "react-router-dom";
 
@@ -31,7 +29,6 @@ const Marketplace = () => {
     setParams(previous => { const next = new URLSearchParams(previous); if (value) next.set(key, value); else next.delete(key); return next; }, {replace: true});
   }
   const productLink = (id: string) => `/marketplace/${id}${params.size ? `?${params}` : ''}`;
-  const { addItem } = useCart();
   const { user } = useAuth();
 
   const { data: listings, isLoading, isError, refetch } = useQuery({
@@ -41,27 +38,6 @@ const Marketplace = () => {
   });
 
   const filteredListings = discoverProducts(listings || [], filters);
-
-  const handleAddToCart = (e: React.MouseEvent, listing: { id: string; title: string; price: number; images?: string[] | null; stock_quantity: number | null; seller_id: string }) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if ((listing.stock_quantity ?? 0) <= 0) {
-      toast.error("This item is out of stock");
-      return;
-    }
-
-    addItem({
-      id: listing.id,
-      title: listing.title,
-      price: listing.price,
-      image: listing.images?.[0] || '/product-fallback.svg',
-      quantity: 1,
-      seller_id: listing.seller_id,
-      stock_quantity: listing.stock_quantity ?? 0,
-      available: true
-    });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -139,16 +115,7 @@ const Marketplace = () => {
                   <div>
                     <Card className="card-elevated h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
                       <Link to={productLink(item.id)} className="relative block aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]" aria-label={`View ${item.title}`}>
-                        {item.images?.[0] ? (
-                          <img
-                            src={item.images[0]}
-                            alt={item.title}
-                            loading="lazy"
-                            className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-                          />
-                        ) : (
-                          <ProductImageFallback category={item.category} title={item.title} />
-                        )}
+                        <ProductImage src={item.images?.[0]} title={item.title} category={item.category} loading="lazy" className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110" />
                         <Badge className="absolute top-3 right-3 bg-background/90 backdrop-blur-md text-foreground border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                           {item.category}
                         </Badge>
@@ -176,14 +143,7 @@ const Marketplace = () => {
                         </div>
                       </CardContent>
                       <CardFooter className="p-6 pt-0">
-                        <Button
-                          className="w-full gap-2 rounded-full font-bold shadow-soft hover:shadow-sm transition-all"
-                          onClick={(e) => handleAddToCart(e, item)}
-                          disabled={(item.stock_quantity ?? 0) <= 0}
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          {(item.stock_quantity ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
-                        </Button>
+                        <ProductCartAction product={item} />
                       </CardFooter>
                     </Card>
                   </div>

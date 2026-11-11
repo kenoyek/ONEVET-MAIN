@@ -1,3 +1,5 @@
+import { ProductImage } from '@/components/marketplace/ProductImage';
+import { ProductCartAction } from '@/components/marketplace/ProductCartAction';
 import { shopService } from '@/lib/services/shop-service';
 import { Link } from 'react-router-dom';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -7,9 +9,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useCart } from "@/hooks/use-cart";
 import {
-  ShoppingCart,
   ArrowLeft,
   Loader2,
   ShieldCheck,
@@ -19,14 +19,12 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
-import { ProductImageFallback } from "@/components/marketplace/ProductImageFallback";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const shopPath = `/marketplace${location.search}`;
-  const { addItem } = useCart();
   const [selectedImage, setSelectedImage] = useState(0);
   useEffect(() => { setSelectedImage(0); }, [id]);
 
@@ -65,19 +63,6 @@ const ProductDetail = () => {
     );
   }
 
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      title: product.title,
-      price: product.price,
-      image: product.images?.[0] || '/product-fallback.svg',
-      quantity: 1,
-      seller_id: product.seller_id,
-      stock_quantity: product.stock_quantity ?? 0,
-      available: true
-    });
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -96,15 +81,7 @@ const ProductDetail = () => {
             {/* Image Gallery */}
             <div className="space-y-6">
               <div className="aspect-square rounded-3xl overflow-hidden bg-white shadow-elevated border-8 border-background">
-                {product.images?.[selectedImage] ? (
-                  <img
-                    src={product.images[selectedImage]}
-                    alt={product.title}
-                    className="w-full h-full object-cover transition-all duration-700 hover:scale-105"
-                  />
-                ) : (
-                  <ProductImageFallback category={product.category} title={product.title} />
-                )}
+                <ProductImage src={product.images?.[selectedImage]} title={product.title} category={product.category} className="w-full h-full object-cover" />
               </div>
               {product.images && product.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-4 px-2">
@@ -118,7 +95,7 @@ const ProductDetail = () => {
                       }`}
                       onClick={() => setSelectedImage(idx)}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <ProductImage src={img} title={`${product.title} image ${idx + 1}`} category={product.category} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
@@ -149,12 +126,12 @@ const ProductDetail = () => {
               <div className="space-y-8 flex-grow">
                 <div>
                   <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground mb-3">Description</h3>
-                  <p className="text-foreground/80 leading-relaxed font-medium">
+                  <p className="text-foreground/80 leading-relaxed font-medium whitespace-pre-line">
                     {product.description || "The seller has not added a description yet."}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div className="flex items-center gap-4 p-5 rounded-[1.5rem] bg-card border border-border/40 shadow-soft">
                     <div className="p-2.5 rounded-xl bg-primary/10 text-primary shadow-sm">
                       <Truck className="w-5 h-5" />
@@ -178,17 +155,10 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="mt-12 flex gap-4">
-                <Button
-                  size="xl"
-                  className="flex-grow h-16 text-lg font-semibold gap-3 rounded-full shadow-sm hover:scale-[1.02] transition-all"
-                  onClick={handleAddToCart}
-                  disabled={(product.stock_quantity ?? 0) <= 0}
-                >
-                  <ShoppingCart className="w-6 h-6" />
-                  {(product.stock_quantity ?? 0) > 0 ? 'Add to Cart' : 'Out of Stock'}
-                </Button>
-
+              <div className="mt-12 space-y-4">
+                <ProductCartAction product={product} />
+                <Button asChild variant="outline" className="w-full"><Link to="/cart">View cart</Link></Button>
+                <p className="text-sm text-muted-foreground">Items in your cart are not reserved. Prices and availability are checked again in your cart.</p>
               </div>
 
               <div className="mt-8 flex items-center justify-center gap-3 text-xs font-bold text-muted-foreground uppercase tracking-widest">
