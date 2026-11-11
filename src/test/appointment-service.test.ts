@@ -45,6 +45,13 @@ describe('Trusted appointment service',()=>{
   const builder={select,order,eq,in:inFilter,lt,range};from.mockReturnValue(builder);for(const method of [select,order,eq,inFilter,lt])method.mockReturnValue(builder);range.mockResolvedValue({data:[],error:null});
   await service.list({customerId:'customer-id'},0,'past_open');expect(eq).toHaveBeenCalledWith('customer_id','customer-id');expect(inFilter).toHaveBeenCalledWith('status',['pending','confirmed']);expect(lt).toHaveBeenCalledWith('end_at',expect.any(String));
  });
+ it('uses the owner-named farm group label and scopes groups to owned farms and active statuses',async()=>{
+  const pets={select:vi.fn(),eq:vi.fn().mockResolvedValue({data:[],error:null})};pets.select.mockReturnValue(pets);
+  const farms={select:vi.fn(),eq:vi.fn().mockResolvedValue({data:[{id:'owned-farm'}],error:null})};farms.select.mockReturnValue(farms);
+  const groups={select:vi.fn(),in:vi.fn(),then:(resolve:(value:unknown)=>unknown)=>Promise.resolve({data:[{id:'group-id',batch_code:'internal-code',housing_unit:'Layer flock',species:'poultry'}],error:null}).then(resolve)};groups.select.mockReturnValue(groups);groups.in.mockReturnValue(groups);
+  from.mockImplementation(table=>table==='pets'?pets:table==='livestock_farms'?farms:groups);
+  expect(await service.animals('profile-id')).toEqual([{id:'group-id',kind:'farm_group',name:'Layer flock',species:'poultry'}]);expect(groups.in).toHaveBeenCalledWith('farm_id',['owned-farm']);expect(groups.in).toHaveBeenCalledWith('status',['active','quarantined']);
+ });
  it('preserves slot-race failures and fails closed on slot lookup errors',async()=>{
   rpc.mockResolvedValue({data:null,error:{code:'23P01'}});
   await expect(service.slots('service-id','2026-11-20')).rejects.toEqual({code:'23P01'});

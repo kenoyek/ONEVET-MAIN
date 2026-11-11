@@ -1,6 +1,7 @@
+import { petBookingReturn } from '@/lib/pet-booking-return';
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Sprout, Plus, ArrowUpRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -21,6 +22,12 @@ import type { FarmValues } from '@/lib/farm-validation';
 
 function FarmsContent() {
   const query = useFarms();
+  const [params]=useSearchParams();
+  const navigate=useNavigate();
+  const returnTo=petBookingReturn(params.get('returnTo'));
+  const active=useRef(true);
+  useEffect(()=>{active.current=true;return()=>{active.current=false;};},[]);
+  const farmPath=(id:string)=>`/farms/${id}${returnTo?'?'+new URLSearchParams({returnTo}):''}`;
   const ownerId = useFarmOwner();
   const client = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -29,8 +36,10 @@ function FarmsContent() {
       if (!ownerId) throw new Error('Profile not ready');
       return livestockService.registerFarm({ ...values, owner_id: ownerId });
     },
-    onSuccess: () =>
-      client.invalidateQueries({ queryKey: ['customer-farms', ownerId] }),
+    onSuccess: async saved => {
+      await client.invalidateQueries({queryKey:['customer-farms',ownerId]});
+      if(returnTo&&saved?.id&&active.current)navigate(farmPath(saved.id));
+    },
   });
   return (
     <div className="min-h-screen bg-background">
@@ -46,6 +55,7 @@ function FarmsContent() {
         >
           Back to your dashboard
         </Link>
+        {returnTo&&<section className="mt-6 rounded-xl border bg-card p-5"><h2 className="font-semibold">Add an animal group for your appointment</h2><p className="text-sm text-muted-foreground mt-2">Choose a farm or register one, then add or select an active animal group. Your selected service and time will be checked again when you return.</p><Link className="inline-block mt-3 text-primary underline text-sm" to={returnTo}>Return to appointment request</Link></section>}
         <div className="flex flex-col sm:flex-row gap-5 justify-between items-start sm:items-center mt-7 mb-9">
           <div>
             <p className="eyebrow mb-3">Your farm workspace</p>
@@ -94,7 +104,7 @@ function FarmsContent() {
         ) : (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
             {query.data.map((f) => (
-              <Link className="care-path" to={`/farms/${f.id}`} key={f.id}>
+              <Link className="care-path" to={farmPath(f.id)} key={f.id}>
                 <Sprout className="text-primary mb-5" />
                 <h2 className="text-xl mb-2">{f.farm_name}</h2>
                 <p className="text-muted-foreground text-sm capitalize">
@@ -143,9 +153,10 @@ function FarmsContent() {
   );
 }
 export default function Farms() {
+  const ownerId=useFarmOwner();
   return (
     <FarmAccess>
-      <FarmsContent />
+      <FarmsContent key={ownerId || 'loading'} />
     </FarmAccess>
   );
 }

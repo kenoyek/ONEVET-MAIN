@@ -42,9 +42,9 @@ export const appointmentService = {
   async animals(profileId: string) {
     const [pets, farms] = await Promise.all([supabase.from('pets').select('id,name,species').eq('owner_id', profileId), supabase.from('livestock_farms').select('id').eq('owner_id', profileId)]);
     if (pets.error) throw pets.error; if (farms.error) throw farms.error;
-    const groups = farms.data.length ? await supabase.from('livestock_batches').select('id,batch_code,species').in('farm_id', farms.data.map(farm => farm.id)).in('status', ['active','quarantined']) : { data: [], error: null };
+    const groups = farms.data.length ? await supabase.from('livestock_batches').select('id,batch_code,housing_unit,species').in('farm_id', farms.data.map(farm => farm.id)).in('status', ['active','quarantined']) : { data: [], error: null };
     if (groups.error) throw groups.error;
-    return [...pets.data.map(pet => ({ id: pet.id, kind: 'pet' as const, name: pet.name, species: pet.species })), ...groups.data.map(group => ({ id: group.id, kind: 'farm_group' as const, name: group.batch_code, species: group.species }))];
+    return [...pets.data.map(pet => ({ id: pet.id, kind: 'pet' as const, name: pet.name, species: pet.species })), ...groups.data.map(group => ({ id: group.id, kind: 'farm_group' as const, name: group.housing_unit || group.batch_code, species: group.species }))];
   },
   async request(input: { serviceId: string; serviceVersion: number; start: string; key: string; animalId: string; kind: 'pet' | 'farm_group'; phone: string; address: string; notes: string }) {
     const { data, error } = await supabase.rpc('request_provider_booking', { service_uuid: input.serviceId, expected_service_version: input.serviceVersion, start_time: input.start, request_key: input.key, ...(input.kind === 'pet' ? { animal_pet: input.animalId } : { animal_batch: input.animalId }), contact_phone: input.phone.trim(), visit_address: input.address.trim(), customer_notes: input.notes.trim() });

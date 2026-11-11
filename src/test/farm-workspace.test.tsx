@@ -6,7 +6,7 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Farms from '@/pages/farms/Farms';
 import FarmDetail from '@/pages/farms/FarmDetail';
@@ -93,6 +93,7 @@ vi.mock('@/lib/services/livestock-service', () => ({
   },
 }));
 import { livestockService } from '@/lib/services/livestock-service';
+function BookingReturn(){return <p>Booking restored {useLocation().search}</p>;}
 function renderPage(path = '/farms') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -103,6 +104,7 @@ function renderPage(path = '/farms') {
         <Routes>
           <Route path="/farms" element={<Farms />} />
           <Route path="/farms/:farmId" element={<FarmDetail />} />
+          <Route path="/booking/new" element={<BookingReturn/>}/>
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -175,6 +177,14 @@ describe('Customer farm workspace', () => {
       }),
     );
     expect(screen.getByText(/6 Nov 2026.*10:00.*WAT/)).toBeInTheDocument();
+  });
+  it('creates a farm and group before returning to the selected appointment',async()=>{
+    renderPage('/farms?'+new URLSearchParams({returnTo:'/booking/new?service_id=service-one&date=2026-11-11&start=time-one'}));
+    await screen.findByText('Start with your farm.');fireEvent.click(screen.getByRole('button',{name:'Add your first farm'}));
+    for(const [label,value] of [['Farm name','Booking Farm'],['Service location','Main road'],['City or local area','Ibadan'],['State','Oyo']] as const)fireEvent.change(screen.getByLabelText(label),{target:{value}});
+    fireEvent.click(screen.getByRole('button',{name:'Save farm'}));await screen.findByRole('heading',{name:'Booking Farm'});
+    fireEvent.click(await screen.findByRole('button',{name:'Add animal group'}));fireEvent.change(screen.getByLabelText('Group name'),{target:{value:'Layer flock'}});fireEvent.click(screen.getByRole('button',{name:'Save animal group'}));
+    expect(await screen.findByText(/Booking restored/)).toHaveTextContent('animal=farm_group%3A'+batchId);expect(screen.getByText(/Booking restored/)).toHaveTextContent('start=time-one');
   });
   it('shows backend errors instead of an empty farm list and retries', async () => {
     state.fail = true;

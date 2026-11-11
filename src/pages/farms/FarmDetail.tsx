@@ -1,6 +1,7 @@
+import { petBookingReturn } from '@/lib/pet-booking-return';
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, ClipboardList, Sprout } from 'lucide-react';
@@ -21,6 +22,12 @@ import type { BatchValues, ObservationValues } from '@/lib/farm-validation';
 
 function FarmDetailContent() {
   const { farmId } = useParams();
+  const [params]=useSearchParams();
+  const navigate=useNavigate();
+  const returnTo=petBookingReturn(params.get('returnTo'));
+  const active=useRef(true);
+  useEffect(()=>{active.current=true;return()=>{active.current=false;};},[]);
+  function bookingPath(groupId:string){const target=new URL(returnTo!,'https://1vet.store');target.searchParams.set('animal',`farm_group:${groupId}`);return target.pathname+target.search;}
   const ownerId = useFarmOwner();
   const query = useFarmWorkspace(farmId);
   const client = useQueryClient();
@@ -45,10 +52,10 @@ function FarmDetailContent() {
         record_type: 'owner_observation',
       });
     },
-    onSuccess: () =>
-      client.invalidateQueries({
-        queryKey: ['customer-farm', ownerId, farmId],
-      }),
+    onSuccess: async (saved,input) => {
+      await client.invalidateQueries({queryKey:['customer-farm',ownerId,farmId]});
+      if(returnTo&&input.kind==='batch'&&saved?.id&&active.current)navigate(bookingPath(saved.id));
+    },
   });
   const done = () => {
     setDialog(null);
@@ -68,7 +75,7 @@ function FarmDetailContent() {
         className="container-wide pt-28 md:pt-36 pb-20"
       >
         <Link
-          to="/farms"
+          to={returnTo?`/farms?${new URLSearchParams({returnTo})}`:'/farms'}
           className="text-sm text-muted-foreground underline underline-offset-4"
         >
           Back to farms
@@ -110,6 +117,7 @@ function FarmDetailContent() {
                 <Link to="/find-a-vet">Find veterinary care</Link>
               </Button>
             </header>
+            {returnTo&&<section className="mb-6 rounded-xl border bg-card p-5"><h2 className="font-semibold">Choose a group for your appointment</h2><p className="mt-2 text-sm text-muted-foreground">Use an active or quarantined animal group below, or create one. The provider must confirm the request; adding a group does not reserve a time.</p><Link className="inline-block mt-3 text-primary underline text-sm" to={returnTo}>Return without selecting a group</Link></section>}
             <section aria-labelledby="groups-title">
               <div className="flex flex-wrap gap-4 items-center justify-between mb-5">
                 <h2 id="groups-title" className="text-2xl">
@@ -159,6 +167,7 @@ function FarmDetailContent() {
                           {b.breed}
                         </p>
                       )}
+                      {returnTo&&['active','quarantined'].includes(b.status)&&<Button asChild variant="outline" className="mt-4"><Link to={bookingPath(b.id)}>Use this group for appointment</Link></Button>}
                     </article>
                   ))}
                 </div>
@@ -294,9 +303,11 @@ function FarmDetailContent() {
   );
 }
 export default function FarmDetail() {
+  const ownerId=useFarmOwner();
+  const {farmId}=useParams();
   return (
     <FarmAccess>
-      <FarmDetailContent />
+      <FarmDetailContent key={`${ownerId || 'loading'}:${farmId}`} />
     </FarmAccess>
   );
 }
