@@ -1,155 +1,49 @@
-import { useState, useRef } from 'react';
-import { Camera, Upload, X, Loader2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Camera, Loader2, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/auth-context';
+import { prepareImage } from '@/lib/services/image-upload-service';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
-interface PetPhotoUploadProps {
+type Props = {
   currentUrl: string | null;
   profileId: string;
   petId?: string;
-  onUpload: (url: string) => void;
-  onRemove?: () => void;
-}
-
-export const PetPhotoUpload = ({ 
-  currentUrl, 
-  profileId, 
-  petId,
-  onUpload,
-  onRemove 
-}: PetPhotoUploadProps) => {
-  const [isUploading, setIsUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a JPG, PNG, or WebP image');
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
-      return;
-    }
-
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = (e) => setPreviewUrl(e.target?.result as string);
-    reader.readAsDataURL(file);
-
-    // Upload to storage
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = petId || `temp-${Date.now()}`;
-      const filePath = `${profileId}/${fileName}.${fileExt}`;
-
-      // Delete old file if exists
-      if (currentUrl) {
-        const oldPath = currentUrl.split('/pet-avatars/')[1];
-        if (oldPath) {
-          await supabase.storage.from('pet-avatars').remove([oldPath]);
-        }
-      }
-
-      const { error: uploadError } = await supabase.storage
-        .from('pet-avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('pet-avatars')
-        .getPublicUrl(filePath);
-
-      onUpload(publicUrl);
-      toast.success('Photo uploaded successfully');
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload photo');
-      setPreviewUrl(null);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleRemove = async () => {
-    if (currentUrl) {
-      const path = currentUrl.split('/pet-avatars/')[1];
-      if (path) {
-        await supabase.storage.from('pet-avatars').remove([path]);
-      }
-    }
-    setPreviewUrl(null);
-    onRemove?.();
-  };
-
-  const displayUrl = previewUrl || currentUrl;
-
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div 
-        className={cn(
-          "relative w-32 h-32 rounded-full overflow-hidden border-2 border-dashed border-muted-foreground/30",
-          "flex items-center justify-center bg-muted cursor-pointer group transition-all",
-          "hover:border-primary/50"
-        )}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        {displayUrl ? (
-          <>
-            <img 
-              src={displayUrl} 
-              alt="Pet photo" 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Camera className="h-8 w-8 text-white" />
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            {isUploading ? (
-              <Loader2 className="h-8 w-8 animate-spin" />
-            ) : (
-              <>
-                <Upload className="h-8 w-8" />
-                <span className="text-xs text-center px-2">Upload Photo</span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
-
-      {displayUrl && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleRemove}
-          className="text-destructive hover:text-destructive"
-        >
-          <X className="h-4 w-4 mr-1" />
-          Remove Photo
-        </Button>
-      )}
-    </div>
-  );
+  onUpload: (url: string) => void | Promise<void>;
+  onRemove?: () => void | Promise<void>;
+  onBusyChange?: (busy: boolean) => void;
+  disabled?: boolean;
 };
+export function PetPhotoUpload({currentUrl,profileId,onUpload,onRemove,onBusyChange,disabled}:Props) {
+  const {user,profile}=useAuth();
+  const input=useRef<HTMLInputElement>(null);
+  const lock=useRef(false);
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
+  async function run(action:()=>Promise<void>){
+    if(lock.current||disabled)return;
+    lock.current=true;setBusy(true);setError('');onBusyChange?.(true);
+    try{await action();}catch(cause){setError(cause instanceof Error?cause.message:'The photo could not be saved. Your previous photo has been kept.');}
+    finally{lock.current=false;setBusy(false);onBusyChange?.(false);if(input.current)input.current.value='';}
+  }
+  async function upload(file:File){
+    await run(async()=>{
+      if(!user||!profile||profile.id!==profileId||profile.user_id!==user.id)throw new Error('Your account is still loading. Please try again.');
+      if(!file.size||file.size>5*1024*1024)throw new Error('Choose a non-empty image up to 5 MB.');
+      const blob=await prepareImage(file);
+      const path=`${user.id}/${crypto.randomUUID()}.${blob.type==='image/webp'?'webp':'png'}`;
+      const bucket=supabase.storage.from('pet-avatars');
+      const {error:uploadError}=await bucket.upload(path,blob,{upsert:false,contentType:blob.type});
+      if(uploadError)throw new Error('Photo upload failed. Your previous photo has been kept. Please try again.');
+      await onUpload(bucket.getPublicUrl(path).data.publicUrl);
+    });
+  }
+  return <section aria-label="Pet photo" className="flex flex-col items-center gap-4">
+    <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border bg-muted">{currentUrl?<img src={currentUrl} alt="Pet photo" className="h-full w-full object-cover"/>:<Camera className="h-8 w-8 text-muted-foreground" aria-hidden="true"/>}</div>
+    <input ref={input} type="file" aria-label="Upload pet photo" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={busy||disabled} onChange={event=>{const file=event.target.files?.[0];if(file)void upload(file);}}/>
+    <Button type="button" variant="outline" disabled={busy||disabled} onClick={()=>input.current?.click()}>{busy?<Loader2 className="mr-2 h-4 w-4 animate-spin"/>:<Camera className="mr-2 h-4 w-4"/>}{busy?'Saving photo…':currentUrl?'Replace photo':'Upload photo'}</Button>
+    <p className="text-xs text-muted-foreground text-center">JPG, PNG or WebP · up to 5 MB. Photos are resized for faster loading.</p>
+    {currentUrl&&onRemove&&<Button type="button" variant="ghost" disabled={busy||disabled} onClick={()=>void run(async()=>{await onRemove();})}><X className="mr-1 h-4 w-4"/>Remove Photo</Button>}
+    {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}
+  </section>;
+}

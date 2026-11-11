@@ -69,6 +69,7 @@ export const PetForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <fieldset disabled={isSubmitting} className="space-y-6 min-w-0">
         <FormField
           control={form.control}
           name="name"
@@ -279,6 +280,7 @@ export const PetForm = ({
           {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           {submitLabel}
         </Button>
+        </fieldset>
       </form>
     </Form>
   );

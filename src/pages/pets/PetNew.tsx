@@ -1,6 +1,7 @@
+import { petBookingReturn } from '@/lib/pet-booking-return';
 import {PageHeading} from '@/components/layout/PageHeading';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
@@ -17,22 +18,37 @@ import { Database } from '@/integrations/supabase/types';
 type SpeciesType = Database['public']['Enums']['species_type'];
 
 const PetNew = () => {
+  const { user }=useAuth();
+  return <PetNewForm key={user?.id || 'guest'}/>;
+};
+const PetNewForm = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
+  const [params]=useSearchParams();
+  const returnTo=petBookingReturn(params.get('returnTo'));
+  const [petId]=useState(()=>crypto.randomUUID());
+  const lock=useRef(false);
+  const active=useRef(true);
+  useEffect(()=>{active.current=true;return()=>{active.current=false;};},[]);
+  const [photoBusy,setPhotoBusy]=useState(false);
+  const [saveError,setSaveError]=useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const handleSubmit = async (values: PetValues) => {
-    if (!profile?.id) {
+    if(lock.current||photoBusy)return;
+    if (!profile?.id || profile.user_id!==user?.id || !profile.is_active) {
       toast.error('You must be logged in to add a pet');
       return;
     }
 
+    lock.current=true;setSaveError('');
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('pets')
         .insert({
+          id:petId,
           owner_id: profile.id,
           name: values.name,
           species: values.species as SpeciesType,
@@ -48,15 +64,23 @@ const PetNew = () => {
         .select('id')
         .single();
 
+      if(error?.code==='23505'){
+        const recovered=await supabase.from('pets').select('id').eq('id',petId).eq('owner_id',profile.id).maybeSingle();
+        if(!recovered.error&&recovered.data){data=recovered.data;error=null;}
+      }
       if (error) throw error;
+      if(!data)throw new Error('No pet profile returned');
 
       toast.success(`${values.name} has been added!`);
-      navigate(`/pets/${data.id}`);
+      if(active.current){
+        if(returnTo){const target=new URL(returnTo,'https://1vet.store');target.searchParams.set('animal',`pet:${data.id}`);navigate(target.pathname+target.search);}
+        else navigate(`/pets/${data.id}`);
+      }
     } catch (error) {
       console.error('Error creating pet:', error);
-      toast.error('Failed to create pet profile');
+      setSaveError('Your pet could not be saved. Your entries are still here. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      lock.current=false;setIsSubmitting(false);
     }
   };
 
@@ -72,7 +96,7 @@ const PetNew = () => {
         >
           <Button 
             variant="ghost" 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(returnTo || '/pets')}
             className="mb-6 gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -87,9 +111,12 @@ const PetNew = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
+              {returnTo&&<p className="rounded-xl border bg-muted/30 p-4 text-sm">Add your animal’s details, then continue your appointment request. Availability will be checked again.</p>}
               {profile?.id && (
                 <PetPhotoUpload
                   currentUrl={avatarUrl}
+                  disabled={isSubmitting}
+                  onBusyChange={setPhotoBusy}
                   profileId={profile.id}
                   onUpload={setAvatarUrl}
                   onRemove={() => setAvatarUrl(null)}
@@ -98,9 +125,10 @@ const PetNew = () => {
               
               <PetForm 
                 onSubmit={handleSubmit}
-                isSubmitting={isSubmitting}
+                isSubmitting={isSubmitting||photoBusy}
                 submitLabel="Add Pet"
               />
+              {saveError&&<p role="alert" className="text-sm text-destructive">{saveError}</p>}
             </CardContent>
           </Card>
         </motion.div>

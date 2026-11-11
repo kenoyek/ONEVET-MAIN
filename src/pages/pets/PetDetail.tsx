@@ -146,6 +146,7 @@ const PetDetailContent = () => {
     } catch (error) {
       console.error('Error updating avatar:', error);
       toast.error('Failed to update photo');
+      throw error;
     }
   };
 
@@ -153,11 +154,6 @@ const PetDetailContent = () => {
     if (!pet) return;
     setIsDeleting(true);
     try {
-      if (pet.avatar_url) {
-        const path = pet.avatar_url.split('/pet-avatars/')[1];
-        if (path) await supabase.storage.from('pet-avatars').remove([path]);
-      }
-
       const { error } = await supabase.from('pets').delete().eq('id', pet.id);
       if (error) throw error;
 
