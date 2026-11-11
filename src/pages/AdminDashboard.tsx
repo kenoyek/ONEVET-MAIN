@@ -235,6 +235,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
+          <Button asChild variant="outline" className="mb-6"><Link to="/admin/shop">Manage shop catalogue</Link></Button>
           {/* Stats Grid */}
           <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6 mb-10">
             <Card className="card-elevated p-4">

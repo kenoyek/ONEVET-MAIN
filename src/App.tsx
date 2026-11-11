@@ -37,6 +37,7 @@ const PetNew = lazyRoute(() => import("./pages/pets/PetNew"));
 const PetDetail = lazyRoute(() => import("./pages/pets/PetDetail"));
 const AdminSubscriptions = lazyRoute(() => import("./pages/admin/Subscriptions"));
 const AdminConversations = lazyRoute(() => import("./pages/admin/Conversations"));
+const ShopCatalogue = lazyRoute(() => import("./pages/admin/ShopCatalogue"));
 const AdminArticles = lazyRoute(() => import("./pages/admin/Articles"));
 const ArticleEditor = lazyRoute(() => import("./pages/admin/ArticleEditor"));
 const Articles = lazyRoute(() => import("./pages/Articles"));
@@ -137,6 +138,7 @@ const App = () => (
                         <AdminConversations />
                       </ProtectedRoute>
                     } />
+                    <Route path="/admin/shop" element={<ProtectedRoute allowedRoles={['admin']}><ShopCatalogue /></ProtectedRoute>} />
                     <Route path="/admin/articles" element={
                       <ProtectedRoute allowedRoles={['admin']}>
                         <AdminArticles />

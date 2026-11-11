@@ -49,6 +49,10 @@ type Table<Row extends Record<string, unknown>, Required extends keyof Row> = {
 export type CustomerDatabase = Omit<Database, 'public'> & {
   public: Omit<Database['public'], 'Tables' | 'Views' | 'Functions'> & {
     Views: Database['public']['Views'] & {
+      shop_catalogue: {
+        Row: Database['public']['Tables']['marketplace_listings']['Row'] & { seller_name: string };
+        Relationships: [];
+      };
       care_service_directory: {
         Row: {
           id: string;
@@ -77,6 +81,8 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
         Args: Omit<Database['public']['Functions']['add_pet_owner_health_entry']['Args'],'weight_value'|'due_date'> & {weight_value:number|null;due_date:string|null};
         Returns: Database['public']['Functions']['add_pet_owner_health_entry']['Returns'];
       };
+      admin_shop_sellers: { Args: Record<PropertyKey, never>; Returns: { id:string; name:string }[] };
+      admin_save_shop_product: { Args: {product_uuid:string;details:import('./types').Json;expected_updated_at?:string|null}; Returns:{id:string;updated_at:string}[] };
       claim_consultation: {
         Args: { consultation_uuid: string };
         Returns: string;
