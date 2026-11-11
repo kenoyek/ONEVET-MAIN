@@ -1,3 +1,4 @@
+import { animalProfileToday } from '@/lib/animal-profile-rules';
 import type { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,13 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { CalendarIcon, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
 const SPECIES_OPTIONS = [
   { value: 'dog', label: 'Dog' },
@@ -68,7 +65,7 @@ export const PetForm = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <fieldset disabled={isSubmitting} className="space-y-6 min-w-0">
         <FormField
           control={form.control}
@@ -132,31 +129,8 @@ export const PetForm = ({
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Date of Birth</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? format(new Date(field.value), "PPP") : "Pick a date"}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
-                      onSelect={(date) => field.onChange(date?.toISOString().split('T')[0])}
-                      disabled={(date) => date > new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl><Input type="date" max={animalProfileToday()} {...field} value={field.value || ''}/></FormControl>
+                <FormDescription>Leave blank if their birth date is unknown.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -171,7 +145,8 @@ export const PetForm = ({
                 <FormControl>
                   <Input 
                     type="number" 
-                    step="0.1"
+                    step="any"
+                    min="0"
                     placeholder="e.g., 12.5" 
                     {...field}
                     value={field.value ?? ''}
@@ -224,7 +199,7 @@ export const PetForm = ({
                 <FormControl>
                   <Switch
                     checked={field.value}
-                    onCheckedChange={field.onChange}
+                    onCheckedChange={checked=>{field.onChange(checked);if(!checked)form.setValue('livestockCount',1,{shouldValidate:true});}}
                   />
                 </FormControl>
               </FormItem>
@@ -242,10 +217,12 @@ export const PetForm = ({
                     <Input 
                       type="number" 
                       min="1"
+                      step="1"
+                      max="2147483647"
                       placeholder="e.g., 50" 
                       {...field}
-                      value={field.value ?? 1}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
                     />
                   </FormControl>
                   <FormMessage />

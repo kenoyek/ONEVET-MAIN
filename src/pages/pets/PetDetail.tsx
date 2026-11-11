@@ -32,6 +32,9 @@ const PetDetailContent = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   
+  const mutationLock=useRef(false);
+  const [photoBusy,setPhotoBusy]=useState(false);
+  const [profileSaveError,setProfileSaveError]=useState('');
   const [pet, setPet] = useState<PetProfile | null>(null);
   const [passportData, setPassportData] = useState<PassportRecord | null>(null);
   const [consultations, setConsultations] = useState<Pick<Database['public']['Tables']['consultations']['Row'], 'id'|'status'|'chief_complaint'|'created_at'>[]>([]);
@@ -101,11 +104,11 @@ const PetDetailContent = () => {
   }, [id, user, fetchPetAndPassport, fetchConsultations]);
 
   const handleUpdate = async (values: PetValues) => {
-    if (!pet) return;
-
+    if (!pet || mutationLock.current || photoBusy) return;
+    mutationLock.current=true;setProfileSaveError('');
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('pets')
         .update({
           name: values.name,
@@ -118,44 +121,46 @@ const PetDetailContent = () => {
           livestock_count: values.isLivestock ? values.livestockCount : 1,
           medical_notes: values.medicalNotes || null,
         })
-        .eq('id', pet.id);
+        .eq('id', pet.id).select('id').single();
 
-      if (error) throw error;
+      if (error || !data?.id) throw error || new Error('No saved profile was returned');
 
       toast.success('Pet profile updated');
       setIsEditing(false);
       fetchPetAndPassport();
     } catch (error) {
       console.error('Error updating pet:', error);
-      toast.error('Failed to update pet profile');
+      setProfileSaveError('The profile could not be saved. Your changes are still here. Check your connection and access, then try again.');
     } finally {
-      setIsSubmitting(false);
+      mutationLock.current=false;setIsSubmitting(false);
     }
   };
 
   const handlePhotoUpload = async (url: string) => {
-    if (!pet) return;
+    if (!pet || mutationLock.current) throw new Error('The profile is busy. Please try again.');
+    mutationLock.current=true;
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('pets')
         .update({ avatar_url: url })
-        .eq('id', pet.id);
+        .eq('id', pet.id).select('id').single();
 
-      if (error) throw error;
+      if (error || !data?.id) throw error || new Error('No saved profile was returned');
       setPet({ ...pet, avatar_url: url });
     } catch (error) {
       console.error('Error updating avatar:', error);
       toast.error('Failed to update photo');
       throw error;
-    }
+    } finally { mutationLock.current=false; }
   };
 
   const handleDelete = async () => {
-    if (!pet) return;
+    if (!pet || mutationLock.current || photoBusy) return;
+    mutationLock.current=true;
     setIsDeleting(true);
     try {
-      const { error } = await supabase.from('pets').delete().eq('id', pet.id);
-      if (error) throw error;
+      const { data, error } = await supabase.from('pets').delete().eq('id', pet.id).select('id').single();
+      if (error || !data?.id) throw error || new Error('No saved profile was returned');
 
       toast.success(`${pet.name} has been removed`);
       navigate('/pets');
@@ -163,7 +168,7 @@ const PetDetailContent = () => {
       console.error('Error deleting pet:', error);
       toast.error('Failed to delete pet');
     } finally {
-      setIsDeleting(false);
+      mutationLock.current=false;setIsDeleting(false);
     }
   };
 
@@ -339,9 +344,12 @@ const PetDetailContent = () => {
                 <CardDescription>Update your pet's information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
+                {profileSaveError&&<p role="alert" className="text-sm text-destructive">{profileSaveError}</p>}
                 {profile?.id && (
                   <PetPhotoUpload
                     currentUrl={pet.avatar_url}
+                    disabled={isSubmitting||isDeleting}
+                    onBusyChange={setPhotoBusy}
                     profileId={profile.id}
                     petId={pet.id}
                     onUpload={handlePhotoUpload}
@@ -362,7 +370,7 @@ const PetDetailContent = () => {
                     medicalNotes: pet.medical_notes || '',
                   }}
                   onSubmit={handleUpdate}
-                  isSubmitting={isSubmitting}
+                  isSubmitting={isSubmitting||photoBusy}
                   submitLabel="Save Changes"
                 />
 

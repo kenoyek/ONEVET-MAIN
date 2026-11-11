@@ -1,3 +1,4 @@
+import { validAnimalBirthDate } from '@/lib/animal-profile-rules';
 import { z } from 'zod';
 
 export const signInSchema = z.object({
@@ -42,13 +43,13 @@ export const petSchema = z.object({
   name: z.string().trim().min(1, { message: "Pet name is required" }).max(100),
   species: z.enum(['dog', 'cat', 'bird', 'rabbit', 'fish', 'cattle', 'goat', 'sheep', 'poultry', 'pig', 'horse', 'other'] as const),
   breed: z.string().trim().max(100).optional(),
-  dateOfBirth: z.string().optional(),
-  weight: z.number().min(0).optional(),
+  dateOfBirth: z.string().optional().refine(value=>validAnimalBirthDate(value),'Choose a real birth date that is not in the future, or leave it blank.'),
+  weight: z.number().finite().positive('Enter a weight greater than zero, or leave it blank.').optional(),
   gender: z.enum(['male', 'female', 'unknown']).optional(),
   isLivestock: z.boolean().default(false),
-  livestockCount: z.number().min(1).optional(),
+  livestockCount: z.number().int('Enter a whole number of animals.').min(1).max(2147483647).optional(),
   medicalNotes: z.string().max(2000).optional(),
-});
+}).refine(value=>!value.isLivestock || value.livestockCount!==undefined,{message:'Enter the number of animals.',path:['livestockCount']});
 
 export const consultationRequestSchema = z.object({
   petId: z.string().uuid({ message: "Please select a pet" }),
