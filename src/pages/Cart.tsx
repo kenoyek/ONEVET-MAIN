@@ -1,3 +1,8 @@
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { shopService } from '@/lib/services/shop-service';
+import { cartQuantityLimit } from '@/lib/cart-rules';
+import { useAuth } from '@/lib/auth-context';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -17,7 +22,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 const Cart = () => {
-  const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
+  const { items, removeItem, updateQuantity, totalPrice, totalItems, refreshItems } = useCart();
+
+  const { user } = useAuth();
+  const ids = [...new Set(items.map(item => item.id))].sort().join(',');
+  const catalogue = useQuery({ queryKey: ['cart-catalogue', user?.id, ids], queryFn: () => shopService.cart(ids.split(',')), enabled: !!ids, staleTime: 15_000 });
+  useEffect(() => { if (catalogue.data) refreshItems(catalogue.data); }, [catalogue.data, refreshItems]);
+  const unavailable = items.some(item => item.available === false);
 
   if (items.length === 0) {
     return (
@@ -61,6 +72,12 @@ const Cart = () => {
 
           <PageHeading size="workspace" className="mb-10" title={<> Shopping Cart <span className="text-primary/40 ml-2">({totalItems})</span> </>}/>
 
+          <section className="mb-6 rounded-xl border bg-card p-4 text-sm text-muted-foreground">
+            <p>Online checkout is currently unavailable. Your cart is kept in this browser for this account; items are not reserved.</p>
+            <p className="mt-2">Current stock may reduce a quantity in your cart. Prices are refreshed from the shop.</p>
+            {catalogue.isFetching && <p role="status" className="mt-2">Checking current prices and stock…</p>}
+            {catalogue.isError && <div role="alert" className="mt-2"><p>We couldn’t check current prices and stock. Your items have been kept.</p><Button variant="link" onClick={() => catalogue.refetch()}>Try again</Button></div>}
+          </section>
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
@@ -78,17 +95,17 @@ const Cart = () => {
                       <div className="flex-grow flex flex-col justify-between">
                         <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h3 className="font-semibold text-xl tracking-tight mb-1">{item.title}</h3>
+                            <h3 className="font-semibold text-xl tracking-tight mb-1"><Link className="hover:underline" to={`/marketplace/${item.id}`}>{item.title}</Link></h3>
                             <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
                               <ShieldCheck className="w-3.5 h-3.5 text-success" />
-                              Verified Seller
+                              {item.available === false ? 'Currently unavailable' : 'Marketplace item'}
                             </div>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full h-10 w-10 transition-colors"
-                            onClick={() => removeItem(item.id)}
+                            aria-label={`Remove ${item.title}`} onClick={() => removeItem(item.id)}
                           >
                             <Trash2 className="w-5 h-5" />
                           </Button>
@@ -99,7 +116,7 @@ const Cart = () => {
                               variant="ghost"
                               size="icon"
                               className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              aria-label={`Decrease quantity of ${item.title}`} onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             >
                               <Minus className="w-3.5 h-3.5" />
                             </Button>
@@ -110,13 +127,13 @@ const Cart = () => {
                               variant="ghost"
                               size="icon"
                               className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              aria-label={`Increase quantity of ${item.title}`} disabled={catalogue.isFetching || catalogue.isError || item.available === false || item.quantity >= cartQuantityLimit(item.stock_quantity)} onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             >
                               <Plus className="w-3.5 h-3.5" />
                             </Button>
                           </div>
                           <div className="text-2xl font-semibold text-primary tracking-tight">
-                            ₦{(item.price * item.quantity).toLocaleString()}
+                            {item.available === false ? 'Unavailable' : `₦${(Math.round(item.price * 100) * item.quantity / 100).toLocaleString()}`}
                           </div>
                         </div>
                       </div>
@@ -134,27 +151,20 @@ const Cart = () => {
                   <h2 className="text-2xl font-semibold mb-8 tracking-tight">Order Summary</h2>
                   <div className="space-y-4 mb-8">
                     <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                      <span>Subtotal</span>
+                      <span>Available items</span>
                       <span className="text-foreground">₦{totalPrice.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                      <span>Shipping</span>
-                      <span className="text-success">Complimentary</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm font-bold text-muted-foreground uppercase tracking-widest">
-                      <span>Service Fee</span>
-                      <span className="text-foreground">₦0.00</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground">Delivery and any additional charges are not yet confirmed.</p>
                     <Separator className="bg-border/60" />
                     <div className="flex justify-between items-center pt-2">
-                      <span className="text-lg font-semibold tracking-tight uppercase tracking-widest">Total</span>
+                      <span className="text-lg font-semibold">Subtotal</span>
                       <span className="text-3xl font-semibold text-primary tracking-tight">₦{totalPrice.toLocaleString()}</span>
                     </div>
                   </div>
 
                   <Button className="w-full h-16 text-lg font-semibold gap-3 rounded-full shadow-sm hover:scale-[1.02] transition-all" asChild>
                     <Link to="/checkout">
-                      Confirm & Checkout
+                      Review checkout availability
                       <ArrowRight className="w-6 h-6" />
                     </Link>
                   </Button>
@@ -162,7 +172,7 @@ const Cart = () => {
                   <div className="mt-8 space-y-4">
                     <div className="flex items-start gap-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-relaxed p-4 rounded-2xl bg-background/50 border border-border/40">
                       <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-                      Secure high-encryption transaction powered by Paystack.
+                      {unavailable ? 'Some items are unavailable. Remove them or check back for new stock.' : 'No order or payment is created by saving items in your cart.'}
                     </div>
                   </div>
                 </CardContent>

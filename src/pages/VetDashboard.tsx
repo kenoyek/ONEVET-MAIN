@@ -250,7 +250,7 @@ const VetDashboard = () => {
                   <div>
                     <p className="font-bold text-lg">Professional approval required</p>
                     <p className="text-sm text-muted-foreground font-medium">
-                      Please upload your veterinary license to start accepting consultations.
+                      {profile?.is_active === false ? 'Your account is inactive. Contact support before accepting work.' : profile?.license_url && profile?.license_number ? (profile?.verification_status === 'rejected' ? 'Your application needs attention. Review your profile and submit updated professional details.' : 'Your professional details are awaiting review. Approval is required before you can accept consultations.') : 'Add your license number and upload your veterinary license in your profile, then wait for professional review.'}
                     </p>
                   </div>
                 </div>
@@ -260,6 +260,12 @@ const VetDashboard = () => {
               </CardContent>
             </Card>
           )}
+
+          <section className="mb-8 rounded-2xl border bg-card p-6 sm:p-8">
+            <h2 className="text-2xl mb-3">Make your services discoverable</h2>
+            <p className="text-muted-foreground leading-relaxed mb-5">To offer bookable services, register your practice, complete organization review, publish your services and set booking availability. Going online here controls consultation availability; it does not publish a service.</p>
+            <div className="flex flex-wrap gap-3"><Button asChild variant="outline"><Link to="/provider/register">Set up your practice</Link></Button><Button asChild variant="ghost"><Link to="/provider/invitations">Team workspaces</Link></Button></div>
+          </section>
 
           {/* Stats Grid */}
           <div className="grid gap-6 md:grid-cols-4 mb-10">

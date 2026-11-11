@@ -13,6 +13,13 @@ function Probe() {
       <p data-testid="cart">
         {cart.items.map((i) => i.title).join(',')}|{cart.totalPrice}
       </p>
+      <p data-testid="quantity">{cart.totalItems}</p>
+      <button onClick={() => cart.refreshItems([{id:'one',title:'Animal feed',price:250,images:[],seller_id:'seller',stock_quantity:2}])}>Refresh stock</button>
+      <button onClick={() => cart.refreshItems([])}>Unavailable</button>
+      <button onClick={() => cart.updateQuantity('one', NaN)}>Invalid quantity</button>
+      <button onClick={() => cart.updateQuantity('one', 1.5)}>Fractional quantity</button>
+      <button onClick={() => cart.updateQuantity('one', 3)}>Three</button>
+      <button onClick={() => cart.updateQuantity('one', 0)}>Remove at zero</button>
       <button
         onClick={() =>
           cart.addItem({
@@ -83,5 +90,30 @@ describe('Account-scoped cart storage', () => {
     );
     render(view());
     expect(screen.getByTestId('cart').textContent).toBe('|0');
+  });
+});
+
+
+describe('Current cart stock and totals', () => {
+  it('refreshes prices, clamps to stock and rejects extra or invalid quantities', () => {
+    render(view());
+    fireEvent.click(screen.getByText('Add'));
+    fireEvent.click(screen.getByText('Add'));
+    fireEvent.click(screen.getByText('Add'));
+    fireEvent.click(screen.getByText('Refresh stock'));
+    expect(screen.getByTestId('cart')).toHaveTextContent('Animal feed|500');
+    expect(screen.getByTestId('quantity')).toHaveTextContent('2');
+    for (const label of ['Three', 'Invalid quantity', 'Fractional quantity', 'Add']) fireEvent.click(screen.getByText(label));
+    expect(screen.getByTestId('quantity')).toHaveTextContent('2');
+    fireEvent.click(screen.getByText('Remove at zero'));
+    expect(screen.getByTestId('cart')).toHaveTextContent('|0');
+  });
+  it('keeps unavailable products visible but excludes them from purchasable totals', () => {
+    render(view());fireEvent.click(screen.getByText('Add'));fireEvent.click(screen.getByText('Unavailable'));
+    expect(screen.getByTestId('cart')).toHaveTextContent('Animal feed|0');
+  });
+  it('uses minor currency units to avoid floating-point totals', () => {
+    localStorage.setItem('1vet-cart:v2:account-a', JSON.stringify([{id:'one',title:'Sample',price:0.1,image:'',quantity:3,seller_id:'seller'}]));
+    render(view());expect(screen.getByTestId('cart')).toHaveTextContent('Sample|0.3');
   });
 });

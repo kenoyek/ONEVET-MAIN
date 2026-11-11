@@ -1,3 +1,5 @@
+import { EmailConfirmationForm } from '@/components/auth/EmailConfirmationForm';
+import { registrationIntent } from '@/lib/registration-intent';
 import authImage from '@/assets/marketing/welcome-care-1100.webp';
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
@@ -13,7 +15,8 @@ import { NewPasswordForm } from '@/components/auth/NewPasswordForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-type AuthMode = 'signin' | 'signup' | 'forgot' | 'reset';
+type AuthMode = 'signin' | 'signup' | 'forgot' | 'reset' | 'confirm';
+function authMode(value: string | null): AuthMode { return value === 'reset' || value === 'signup' || value === 'confirm' ? value : value === 'recover' ? 'forgot' : 'signin'; }
 type SelectedRole = null | 'client' | 'provider';
 
 const Auth = () => {
@@ -22,23 +25,25 @@ const Auth = () => {
   const returnPath = getAuthReturnPath(location.state);
   const [searchParams] = useSearchParams();
   const { user, role, roles, loading, passwordRecovery, permissionsError } = useAuth();
-  const [mode, setMode] = useState<AuthMode>(()=>searchParams.get('mode')==='reset'?'reset':searchParams.get('mode')==='signup'?'signup':searchParams.get('mode')==='recover'?'forgot':'signin');
-  const [selectedRole, setSelectedRole] = useState<SelectedRole>(()=>searchParams.get('role')==='provider'?'provider':null);
+  const [mode, setMode] = useState<AuthMode>(() => authMode(searchParams.get('mode')));
+  const intent = registrationIntent(searchParams.get('role') || (returnPath === '/provider/register' ? 'provider' : null));
+  const [selectedRole, setSelectedRole] = useState<SelectedRole>(()=>intent.audience);
 
-  const isProviderFlow = searchParams.get('role') === 'provider';
+  const isProviderFlow = selectedRole === 'provider';
+  const accountToolMode = ['reset','forgot','confirm'].includes(mode) || ['reset','recover','confirm'].includes(searchParams.get('mode') || '');
 
   useEffect(() => {
-    const modeParam = searchParams.get('mode');
-    if (modeParam === 'reset') {
-      setMode('reset');
-    } else if (modeParam === 'signup') {
-      setMode('signup');
-    } else if(modeParam==='recover'){setMode('forgot');}else{setMode('signin');}
+    setMode(authMode(searchParams.get('mode')));
     // If role=provider URL param, skip role selection
-    if (searchParams.get('role') === 'provider') {
-      setSelectedRole('provider');
-    }
+    if (searchParams.has('role')) setSelectedRole(registrationIntent(searchParams.get('role')).audience);
   }, [searchParams]);
+
+  function chooseAudience(audience: SelectedRole) {
+    const params = new URLSearchParams(searchParams);
+    if (audience) params.set('role', audience === 'provider' ? 'provider' : 'pet_owner'); else params.delete('role');
+    setSelectedRole(audience);
+    navigate({ pathname: '/auth', search: params.toString() ? `?${params}` : '' }, { state: location.state });
+  }
 
   function changeMode(next:AuthMode){const params=new URLSearchParams(searchParams);if(next==='signin')params.delete('mode');else params.set('mode',next==='forgot'?'recover':next);setMode(next);navigate({pathname:'/auth',search:params.toString()?`?${params}`:''},{state:location.state});}
 
@@ -47,12 +52,12 @@ const Auth = () => {
   // Database permissions are verified by ProtectedRoute before opening a portal.
   useEffect(() => {
     if(passwordRecovery){if(searchParams.get('mode')!=='reset')navigate('/auth?mode=reset',{replace:true});return;}
-    if (!loading && user && (role!==null||permissionsError) && mode !== 'reset' && mode !== 'forgot' && searchParams.get('mode') !== 'reset' && searchParams.get('mode') !== 'recover') {
+    if (!loading && user && (role!==null||permissionsError) && !accountToolMode) {
       navigate(returnPath??getAccountHome(role,roles),{replace:true});
     }
-  }, [user, loading, role, roles, navigate, mode, returnPath, searchParams, passwordRecovery, permissionsError]);
+  }, [user, loading, role, roles, navigate, mode, returnPath, searchParams, passwordRecovery, permissionsError, accountToolMode]);
 
-  if (loading||(user&&!passwordRecovery&&mode!=='reset'&&mode!=='forgot'&&searchParams.get('mode')!=='reset'&&searchParams.get('mode')!=='recover')) {
+  if (loading||(user&&!passwordRecovery&&!accountToolMode)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -114,7 +119,7 @@ const Auth = () => {
 
       {/* Right side - Forms */}
       <div className="auth-form-panel w-full lg:w-1/2 flex items-center justify-center">
-        <div className="w-full max-w-md"><h1 className="sr-only">{(mode==='reset'||mode==='forgot')?'Reset your password':mode==='signup'?'Create your 1Vet account':'Sign in to 1Vet'}</h1>
+        <div className="w-full max-w-md"><h1 className="sr-only">{mode==='confirm'?'Confirm your email':(mode==='reset'||mode==='forgot')?'Reset your password':mode==='signup'?'Create your 1Vet account':'Sign in to 1Vet'}</h1>
           {/* Mobile logo */}
           <div className="lg:hidden mb-12 text-center">
             <Link to="/" className="inline-flex items-center gap-3 group">
@@ -145,6 +150,10 @@ const Auth = () => {
                     <NewPasswordForm />
                   </CardContent>
                 </Card>
+              </motion.div>
+            ) : mode === 'confirm' ? (
+              <motion.div key="confirm-email" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <Card className="card-elevated p-4 sm:p-8 rounded-3xl"><CardContent className="px-0 py-0"><EmailConfirmationForm onBack={() => changeMode('signin')} /></CardContent></Card>
               </motion.div>
             ) : mode === 'forgot' ? (
               <motion.div
@@ -201,6 +210,7 @@ const Auth = () => {
 
                       <TabsContent value="signin" className="mt-0 focus-visible:ring-0">
                         <SignInForm onForgotPassword={() => changeMode('forgot')} />
+                        <Link className="mt-4 block text-center text-sm text-primary underline underline-offset-4" to="/auth?mode=confirm" state={location.state}>Need a new confirmation email?</Link>
                       </TabsContent>
 
                       <TabsContent value="signup" className="mt-0 focus-visible:ring-0">
@@ -217,7 +227,7 @@ const Auth = () => {
                               <div className="grid grid-cols-1 gap-4">
                                 <button
                                   type="button"
-                                  onClick={() => setSelectedRole('client')}
+                                  onClick={() => chooseAudience('client')}
                                   className="group flex items-center gap-5 rounded-3xl border-2 border-border/40 bg-card/50 p-6 text-left transition-all duration-300 hover:border-primary hover:bg-primary/5 hover:shadow-soft"
                                 >
                                   <div className="rounded-2xl bg-primary/10 p-4 transition-all duration-500 group-hover:scale-110 group-hover:bg-primary/20 group-hover:rotate-3 shadow-sm">
@@ -233,7 +243,7 @@ const Auth = () => {
 
                                 <button
                                   type="button"
-                                  onClick={() => setSelectedRole('provider')}
+                                  onClick={() => chooseAudience('provider')}
                                   className="group flex items-center gap-5 rounded-3xl border-2 border-border/40 bg-card/50 p-6 text-left transition-all duration-300 hover:border-accent hover:bg-accent/5 hover:shadow-soft"
                                 >
                                   <div className="rounded-2xl bg-accent/10 p-4 transition-all duration-500 group-hover:scale-110 group-hover:bg-accent/20 group-hover:-rotate-3 shadow-sm">
@@ -258,13 +268,13 @@ const Auth = () => {
                             >
                               <button
                                 type="button"
-                                onClick={() => setSelectedRole(null)}
+                                onClick={() => chooseAudience(null)}
                                 className="mb-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
                               >
                                 <ArrowLeft className="h-4 w-4" />
                                 Choose a different account type
                               </button>
-                              {selectedRole === 'provider' ? <ProviderSignUpForm onSignIn={()=>changeMode('signin')}/> : <SignUpForm onSignIn={()=>changeMode('signin')}/>}
+                              {selectedRole === 'provider' ? <ProviderSignUpForm key={intent.providerCategory} initialCategory={intent.providerCategory} onSignIn={()=>changeMode('signin')}/> : <SignUpForm key={intent.customerType} initialCustomerType={intent.customerType} onSignIn={()=>changeMode('signin')}/>}
                             </motion.div>
                           )}
                         </AnimatePresence>

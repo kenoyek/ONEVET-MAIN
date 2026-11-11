@@ -52,7 +52,7 @@ const roleOptions: { value: ProviderRole; label: string; description: string; ic
   },
 ];
 
-export function ProviderSignUpForm({onSignIn}:{onSignIn?:()=>void}) {
+export function ProviderSignUpForm({onSignIn, initialCategory = ''}:{onSignIn?:()=>void; initialCategory?:string}) {
   const [confirmationEmail,setConfirmationEmail]=useState('');
   const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +60,7 @@ export function ProviderSignUpForm({onSignIn}:{onSignIn?:()=>void}) {
   const [isLoading, setIsLoading] = useState(false);
   const busy=useRef(false);
   const [submitError,setSubmitError]=useState('');
-  const [selectedLabel, setSelectedLabel] = useState('');
+  const [selectedLabel, setSelectedLabel] = useState(initialCategory);
 
   const form = useForm<ProviderSignUpValues>({
     resolver: zodResolver(providerSignUpSchema),
@@ -70,7 +70,7 @@ export function ProviderSignUpForm({onSignIn}:{onSignIn?:()=>void}) {
       email: '',
       password: '',
       confirmPassword: '',
-      role: 'service_provider',
+      role: initialCategory === 'Veterinarian' ? 'veterinarian' : 'service_provider',
       businessName: '',
       location: '',
       licenseNumber: '',

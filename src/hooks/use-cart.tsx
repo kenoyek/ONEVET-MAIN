@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+import { cartQuantityLimit, validCartQuantity } from '@/lib/cart-rules';
 import { useAuth } from '@/lib/auth-context';
 import {
   createContext,
@@ -15,6 +17,8 @@ export interface CartItem {
   image: string;
   quantity: number;
   seller_id: string;
+  stock_quantity?: number;
+  available?: boolean;
 }
 
 interface CartContextType {
@@ -23,6 +27,7 @@ interface CartContextType {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  refreshItems: (listings: { id:string; title:string; price:number; images:string[]|null; seller_id:string; stock_quantity:number|null }[]) => void;
   totalItems: number;
   totalPrice: number;
 }
@@ -54,8 +59,9 @@ function readCart(raw: string | null): CartItem[] {
         typeof item.price === 'number' &&
         Number.isFinite(item.price) &&
         item.price >= 0 &&
-        Number.isInteger(item.quantity) &&
-        item.quantity > 0
+        validCartQuantity(item.quantity) &&
+        (item.stock_quantity === undefined || (Number.isSafeInteger(item.stock_quantity) && item.stock_quantity >= 0)) &&
+        (item.available === undefined || typeof item.available === 'boolean')
       );
     });
   } catch {
@@ -90,13 +96,15 @@ const ScopedCart = ({
   }, [items, storageKey]);
 
   const addItem = (newItem: CartItem) => {
+    if (!Number.isFinite(newItem.price) || newItem.price < 0 || cartQuantityLimit(newItem.stock_quantity) === 0 || newItem.available === false) { toast.error('This product is unavailable.'); return; }
     setItems((prevItems) => {
       const existingItem = prevItems.find((item) => item.id === newItem.id);
       if (existingItem) {
+        if (existingItem.quantity >= cartQuantityLimit(newItem.stock_quantity ?? existingItem.stock_quantity)) { toast.info('You have reached the available quantity for this item.'); return prevItems; }
         toast.info(`Increased quantity of ${newItem.title} in cart`);
         return prevItems.map((item) =>
           item.id === newItem.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, ...newItem, available: true, quantity: item.quantity + 1 }
             : item,
         );
       }
@@ -116,13 +124,13 @@ const ScopedCart = ({
   };
 
   const updateQuantity = (id: string, quantity: number) => {
+    if (!Number.isSafeInteger(quantity)) return;
     if (quantity <= 0) {
       removeItem(id);
       return;
     }
-    setItems((prevItems) =>
-      prevItems.map((item) => (item.id === id ? { ...item, quantity } : item)),
-    );
+    if (!validCartQuantity(quantity)) return;
+    setItems((prevItems) => prevItems.map(item => item.id === id && item.available !== false && quantity <= cartQuantityLimit(item.stock_quantity) ? { ...item, quantity } : item));
   };
 
   const clearCart = () => {
@@ -134,11 +142,22 @@ const ScopedCart = ({
     }
   };
 
+  const refreshItems = useCallback((listings: { id:string; title:string; price:number; images:string[]|null; seller_id:string; stock_quantity:number|null }[]) => {
+    setItems(previous => {
+      const next = previous.map(item => {
+        const listing = listings.find(product => product.id === item.id);
+        if (!listing || !Number.isFinite(listing.price) || listing.price < 0 || cartQuantityLimit(listing.stock_quantity ?? 0) === 0) return { ...item, available: false, stock_quantity: 0 };
+        return { ...item, title: listing.title, price: listing.price, seller_id: listing.seller_id, image: listing.images?.[0] || '/product-fallback.svg', stock_quantity: listing.stock_quantity ?? 0, available: true, quantity: Math.min(item.quantity, cartQuantityLimit(listing.stock_quantity ?? 0)) };
+      });
+      return JSON.stringify(previous) === JSON.stringify(next) ? previous : next;
+    });
+  }, []);
+
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
   const totalPrice = items.reduce(
-    (acc, item) => acc + item.price * item.quantity,
+    (acc, item) => acc + (item.available === false ? 0 : Math.round(item.price * 100) * item.quantity),
     0,
-  );
+  ) / 100;
 
   return (
     <CartContext.Provider
@@ -148,6 +167,7 @@ const ScopedCart = ({
         removeItem,
         updateQuantity,
         clearCart,
+        refreshItems,
         totalItems,
         totalPrice,
       }}

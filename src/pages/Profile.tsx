@@ -1,3 +1,4 @@
+import { uploadVeterinaryLicense } from '@/lib/services/license-service';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
@@ -46,6 +47,9 @@ export default function Profile() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingLicense, setIsUploadingLicense] = useState(false);
+  const profileDirty = useRef(false);
+  const profileRevision = useRef(0);
+  const loadedProfileId = useRef<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const licenseInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,7 +57,9 @@ export default function Profile() {
   const isServiceProvider = role === 'service_provider';
 
   useEffect(() => {
-    if (profile) {
+    if (profile && (loadedProfileId.current !== profile.id || !profileDirty.current)) {
+      if (loadedProfileId.current !== profile.id) { profileDirty.current = false; profileRevision.current = 0; }
+      loadedProfileId.current = profile.id;
       setFormData({
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
@@ -70,12 +76,18 @@ export default function Profile() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    profileDirty.current = true; profileRevision.current++;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSaveProfile = async () => {
     if (!profile?.id) return;
 
+    if (isSaving) return;
+    if (!formData.first_name.trim() || !formData.last_name.trim()) { toast.error('Enter your first and last names.'); return; }
+    const digits = formData.phone.replace(/\D/g, '');
+    if (formData.phone.trim() && (digits.length < 7 || digits.length > 15)) { toast.error('Enter a valid contact phone number.'); return; }
+    const savingRevision = profileRevision.current;
     setIsSaving(true);
     try {
       const updateData: Record<string, string> = {
@@ -103,6 +115,7 @@ export default function Profile() {
 
       if (error) throw error;
 
+      if (profileRevision.current === savingRevision) profileDirty.current = false;
       await refreshProfile();
       toast.success('Profile updated successfully!');
     } catch (error) {
@@ -161,7 +174,9 @@ export default function Profile() {
 
   const handleLicenseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id || !profile?.id) return;
+    if (!file || !user?.id || !profile?.id || isUploadingLicense) return;
+
+    if (!formData.license_number.trim() || formData.license_number.trim().length > 100) { toast.error('Enter your license number before uploading a document.'); e.target.value = ''; return; }
 
     const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
@@ -176,30 +191,7 @@ export default function Profile() {
 
     setIsUploadingLicense(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${user.id}/license.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('licenses')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      // Get signed URL for private bucket
-      const { data: signedData } = await supabase.storage
-        .from('licenses')
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          license_url: signedData?.signedUrl || filePath,
-          license_verified: false, // Reset verification on new upload
-          verification_status: 'pending',
-        })
-        .eq('id', profile.id);
-
-      if (updateError) throw updateError;
+      await uploadVeterinaryLicense(user.id, profile.id, file, formData.license_number);
 
       await refreshProfile();
       toast.success('License uploaded! Pending verification.');
@@ -208,6 +200,7 @@ export default function Profile() {
       toast.error('Failed to upload license');
     } finally {
       setIsUploadingLicense(false);
+      if (licenseInputRef.current) licenseInputRef.current.value = '';
     }
   };
 
@@ -454,7 +447,7 @@ export default function Profile() {
                         </div>
                       </div>
                     ) : (
-                      <div
+                      <button type="button" disabled={isUploadingLicense} aria-label="Upload veterinary license"
                         onClick={() => licenseInputRef.current?.click()}
                         className="p-12 rounded-[2rem] border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer text-center group"
                       >
@@ -476,7 +469,7 @@ export default function Profile() {
                             </div>
                           </div>
                         )}
-                      </div>
+                      </button>
                     )}
                     <input
                       ref={licenseInputRef}

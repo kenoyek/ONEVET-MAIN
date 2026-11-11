@@ -1,3 +1,4 @@
+import { AccountNextSteps } from '@/components/onboarding/AccountNextSteps';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Link } from 'react-router-dom';
 import {
@@ -44,6 +45,7 @@ export default function Dashboard() {
             </Link>
           </Button>
         </header>
+        <AccountNextSteps hasAnimals={!!data?.pets.length} />
         <Button asChild variant="outline" className="mb-6"><Link to="/my-bookings">Your appointment requests</Link></Button>
         <div className="grid md:grid-cols-2 gap-5 mb-8">
           <Link className="care-path" to="/pets">

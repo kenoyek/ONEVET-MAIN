@@ -1,3 +1,4 @@
+import { shopService } from '@/lib/services/shop-service';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from "react";
 import { Navbar } from "@/components/layout/Navbar";
@@ -7,22 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/use-cart";
 import { motion } from "framer-motion";
-import { 
-  ShoppingBag, 
+import {
+  ShoppingBag,
   Search,
-  Filter,
   ShoppingCart,
-  ArrowRight,
   Loader2,
-  CheckCircle2,
   MapPin
 } from "lucide-react";
 import { toast } from "sonner";
 import { ProductImageFallback } from "@/components/marketplace/ProductImageFallback";
-import livestockCareImage from "@/assets/marketing/livestock-care.jpg";
 
 import { Link } from "react-router-dom";
 
@@ -40,24 +36,10 @@ const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { addItem } = useCart();
 
-  const { data: listings, isLoading } = useQuery({
+  const { data: listings, isLoading, isError, refetch } = useQuery({
     queryKey: ['marketplace-listings', selectedCategory],
-    queryFn: async () => {
-      let query = supabase
-        .from('marketplace_listings')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_approved', true);
+    queryFn: () => shopService.list(selectedCategory),
 
-      if (selectedCategory !== "All") {
-        query = query.eq('category', selectedCategory);
-      }
-
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    }
   });
 
   const filteredListings = listings?.filter(item =>
@@ -80,7 +62,9 @@ const Marketplace = () => {
       price: listing.price,
       image: listing.images?.[0] || '/product-fallback.svg',
       quantity: 1,
-      seller_id: listing.seller_id
+      seller_id: listing.seller_id,
+      stock_quantity: listing.stock_quantity ?? 0,
+      available: true
     });
   };
 
@@ -97,22 +81,20 @@ const Marketplace = () => {
               </Badge>
               <PageHeading size="display" className="" title={<> 1Vet Marketplace </>}/>
               <p className="text-muted-foreground mt-2 font-medium">
-                Premium veterinary supplies and pet products from verified sellers.
+                Veterinary supplies and animal-care products listed on 1Vet.
               </p>
             </div>
             <div className="flex w-full md:w-auto gap-3">
               <div className="relative flex-1 md:w-80">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search products..."
+                  aria-label="Search products" placeholder="Search products..."
                   className="pl-11 rounded-full bg-card border-border/50 shadow-soft"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button variant="outline" size="icon" className="rounded-full border-2">
-                <Filter className="w-4 h-4" />
-              </Button>
+              <Button variant="outline" asChild><Link to="/cart">View cart</Link></Button>
             </div>
           </div>
 
@@ -133,7 +115,8 @@ const Marketplace = () => {
           </div>
 
           {/* Product Grid */}
-          {isLoading ? (
+          <p role="status" className="mb-6 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">You can browse and keep items in your cart. Online checkout is currently unavailable.</p>
+          {isError ? <section role="alert" className="care-path"><h2 className="text-xl">We couldn’t load the shop.</h2><p className="my-3">Please try again to check current products and stock.</p><Button variant="outline" onClick={() => refetch()}>Try again</Button></section> : isLoading ? (
             <div className="flex flex-col items-center justify-center py-24">
               <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
               <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Loading marketplace...</p>
@@ -148,9 +131,9 @@ const Marketplace = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
                 >
-                  <Link to={`/marketplace/${item.id}`}>
+                  <div>
                     <Card className="card-elevated h-full flex flex-col group rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all duration-500 shadow-soft hover:shadow-elevated">
-                      <div className="relative aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]">
+                      <Link to={`/marketplace/${item.id}`} className="relative block aspect-square overflow-hidden bg-muted m-2 rounded-[1.5rem]" aria-label={`View ${item.title}`}>
                         {item.images?.[0] ? (
                           <img
                             src={item.images[0]}
@@ -164,9 +147,9 @@ const Marketplace = () => {
                         <Badge className="absolute top-3 right-3 bg-background/90 backdrop-blur-md text-foreground border-none px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
                           {item.category}
                         </Badge>
-                      </div>
+                      </Link>
                       <CardHeader className="p-6 pb-2">
-                        <CardTitle className="text-lg font-bold line-clamp-1 group-hover:text-primary transition-colors tracking-tight">{item.title}</CardTitle>
+                        <CardTitle className="text-lg font-semibold tracking-tight"><Link className="hover:underline" to={`/marketplace/${item.id}`}>{item.title}</Link></CardTitle>
                         <div className="text-2xl font-semibold text-primary tracking-tight mt-1">
                           ₦{item.price.toLocaleString()}
                         </div>
@@ -198,16 +181,16 @@ const Marketplace = () => {
                         </Button>
                       </CardFooter>
                     </Card>
-                  </Link>
+                  </div>
                 </motion.div>
               ))}
             </div>
           ) : (
             <div className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed border-muted">
               <ShoppingBag className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-              <h3 className="text-xl font-semibold">No products found</h3>
+              <h3 className="text-xl font-semibold">{searchQuery || selectedCategory !== 'All' ? 'No matching products' : 'Our shop is being prepared'}</h3>
               <p className="text-muted-foreground mt-2">
-                Try adjusting your search or category filter.
+                {searchQuery || selectedCategory !== 'All' ? 'Try a different search or category.' : 'Products will appear here when stock has been added and approved.'}
               </p>
               <Button
                 variant="link"
@@ -222,62 +205,10 @@ const Marketplace = () => {
             </div>
           )}
 
-          {/* Seller CTA */}
-          <section className="mt-20">
-            <div className="bg-primary rounded-3xl p-8 md:p-12 text-primary-foreground overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
-
-              <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
-                <div>
-                  <Badge className="mb-4 bg-secondary text-secondary-foreground hover:bg-secondary/90 border-none">
-                    Merchant Program
-                  </Badge>
-                  <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                    Start Selling on 1Vet Today
-                  </h2>
-                  <p className="text-primary-foreground/80 text-lg mb-8">
-                    Join Nigeria's fastest-growing veterinary marketplace. Reach pet owners and farmers across the country.
-                  </p>
-
-                  <div className="grid sm:grid-cols-2 gap-4 mb-8">
-                    {[
-                      "Low commission fees",
-                      "Instant payments",
-                      "Secure logistics",
-                      "Seller dashboard"
-                    ].map((feature, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-secondary" />
-                        <span className="font-medium">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button size="lg" variant="secondary" className="font-bold" asChild>
-                    <a href="/auth?mode=signup&role=service_provider">
-                      Register as Merchant <ArrowRight className="ml-2 w-5 h-5" />
-                    </a>
-                  </Button>
-                </div>
-                <div className="hidden md:block">
-                  <div className="relative">
-                    <img
-                      src={livestockCareImage}
-                      alt="Veterinary supplies"
-                      loading="lazy"
-                      className="rounded-2xl shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500"
-                    />
-                    <div className="absolute -bottom-6 -left-6 bg-background p-4 rounded-xl shadow-lg text-foreground animate-bounce">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 bg-green-500 rounded-full" />
-                        <span className="font-bold">Verified Seller</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <section className="mt-12 rounded-2xl border bg-card p-6 md:p-8">
+            <h2 className="text-2xl mb-3">Have a veterinary business?</h2>
+            <p className="text-muted-foreground mb-5">Register your organization and submit its details for review. Registration does not automatically publish products or enable payments.</p>
+            <Button asChild variant="outline"><Link to="/provider/register">Register your business</Link></Button>
           </section>
         </div>
       </main>

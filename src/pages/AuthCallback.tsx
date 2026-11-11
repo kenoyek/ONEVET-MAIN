@@ -23,7 +23,7 @@ export default function AuthCallback() {
     }
   }, [user, role, roles, loading, passwordRecovery, permissionsError, linkFailed, navigate]);
 
-  if(linkFailed)return <main className="min-h-screen flex items-center justify-center bg-background p-6"><section role="alert" className="card-elevated p-8 max-w-md text-center space-y-4"><h1 className="text-2xl">This account link is unavailable</h1><p className="text-sm text-muted-foreground">It may have expired or already been used. Request a new reset link, or return to sign in.</p><Link className="block text-primary underline" to="/auth?mode=recover">Request a new reset link</Link><Link className="block text-primary underline" to="/auth">Back to sign in</Link></section></main>;
+  if(linkFailed)return <main className="min-h-screen flex items-center justify-center bg-background p-6"><section role="alert" className="card-elevated p-8 max-w-md text-center space-y-4"><h1 className="text-2xl">This account link is unavailable</h1><p className="text-sm text-muted-foreground">It may have expired or already been used. Request a new reset link, or return to sign in.</p><Link className="block text-primary underline" to="/auth?mode=confirm">Request a new signup confirmation</Link><Link className="block text-primary underline" to="/auth?mode=recover">Request a new reset link</Link><Link className="block text-primary underline" to="/auth">Back to sign in</Link></section></main>;
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">

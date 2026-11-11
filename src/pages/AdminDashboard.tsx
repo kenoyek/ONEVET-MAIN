@@ -1,5 +1,7 @@
+import { licenseBelongsToApplicant } from '@/lib/services/license-service';
+import { LicenseDocumentLink } from '@/components/onboarding/LicenseDocumentLink';
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -28,6 +30,7 @@ interface DashboardStats {
 }
 
 interface PendingVet {
+  user_id: string;
   id: string;
   first_name: string;
   last_name: string;
@@ -72,18 +75,19 @@ const AdminDashboard = () => {
       if (usersError) throw new Error(`Profiles: ${usersError.message}`);
 
       // Fetch vet counts
-      const { count: vetsCount, error: vetsError } = await supabase
+      const { data: vetAccounts, count: vetsCount, error: vetsError } = await supabase
         .from('user_roles')
-        .select('*', { count: 'exact', head: true })
+        .select('user_id', { count: 'exact' })
         .eq('role', 'veterinarian');
       if (vetsError) throw new Error(`User Roles: ${vetsError.message}`);
 
       // Fetch pending vendors
       const { data: pendingVetsData, error: pendingError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, license_number, license_url, created_at, vendor_type')
-        .eq('verification_status', 'pending');
-      if (pendingError) throw new Error(`Pending Vendors: ${pendingError.message}`);
+        .select('id, user_id, first_name, last_name, email, license_number, license_url, created_at, vendor_type')
+        .eq('verification_status', 'pending')
+        .in('user_id', (vetAccounts || []).map(account => account.user_id));
+      if (pendingError) throw new Error(`Pending Veterinarians: ${pendingError.message}`);
 
       // Fetch active subscriptions
       const { count: activeSubsCount, error: subsError } = await supabase
@@ -123,35 +127,42 @@ const AdminDashboard = () => {
     }
   };
 
+  const verificationBusy = useRef(false);
+  const [verifying, setVerifying] = useState(false);
   const verifyVet = async (vetId: string, approve: boolean) => {
+    if (verificationBusy.current) return;
+    const application = pendingVets.find(vet => vet.id === vetId);
+    if (!application || (approve && (!application.license_number || !licenseBelongsToApplicant(application.license_url, application.user_id)))) { toast.error('Review a complete license application before approving.'); return; }
+    verificationBusy.current = true; setVerifying(true);
     try {
       const newStatus = approve ? 'approved' : 'rejected';
 
       // 1. Update profiles table
-      const { data: updatedProfiles, error: profileErr } = await supabase
+      let update = supabase
         .from('profiles')
         .update({
           verification_status: newStatus,
           license_verified: approve
         })
-        .eq('id', vetId)
-        .select('id, user_id');
+        .eq('id', vetId).eq('verification_status', 'pending');
+      if (approve) update = update.eq('license_url', application.license_url!).eq('license_number', application.license_number!);
+      const { data: updatedProfiles, error: profileErr } = await update.select('id, user_id');
 
       if (profileErr) throw profileErr;
 
       if (!updatedProfiles || updatedProfiles.length === 0) {
-        throw new Error('This action could not be completed. Your access may have changed; refresh and try again.');
+        throw new Error('This action could not be completed. The application or your access may have changed; refresh and review it again.');
       }
 
       // Verification changes are audited atomically by the trusted database trigger.
       // Organization verification has a separate reviewed workflow.
 
-      toast.success(approve ? 'Vendor approved!' : 'Vendor rejected');
+      toast.success(approve ? 'Veterinarian approved.' : 'Application rejected.');
       fetchDashboardData();
     } catch (error: unknown) {
       console.error('Error verifying vendor:', error);
       toast.error((error as Error).message || 'Failed to update verification status');
-    }
+    } finally { verificationBusy.current = false; setVerifying(false); }
   };
 
   if (isLoading) {
@@ -360,16 +371,7 @@ const AdminDashboard = () => {
                             <p className="text-sm mt-1">
                               License: {vet.license_number || 'Not provided'}
                             </p>
-                            {vet.license_url && (
-                              <a
-                                href={vet.license_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline"
-                              >
-                                View License Document
-                              </a>
-                            )}
+                            {vet.license_url && <LicenseDocumentLink key={vet.license_url} value={vet.license_url} ownerUserId={vet.user_id} />}
                             <p className="text-xs text-muted-foreground mt-2">
                               Applied: {new Date(vet.created_at).toLocaleDateString()}
                             </p>
@@ -377,6 +379,7 @@ const AdminDashboard = () => {
                           <div className="flex gap-2">
                             <Button
                               size="sm"
+                              disabled={verifying || !vet.license_number || !licenseBelongsToApplicant(vet.license_url, vet.user_id)}
                               onClick={() => verifyVet(vet.id, true)}
                               className="gap-1"
                             >
@@ -386,7 +389,7 @@ const AdminDashboard = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => verifyVet(vet.id, false)}
+                              disabled={verifying} onClick={() => verifyVet(vet.id, false)}
                               className="gap-1"
                             >
                               <XCircle className="h-4 w-4" />

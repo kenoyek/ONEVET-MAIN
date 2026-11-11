@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-export function SignUpForm({onSignIn}:{onSignIn?:()=>void}) {
+export function SignUpForm({onSignIn, initialCustomerType = 'pet_owner'}:{onSignIn?:()=>void; initialCustomerType?:'pet_owner'|'farm_owner'}) {
   const [confirmationEmail,setConfirmationEmail]=useState('');
   const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -39,7 +39,7 @@ export function SignUpForm({onSignIn}:{onSignIn?:()=>void}) {
       password: '',
       confirmPassword: '',
       role: 'pet_owner',
-      customerType: 'pet_owner',
+      customerType: initialCustomerType,
     },
   });
 
@@ -73,7 +73,7 @@ export function SignUpForm({onSignIn}:{onSignIn?:()=>void}) {
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-sm font-medium text-foreground">Account Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all">
                     <SelectValue placeholder="Select account type" />
