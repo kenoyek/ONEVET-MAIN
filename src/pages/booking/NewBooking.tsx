@@ -1,3 +1,4 @@
+import { bookingDateRange, initialBookingDate } from '@/lib/booking-date-range';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -11,7 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { appointmentService as service, appointmentError, bookingTime, watDate } from '@/lib/services/appointment-service';
 export default function NewBooking() {
   const [params]=useSearchParams();const id=params.get('service_id') ?? '';const {user,profile}=useAuth();const navigate=useNavigate();
-  const [date,setDate]=useState(watDate());const [start,setStart]=useState('');const [animal,setAnimal]=useState('');const [phone,setPhone]=useState('');const [address,setAddress]=useState('');const [notes,setNotes]=useState('');const [acceptedVersion,setAcceptedVersion]=useState<number|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const range=bookingDateRange();
+  const [date,setDate]=useState(()=>initialBookingDate(params.get('date'),range.today,range.last));const [start,setStart]=useState(()=>params.get('start') || '');const [animal,setAnimal]=useState('');const [phone,setPhone]=useState('');const [address,setAddress]=useState('');const [notes,setNotes]=useState('');const [acceptedVersion,setAcceptedVersion]=useState<number|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const retry=useRef({payload:'',key:''});
   const catalog=useQuery({queryKey:['booking-service',id],enabled:!!id,queryFn:()=>service.service(id),staleTime:0});
   const consent=acceptedVersion!==null && acceptedVersion===catalog.data?.service_version;
@@ -19,7 +21,7 @@ export default function NewBooking() {
   const slots=useQuery({queryKey:['appointment-slots',id,date,catalog.data?.service_version],enabled:!!id && !!date && !!catalog.data?.booking_enabled,queryFn:()=>service.slots(id,date),refetchInterval:60_000});
   const item=catalog.data;const home=item?.delivery_mode==='home_visit';const selected=choices.data?.find(choice=>`${choice.kind}:${choice.id}`===animal);
   const options=choices.data?.filter(choice=>choice.kind==='pet' || ['veterinary','diagnostics'].includes(item?.category ?? '')) ?? [];
-  const limit=watDate(new Date(Date.parse(watDate()+'T12:00:00+01:00')+90*86400000));
+  const limit=range.last;
   return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container-wide max-w-3xl pt-32 pb-20"><Link className="text-primary underline" to="/my-bookings">Your booking requests</Link>
     <PageHeading size="workspace" className="my-6" title={<> Request a service appointment </>}/>
     {!id?<p>Select a service from the <Link className="underline text-primary" to="/provider-marketplace">care directory</Link>.</p>:catalog.isPending?<p role="status">Loading service…</p>:catalog.isError || !item?<><p role="alert">This service is unavailable or could not be loaded.</p><Button onClick={()=>void catalog.refetch()}>Refresh service</Button></>:<>
