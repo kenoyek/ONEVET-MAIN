@@ -16,6 +16,7 @@ const groups = [
     title: 'Explore 1Vet',
     links: [
       ['About us', '/about'],
+      ['Marketplace', '/marketplace'],
       ['Resources', '/articles'],
       ['Contact & support', '/contact'],
       ['Urgent care guidance', '/urgent-care'],

@@ -78,6 +78,7 @@ const Cart = () => {
             {catalogue.isFetching && <p role="status" className="mt-2">Checking current prices and stock…</p>}
             {catalogue.isError && <div role="alert" className="mt-2"><p>We couldn’t check current prices and stock. Your items have been kept.</p><Button variant="link" onClick={() => catalogue.refetch()}>Try again</Button></div>}
           </section>
+          {!user && <section className="mb-6 rounded-2xl border bg-card p-5"><h2 className="font-semibold">Keep your shopping list with you</h2><p className="mt-2 text-sm text-muted-foreground">Your cart is saved in this browser. Sign in to move these items into your account cart. Online checkout remains unavailable.</p><div className="mt-4 flex flex-wrap gap-3"><Button asChild><Link to="/auth?mode=signup" state={{from:{pathname:'/cart'}}}>Create account</Link></Button><Button asChild variant="outline"><Link to="/auth" state={{from:{pathname:'/cart'}}}>Sign in</Link></Button></div></section>}
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">

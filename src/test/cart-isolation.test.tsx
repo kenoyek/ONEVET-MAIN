@@ -63,6 +63,23 @@ describe('Account-scoped cart storage', () => {
     rerender(view());
     expect(screen.getByTestId('cart')).toHaveTextContent('Animal feed|200');
   });
+  it('moves a visitor cart into the signed-in account once and keeps it away from the next account', () => {
+    auth.user = null; const { rerender } = render(view()); fireEvent.click(screen.getByText('Add'));
+    expect(localStorage.getItem('1vet-cart:v2:guest')).toContain('Animal feed');
+    auth.loading = true; rerender(view());
+    auth.user = { id: 'account-a' }; auth.loading = false; rerender(view());
+    expect(screen.getByTestId('cart')).toHaveTextContent('Animal feed|200');
+    expect(localStorage.getItem('1vet-cart:v2:guest')).toBeNull();
+    auth.user = { id: 'account-b' }; rerender(view()); expect(screen.getByTestId('quantity')).toHaveTextContent('0');
+    auth.user = { id: 'account-a' }; rerender(view()); expect(screen.getByTestId('quantity')).toHaveTextContent('1');
+  });
+  it('merges overlapping visitor and account items without exceeding stock', () => {
+    const item = { id: 'one', title: 'Animal feed', price: 200, image: '', seller_id: 'seller', stock_quantity: 3 };
+    localStorage.setItem('1vet-cart:v2:guest', JSON.stringify([{ ...item, quantity: 2 }]));
+    localStorage.setItem('1vet-cart:v2:account-a', JSON.stringify([{ ...item, quantity: 2 }]));
+    render(view()); expect(screen.getByTestId('quantity')).toHaveTextContent('3');
+    expect(JSON.parse(localStorage.getItem('1vet-cart:v2:account-a')!)).toHaveLength(1);
+  });
   it('does not assign the old shared cart to whichever user signs in next', () => {
     localStorage.setItem(
       '1vet-cart',

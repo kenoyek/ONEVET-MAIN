@@ -214,21 +214,9 @@ const App = () => (
                     } />
 
                     {/* E-Commerce Marketplace */}
-                    <Route path="/marketplace" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
-                        <Marketplace />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/marketplace/:id" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
-                        <ProductDetail />
-                      </ProtectedRoute>
-                    } />
-                    <Route path="/cart" element={
-                      <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
-                        <Cart />
-                      </ProtectedRoute>
-                    } />
+                    <Route path="/marketplace" element={<Marketplace />} />
+                    <Route path="/marketplace/:id" element={<ProductDetail />} />
+                    <Route path="/cart" element={<Cart />} />
                     <Route path="/checkout" element={
                       <ProtectedRoute allowedRoles={['pet_owner', 'client', 'service_provider', 'admin', 'veterinarian']}>
                         <Checkout />

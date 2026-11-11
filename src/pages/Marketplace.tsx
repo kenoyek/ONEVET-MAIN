@@ -1,3 +1,4 @@
+import { useAuth } from '@/lib/auth-context';
 import { shopService } from '@/lib/services/shop-service';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from "react";
@@ -35,6 +36,7 @@ const Marketplace = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   const { data: listings, isLoading, isError, refetch } = useQuery({
     queryKey: ['marketplace-listings', selectedCategory],
@@ -73,6 +75,7 @@ const Marketplace = () => {
       <Navbar />
       <main id="main-content" tabIndex={-1} className="pt-28 md:pt-32 pb-20">
         <div className="container-wide">
+          {!user && <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-5"><p className="text-sm text-muted-foreground">Browse freely and build your cart. Create an account to keep shopping with 1Vet.</p><Button asChild variant="outline"><Link to="/auth?mode=signup" state={{from:{pathname:'/cart'}}}>Create account</Link></Button></div>}
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
             <div>

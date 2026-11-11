@@ -16,10 +16,11 @@ const primaryTabs = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/services', label: 'Services', icon: Briefcase },
   { href: '/find-a-vet', label: 'Find a vet', icon: Stethoscope },
-  { href: '/pricing', label: 'Pricing', icon: Tag },
+  { href: '/marketplace', label: 'Shop', icon: ShoppingBag },
 ];
 
 const moreLinks = [
+  { href: '/pricing', label: 'Pricing', icon: Tag },
   { href: '/education', label: 'Education', icon: GraduationCap },
   { href: '/about', label: 'About', icon: Info },
   { href: '/contact', label: 'Contact', icon: Phone },

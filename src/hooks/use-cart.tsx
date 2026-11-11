@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { cartQuantityLimit, validCartQuantity } from '@/lib/cart-rules';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -76,24 +76,41 @@ const ScopedCart = ({
   children: ReactNode;
   storageKey: string | null;
 }) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    if (typeof window === 'undefined' || !storageKey) return [];
+  const [handoff] = useState(() => {
+    if (typeof window === 'undefined' || !storageKey) return { items: [] as CartItem[], imported: false };
     try {
-      return readCart(localStorage.getItem(storageKey));
-    } catch (error) {
-      console.error('Failed to parse cart from localStorage', error);
-      return [];
-    }
+      const saved = readCart(localStorage.getItem(storageKey));
+      if (storageKey.endsWith(':guest')) return { items: saved, imported: false };
+      const guest = readCart(localStorage.getItem('1vet-cart:v2:guest'));
+      const merged = [...saved];
+      for (const item of guest) {
+        const index = merged.findIndex(existing => existing.id === item.id);
+        const quantity = Math.min((index < 0 ? 0 : merged[index]!.quantity) + item.quantity, cartQuantityLimit(item.stock_quantity));
+        if (quantity <= 0) continue;
+        const next = { ...item, quantity };
+        if (index < 0) merged.push(next); else merged[index] = next;
+      }
+      return { items: merged, imported: guest.length > 0 };
+    } catch { return { items: [] as CartItem[], imported: false }; }
   });
+  const [items, setItems] = useState<CartItem[]>(handoff.items);
+
+  const guestConsumed = useRef(false);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     try {
-      if (storageKey) localStorage.setItem(storageKey, JSON.stringify(items));
+      if (storageKey) {
+        localStorage.setItem(storageKey, JSON.stringify(items));
+        if (handoff.imported && !guestConsumed.current) {
+          localStorage.removeItem('1vet-cart:v2:guest');
+          guestConsumed.current = true;
+        }
+      }
     } catch (error) {
       console.error('Failed to save cart to localStorage', error);
     }
-  }, [items, storageKey]);
+  }, [items, storageKey, handoff.imported]);
 
   const addItem = (newItem: CartItem) => {
     if (!Number.isFinite(newItem.price) || newItem.price < 0 || cartQuantityLimit(newItem.stock_quantity) === 0 || newItem.available === false) { toast.error('This product is unavailable.'); return; }

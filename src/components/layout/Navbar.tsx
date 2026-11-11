@@ -29,6 +29,7 @@ const navLinks = [
   { href: '/pet-care', label: 'Pet care' },
   { href: '/farm-care', label: 'Farm & livestock' },
   { href: '/services', label: 'Services' },
+  { href: '/marketplace', label: 'Marketplace' },
   { href: '/articles', label: 'Resources' },
 ];
 
