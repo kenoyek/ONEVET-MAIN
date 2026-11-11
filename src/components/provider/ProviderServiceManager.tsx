@@ -43,9 +43,9 @@ export function ProviderServiceManager({ providerId, providerType, slug, approve
   const category = categoryByProvider[providerType];
   const services = useQuery({ queryKey: ['owned-provider-services', user?.id, providerId], queryFn: () => service.owned(providerId), enabled: !!user });
   async function refresh() {
-    await Promise.all([cache.invalidateQueries({ queryKey: ['owned-provider-services', user?.id, providerId] }), cache.invalidateQueries({ queryKey: ['provider-draft', user?.id] }), cache.invalidateQueries({ queryKey: ['provider-marketplace'] }), cache.invalidateQueries({ queryKey: ['public-provider'] })]);
+    await Promise.all([cache.invalidateQueries({ queryKey: ['owned-provider-services', user?.id, providerId] }), cache.invalidateQueries({ queryKey: ['provider-draft', user?.id] }), cache.invalidateQueries({ queryKey: ['provider-marketplace'] }), cache.invalidateQueries({ queryKey: ['public-provider'] }), cache.invalidateQueries({ queryKey: ['provider-launch-public', user?.id] })]);
   }
-  return <section className="care-path mb-8"><h2 className="text-xl mb-3">Services and public listing</h2>
+  return <section id="organization-services" className="care-path mb-8 scroll-mt-28"><h2 className="text-xl mb-3">Services and public listing</h2>
     <p className="text-muted-foreground mb-4">Draft your services, then publish when organization approval and credentials are current. Publishing makes your organization name, identifier, category, city/state and service details public. Your registration email, phone, street address and documents stay private. Set availability in the booking section to accept appointment requests. Online payments remain unavailable.</p>
     {!category ? <p>Service publishing is not available for this organization category yet.</p> : <>
       <label className="flex gap-3 items-start mb-5"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-1" />I understand which details will appear publicly when I publish.</label>

@@ -27,6 +27,17 @@ describe('Owner verification workflow', () => {
     expect(upload).toHaveBeenCalledTimes(1);
     expect(register).toHaveBeenCalledTimes(2);
   });
+  it('sends one upload when the attachment form is submitted twice while pending', async () => {
+    let finish!: (path: string) => void;
+    upload.mockReturnValue(new Promise(resolve => { finish = resolve; })); register.mockResolvedValue('doc-id');
+    mount(); const fileInput = await screen.findByLabelText('PDF, JPEG or PNG · up to 10 MB');
+    fireEvent.change(fileInput, { target: { files: [new File(['%PDF'], 'doc.pdf', { type: 'application/pdf' })] } });
+    const form = fileInput.closest('form')!;
+    fireEvent.submit(form); fireEvent.submit(form);
+    expect(upload).toHaveBeenCalledTimes(1);
+    finish('org-id/one-document.pdf'); await screen.findByText('Document attached privately.');
+    expect(register).toHaveBeenCalledTimes(1);
+  });
   it('shows reviewer feedback and prevents changes while submitted', async () => {
     application.mockResolvedValue({ feedback: 'Your application is being reviewed.' });
     mount('submitted');

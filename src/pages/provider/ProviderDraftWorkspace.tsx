@@ -1,3 +1,4 @@
+import { ProviderLaunchGuide } from '@/components/provider/ProviderLaunchGuide';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -32,13 +33,14 @@ export default function ProviderDraftWorkspace() {
         <Button variant="outline" className="mt-5" asChild><Link to="/profile">Professional profile</Link></Button>
         <Button variant="link" asChild><Link to="/contact">Contact support</Link></Button>
       </section>
+      {isOwner && <ProviderLaunchGuide providerId={organization.id} slug={organization.slug} providerType={organization.provider_type} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
       {isOwner && <ProviderVerificationPanel key={`${user?.id}-${organization.id}`} providerId={organization.id} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
       {draft.data?.access.services && <ProviderServiceManager key={`${user?.id}-${organization.id}`} providerId={organization.id} providerType={organization.provider_type} slug={organization.slug} approved={organization.verification_status === 'approved'} suspended={organization.status === 'suspended'} />}
       {draft.data?.access.bookings && <ProviderBookingManager key={`${user?.id}-${organization.id}`} providerId={organization.id} />}
       {isOwner && <ProviderTeamManager key={`${user?.id}-${organization.id}`} providerId={organization.id} suspended={organization.status==='suspended'}/>}
       {!isOwner && draft.data?.access.workspace && <p className="mb-6 text-muted-foreground">You have delegated organization access. Business-profile changes, verification documents and team controls stay with the owner. Team roles do not grant clinical permissions or add appointment capacity.</p>}
       {!isOwner && !draft.data?.access.workspace && <p className="mb-6">You are viewing this organization as an administrator. <Link className="text-primary underline" to="/admin/verifications">Open the verification queue</Link> to review its application.</p>}
-      <section className="care-path"><h2 className="text-xl mb-6">Business and primary location</h2>
+      <section id="business-details" className="care-path scroll-mt-28"><h2 className="text-xl mb-6">Business and primary location</h2>
         {!isOwner || !['draft','more_info_required','rejected'].includes(organization.verification_status) || organization.status === 'suspended' ? <p>This workspace can be edited by its registering owner when the application is a draft or has been returned for corrections.</p> : <ProviderDraftForm key={`${organization.id}-${organization.updated_at}`} editing initial={{ name: organization.name, slug: organization.slug, provider_type: organization.provider_type as keyof typeof providerCategories, email: organization.email, phone: organization.phone, website: organization.website, description: organization.description, state: organization.state, city: organization.city, address: organization.address, primary_location_name: location.name }} onSave={async input => {
           await providerDraftService.save(input, organization.id);
           toast.success('Organization draft saved');

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ export function ProviderVerificationPanel({ providerId, status, suspended }: { p
   const [expiry, setExpiry] = useState('');
   const [pendingPath, setPendingPath] = useState('');
   const [busy, setBusy] = useState(false);
+  const actionLock = useRef(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [fileKey, setFileKey] = useState(0);
@@ -24,16 +25,16 @@ export function ProviderVerificationPanel({ providerId, status, suspended }: { p
     return { documents, application, history };
   } });
   async function refresh() {
-    await Promise.all([cache.invalidateQueries({ queryKey: ['provider-verification', user?.id, providerId] }), cache.invalidateQueries({ queryKey: ['provider-draft', user?.id] }), cache.invalidateQueries({ queryKey: ['provider-drafts', user?.id] })]);
+    await Promise.all([cache.invalidateQueries({ queryKey: ['provider-verification', user?.id, providerId] }), cache.invalidateQueries({ queryKey: ['provider-draft', user?.id] }), cache.invalidateQueries({ queryKey: ['provider-drafts', user?.id] }), cache.invalidateQueries({ queryKey: ['provider-launch-public', user?.id] })]);
   }
-  return <section className="care-path mb-8" aria-labelledby="verification-title">
+  return <section id="organization-verification" className="care-path mb-8 scroll-mt-28" aria-labelledby="verification-title">
     <h2 id="verification-title" className="text-xl mb-3">Organization verification</h2>
     <p className="text-muted-foreground mb-5">Attach registration evidence and relevant professional licences. An administrator reviews the documents. Organization approval does not verify an individual's licence or publish services.</p>
     {details.isPending ? <p role="status">Loading verification…</p> : details.isError ? <><p role="alert">Could not load verification details.</p><Button variant="outline" onClick={() => void details.refetch()}>Retry verification details</Button></> : details.data && <div className="space-y-6">
       {details.data.application?.feedback && <div className="rounded-lg bg-muted p-4"><h3 className="font-medium">Reviewer feedback</h3><p className="whitespace-pre-wrap">{details.data.application.feedback}</p></div>}
       <ProviderEvidenceList documents={details.data.documents} accountId={user?.id ?? ''} />
       {editable && <form className="space-y-4" onSubmit={async event => {
-        event.preventDefault(); if (busy || !file) return;
+        event.preventDefault(); if (actionLock.current || !file) return; actionLock.current = true;
         setBusy(true); setError(''); setMessage('');
         try {
           const path = pendingPath || await service.upload(providerId, file);
@@ -42,7 +43,7 @@ export function ProviderVerificationPanel({ providerId, status, suspended }: { p
           setPendingPath(''); setFile(null); setExpiry(''); setFileKey(previous => previous + 1);
           setMessage('Document attached privately.'); await refresh();
         } catch (cause) { setError(verificationError(cause)); }
-        finally { setBusy(false); }
+        finally { actionLock.current = false; setBusy(false); }
       }}>
         <fieldset disabled={busy || !!pendingPath} className="space-y-4">
           <legend className="font-medium mb-3">Attach a document</legend>
@@ -57,10 +58,10 @@ export function ProviderVerificationPanel({ providerId, status, suspended }: { p
       </form>}
       {editable && <div className="border-t pt-5"><p className="text-sm text-muted-foreground mb-3">Save any business changes below before submitting. Submitting sends the saved business details and locks details and evidence until the reviewer returns the application. At least one current document is required. Veterinary organizations must also complete individual veterinary verification before approval.</p>
         <Button disabled={busy || !!pendingPath || !details.data.documents.some(document => document.is_current)} onClick={async () => {
-          if (busy) return; setBusy(true); setError(''); setMessage('');
+          if (actionLock.current) return; actionLock.current = true; setBusy(true); setError(''); setMessage('');
           try { await service.submit(providerId); setMessage('Application submitted for review.'); await refresh(); }
           catch (cause) { setError(verificationError(cause)); await refresh(); }
-          finally { setBusy(false); }
+          finally { actionLock.current = false; setBusy(false); }
         }}>{busy ? 'Working…' : 'Submit for verification'}</Button>
       </div>}
       <ProviderVerificationHistory events={details.data.history} documents={details.data.documents} accountId={user?.id ?? ''} />
