@@ -1,7 +1,8 @@
+import { bookingStatus } from '@/lib/booking-status';
 import { Link } from 'react-router-dom';
 import { AppointmentCalendarDownload } from './AppointmentCalendarDownload';
 import { BookingRescheduleForm } from './BookingRescheduleForm';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
@@ -10,15 +11,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { appointmentService as service, appointmentError, bookingTime, snapshotText, type Appointment, type BookingDecision, type BookingView } from '@/lib/services/appointment-service';
 export function BookingRequestCard({ booking, provider, refresh, readOnly = false }: { booking: Appointment; provider: boolean; refresh: () => Promise<void>; readOnly?: boolean }) {
   const { user } = useAuth();
+  const actionLock=useRef(false);
   const [rescheduling, setRescheduling] = useState(false);
   const [note, setNote] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [showHistory, setShowHistory] = useState(false);
   const events = useQuery({ queryKey: ['booking-history', user?.id, booking.id, booking.version], queryFn: () => service.history(booking.id), enabled: showHistory });
   async function respond(decision: BookingDecision) {
-    if (busy) return; setBusy(true); setError('');
+    if (actionLock.current) return; actionLock.current=true; setBusy(true); setError('');
     try { await service.respond(booking, decision, note); setNote(''); await refresh(); }
     catch (cause) { setError(appointmentError(cause)); }
-    finally { setBusy(false); }
+    finally { actionLock.current=false; setBusy(false); }
   }
+  const statusInfo=bookingStatus(booking.status,booking.start_at,booking.end_at);
   const actingProvider=provider && booking.provider_access===true && booking.customer_id!==user?.id;
   const canAct=!readOnly && (actingProvider || booking.customer_id===user?.id);
   const open = ['pending','confirmed'].includes(booking.status);
@@ -27,8 +30,11 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
     {open && booking.provider_eligibility==='unavailable' && <p role="alert" className="text-destructive">Provider approval is currently unavailable. This recorded request has not been cancelled automatically. Contact support before attending.</p>}
     {open && booking.provider_eligibility==='unknown' && <p role="status">Could not recheck provider approval. Refresh or contact support before attending.</p>}
     <h3 className="text-lg font-medium">{snapshotText(booking.service_snapshot,'name')}</h3>
-    <p>{snapshotText(booking.service_snapshot,'organization_name')} · {booking.status}</p>
+    <p>{snapshotText(booking.service_snapshot,'organization_name')}</p>
+    <section className="rounded-xl border bg-muted/30 p-4"><h4 className="font-semibold">{statusInfo.label}</h4><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{statusInfo.text}</p></section>
     <Link className="text-primary underline text-sm" to={`/appointments/${booking.id}`}>Open request details</Link>
+    {canAct && <Link className="text-primary underline text-sm block" to={`/appointments/${booking.id}#appointment-messages`}>View appointment messages</Link>}
+    {!provider && ['cancelled','declined','completed'].includes(booking.status) && <Link className="text-primary underline text-sm block" to="/provider-marketplace">Browse care for a new request</Link>}
     {booking.replacement_for && <p className="text-sm">Reschedule of <Link className="text-primary underline" to={`/appointments/${booking.replacement_for}`}>the original appointment</Link>. {booking.status==='pending'?'The original remains confirmed until this alternative is accepted.':''}</p>}
     {booking.reschedule_reason && <p className="text-sm whitespace-pre-wrap">Reschedule reason: {booking.reschedule_reason}</p>}
     <p>{bookingTime(booking.start_at)} – {new Date(booking.end_at).toLocaleTimeString('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit' })} WAT</p>
@@ -39,8 +45,6 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
     {booking.provider_address && <p className="text-sm whitespace-pre-wrap">Provider location: {booking.provider_address}</p>}
     {booking.customer_notes && <p className="text-sm whitespace-pre-wrap">Customer notes: {booking.customer_notes}</p>}
     {booking.response_note && <p className="text-sm whitespace-pre-wrap">Latest response: {booking.response_note}</p>}
-    {booking.status==='pending' && !withinConfirmationWindow && <p className="text-sm text-destructive">The confirmation window has passed. Cancel or decline this request and choose a new time.</p>}
-    {booking.status==='pending' && withinConfirmationWindow && <p className="text-sm text-muted-foreground">Awaiting provider confirmation. This request does not reserve the slot. Confirmation requires at least 30 minutes' notice.</p>}
     {open && canAct && <><Label htmlFor={`response-${booking.id}`}>Response / explanation (required for cancellation or decline)</Label><Textarea id={`response-${booking.id}`} disabled={busy} maxLength={2000} value={note} onChange={event => setNote(event.target.value)} />
       {actingProvider && booking.status==='pending' && <p className="text-sm text-muted-foreground">Confirm only if you can provide this service at the recorded fee. Confirming a provider-location visit shares your primary location address with this customer.</p>}
       <div className="flex flex-wrap gap-3">
@@ -60,8 +64,8 @@ export function BookingRequestList({ providerId }: { providerId?: string }) {
   const requests = useQuery({ queryKey: ['booking-requests',user?.id,providerId ?? 'customer',view,page], enabled: !!user, refetchInterval: 60_000, queryFn: () => service.list(providerId ? { providerId } : { customerId: user!.id },page,view) });
   async function refresh() { await Promise.all([cache.invalidateQueries({ queryKey: ['booking-requests',user?.id] }),cache.invalidateQueries({ queryKey: ['appointment-slots'] }),cache.invalidateQueries({ queryKey: ['appointment-detail',user?.id] }),cache.invalidateQueries({ queryKey: ['reschedule-slots',user?.id] })]); }
   return <section className="space-y-5"><h2 className="text-xl">{providerId ? 'Customer booking requests' : 'Your booking requests'}</h2>
-    <label className="block text-sm">View requests <select aria-label="View requests" className="ml-3 rounded border bg-background p-2" value={view} onChange={event=>{setView(event.target.value as BookingView);setPage(0);}}><option value="upcoming">Upcoming</option><option value="needs_response">Needs confirmation</option><option value="history">Cancelled, declined and completed</option><option value="all">All requests</option></select></label>
-    {requests.isPending ? <p role="status">Loading requests…</p> : requests.isError ? <p role="alert">Could not load booking requests.</p> : requests.data?.rows.length ? requests.data.rows.map(booking => <BookingRequestCard key={booking.id} booking={booking} provider={!!providerId} refresh={refresh} />) : <p>No requests on this page.</p>}
+    <label className="block text-sm">View requests <select aria-label="View requests" className="ml-3 rounded border bg-background p-2" value={view} onChange={event=>{setView(event.target.value as BookingView);setPage(0);}}><option value="upcoming">Upcoming</option><option value="needs_response">Needs confirmation</option><option value="past_open">Past requests still open</option><option value="history">Cancelled, declined and completed</option><option value="all">All requests</option></select></label>
+    {requests.isPending ? <p role="status">Loading requests…</p> : requests.isError ? <p role="alert">Could not load booking requests.</p> : requests.data?.rows.length ? requests.data.rows.map(booking => <BookingRequestCard key={booking.id} booking={booking} provider={!!providerId} refresh={refresh} />) : <section className="rounded-2xl border border-dashed p-6"><h3 className="font-semibold">{view==='upcoming'?'No upcoming appointments':view==='needs_response'?'No requests awaiting confirmation':view==='past_open'?'No past requests still open':'No requests in this view'}</h3><p className="mt-2 text-sm text-muted-foreground">{view==='upcoming'?'Pending requests need confirmation. Check All requests or Past requests still open for older records.':'Choose another view to find other appointments.'}</p>{!providerId&&<Button asChild variant="outline" className="mt-4"><Link to="/provider-marketplace">Find care services</Link></Button>}</section>}
     <div className="flex flex-wrap gap-3 items-center"><Button variant="outline" onClick={() => void refresh()}>Refresh requests</Button><Button variant="outline" disabled={page===0 || requests.isFetching} onClick={() => setPage(previous=>previous-1)}>Previous</Button><span>Page {page+1}</span><Button variant="outline" disabled={!requests.data?.hasNext || requests.isFetching} onClick={() => setPage(previous=>previous+1)}>Next</Button></div>
   </section>;
 }

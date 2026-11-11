@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-const { rpc, from, select, order, eq, range, inFilter, gte }=vi.hoisted(()=>({rpc:vi.fn(),from:vi.fn(),select:vi.fn(),order:vi.fn(),eq:vi.fn(),range:vi.fn(),inFilter:vi.fn(),gte:vi.fn()}));
+const { rpc, from, select, order, eq, range, inFilter, gte, lt }=vi.hoisted(()=>({rpc:vi.fn(),from:vi.fn(),select:vi.fn(),order:vi.fn(),eq:vi.fn(),range:vi.fn(),inFilter:vi.fn(),gte:vi.fn(),lt:vi.fn()}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc,from}}));
 import { appointmentService as service, appointmentError, bookingTime, watDate } from '@/lib/services/appointment-service';
 describe('Trusted appointment service',()=>{
@@ -40,6 +40,10 @@ describe('Trusted appointment service',()=>{
  it('filters upcoming requests on the server and sorts the nearest times first',async()=>{
   const builder={select,order,eq,in:inFilter,gte,range};from.mockReturnValue(builder);for(const method of [select,order,eq,inFilter,gte])method.mockReturnValue(builder);range.mockResolvedValue({data:[],error:null});
   await service.list({customerId:'customer-id'},0,'upcoming');expect(inFilter).toHaveBeenCalledWith('status',['pending','confirmed']);expect(gte).toHaveBeenCalledWith('end_at',expect.any(String));expect(order).toHaveBeenCalledWith('start_at',{ascending:true});
+ });
+ it('finds past pending and confirmed requests without marking them completed',async()=>{
+  const builder={select,order,eq,in:inFilter,lt,range};from.mockReturnValue(builder);for(const method of [select,order,eq,inFilter,lt])method.mockReturnValue(builder);range.mockResolvedValue({data:[],error:null});
+  await service.list({customerId:'customer-id'},0,'past_open');expect(eq).toHaveBeenCalledWith('customer_id','customer-id');expect(inFilter).toHaveBeenCalledWith('status',['pending','confirmed']);expect(lt).toHaveBeenCalledWith('end_at',expect.any(String));
  });
  it('preserves slot-race failures and fails closed on slot lookup errors',async()=>{
   rpc.mockResolvedValue({data:null,error:{code:'23P01'}});

@@ -3,7 +3,7 @@ import type { Database } from '@/integrations/supabase/types';
 export type Appointment = Database['public']['Tables']['provider_booking_requests']['Row'] & { provider_access?: boolean; provider_eligibility?: 'eligible' | 'unavailable' | 'unknown' };
 export type BookingSchedule = Database['public']['Tables']['provider_booking_settings']['Row'];
 export type WeeklyWindow = { weekday: number; opens: number; closes: number };
-export type BookingView = 'upcoming' | 'needs_response' | 'history' | 'all';
+export type BookingView = 'upcoming' | 'needs_response' | 'past_open' | 'history' | 'all';
 export type BookingDecision = 'confirmed' | 'declined' | 'cancelled' | 'completed';
 export function bookingTime(value: string) { return new Intl.DateTimeFormat('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) + ' WAT'; }
 export function watDate(now = new Date()) {
@@ -55,6 +55,7 @@ export const appointmentService = {
     query = 'customerId' in scope ? query.eq('customer_id', scope.customerId) : query.eq('provider_id', scope.providerId);
     if (view === 'upcoming') query = query.in('status', ['pending','confirmed']).gte('end_at', new Date().toISOString());
     if (view === 'needs_response') query = query.eq('status', 'pending').gte('start_at', new Date(Date.now() + 30 * 60_000).toISOString());
+    if (view === 'past_open') query = query.in('status', ['pending','confirmed']).lt('end_at', new Date().toISOString());
     if (view === 'history') query = query.in('status', ['declined','cancelled','completed']);
     const { data, error } = await query.range(page * 20, page * 20 + 20);
     if (error) throw error;

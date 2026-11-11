@@ -24,7 +24,7 @@ describe('Booking management',()=>{
  });
  it('disables confirmation once the notice window has passed',async()=>{
   identity.userId='provider-id';
-  list.mockResolvedValue({rows:[{...booking,start_at:new Date(Date.now()+10*60_000).toISOString()}],hasNext:false});mount(<BookingRequestList providerId="org-id"/>);await screen.findByText('The confirmation window has passed. Cancel or decline this request and choose a new time.');expect(screen.getByRole('button',{name:'Confirm request'})).toBeDisabled();
+  list.mockResolvedValue({rows:[{...booking,start_at:new Date(Date.now()+10*60_000).toISOString()}],hasNext:false});mount(<BookingRequestList providerId="org-id"/>);await screen.findByRole('heading',{name:'Confirmation window passed'});expect(screen.getByRole('button',{name:'Confirm request'})).toBeDisabled();
  });
  it('resets pagination when switching request views',async()=>{
   list.mockResolvedValue({rows:[booking],hasNext:true});mount(<BookingRequestList/>);await screen.findByText('Grooming');fireEvent.click(screen.getByRole('button',{name:'Next'}));await waitFor(()=>expect(list).toHaveBeenCalledWith({customerId:'customer-id'},1,'upcoming'));fireEvent.change(screen.getByLabelText('View requests'),{target:{value:'history'}});await waitFor(()=>expect(list).toHaveBeenCalledWith({customerId:'customer-id'},0,'history'));
@@ -37,6 +37,16 @@ describe('Booking management',()=>{
  });
  it('loads private booking history only when requested',async()=>{
   mount(<BookingRequestList/>);await screen.findByText('Grooming');expect(history).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'Show history'}));await waitFor(()=>expect(history).toHaveBeenCalledWith('booking-id'));
+ });
+ it('exposes past open requests and links participants directly to appointment messages',async()=>{
+  mount(<BookingRequestList/>);await screen.findByText('Grooming');
+  expect(screen.getByRole('link',{name:'View appointment messages'})).toHaveAttribute('href','/appointments/booking-id#appointment-messages');
+  fireEvent.change(screen.getByLabelText('View requests'),{target:{value:'past_open'}});await waitFor(()=>expect(list).toHaveBeenCalledWith({customerId:'customer-id'},0,'past_open'));
+ });
+ it('blocks repeated pending response actions',async()=>{
+  let finish!:()=>void;respond.mockReturnValue(new Promise<void>(resolve=>{finish=resolve;}));mount(<BookingRequestList/>);await screen.findByText('Grooming');
+  fireEvent.change(screen.getByLabelText('Response / explanation (required for cancellation or decline)'),{target:{value:'Cannot attend this appointment.'}});
+  const cancel=screen.getByRole('button',{name:'Cancel request'});fireEvent.click(cancel);fireEvent.click(cancel);expect(respond).toHaveBeenCalledTimes(1);finish();await waitFor(()=>expect(screen.getByLabelText('Response / explanation (required for cancellation or decline)')).toHaveValue(''));
  });
  it('starts schedules disabled and saves explicit WAT windows with their version',async()=>{
   list.mockResolvedValue({rows:[],hasNext:false});mount(<ProviderBookingManager providerId="org-id"/>);const enabled=await screen.findByLabelText('Accept booking requests for published services');expect(enabled).not.toBeChecked();fireEvent.click(enabled);fireEvent.click(screen.getByLabelText('Monday'));fireEvent.click(screen.getByRole('button',{name:'Save availability'}));await waitFor(()=>expect(saveSchedule).toHaveBeenCalledWith('org-id',true,[{weekday:1,opens:540,closes:1020}],[],0));
