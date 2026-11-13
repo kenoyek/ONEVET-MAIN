@@ -18,6 +18,7 @@ const groups = [
       ['About us', '/about'],
       ['Marketplace', '/marketplace'],
       ['Resources', '/articles'],
+      ['Visitor privacy', '/privacy'],
       ['Contact & support', '/contact'],
       ['Urgent care guidance', '/urgent-care'],
       ['Join as a provider', '/provider/register'],

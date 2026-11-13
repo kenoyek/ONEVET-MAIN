@@ -1,3 +1,4 @@
+import { SiteAnalyticsTracker } from './components/shared/SiteAnalyticsTracker';
 import { PlannedModuleGate } from '@/components/shared/PlannedModuleGate';
 import { Suspense } from "react";
 import {lazyRoute} from "@/lib/lazy-route";
@@ -25,6 +26,7 @@ const FarmDetail = lazyRoute(() => import("./pages/farms/FarmDetail"));
 const Dashboard = lazyRoute(() => import("./pages/Dashboard"));
 const VetDashboard = lazyRoute(() => import("./pages/VetDashboard"));
 const AdminDashboard = lazyRoute(() => import("./pages/AdminDashboard"));
+const Privacy = lazyRoute(() => import("./pages/Privacy"));
 const AdminAnalytics = lazyRoute(() => import("./pages/admin/Analytics"));
 const AdminUsers = lazyRoute(() => import("./pages/admin/Users"));
 const ProviderVerificationQueue = lazyRoute(() => import("./pages/admin/ProviderVerificationQueue"));
@@ -77,12 +79,14 @@ const App = () => (
               <a href="#main-content" onClick={(event) => { const main = document.querySelector('main'); if (main) { event.preventDefault(); main.tabIndex = -1; main.focus(); main.scrollIntoView({ block: 'start' }); } }} className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:bg-card focus:p-4 focus:rounded-lg">Skip to main content</a>
               <RouteErrorBoundary>
                 <Suspense fallback={<PageLoader />}>
+                  <SiteAnalyticsTracker />
                   <Routes>
                     {/* Public & Informational Routes */}
                     <Route path="/" element={<Index />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/auth/callback" element={<AuthCallback />} />
                     <Route path="/about" element={<About />} />
+                    <Route path="/privacy" element={<Privacy />} />
                     <Route path="/pricing" element={<Pricing />} />
                     <Route path="/subscription" element={<Pricing />} />
                     <Route path="/contact" element={<Contact />} />

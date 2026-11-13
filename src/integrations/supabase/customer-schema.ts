@@ -81,6 +81,8 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
         Args: Omit<Database['public']['Functions']['add_pet_owner_health_entry']['Args'],'weight_value'|'due_date'> & {weight_value:number|null;due_date:string|null};
         Returns: Database['public']['Functions']['add_pet_owner_health_entry']['Returns'];
       };
+      site_analytics_report: {Args:{window_days?:number;country_filter?:string|null};Returns:import('./types').Json};
+      rotate_site_analytics_key:{Args:Record<PropertyKey,never>;Returns:string};
       admin_shop_sellers: { Args: Record<PropertyKey, never>; Returns: { id:string; name:string }[] };
       admin_save_shop_product: { Args: {product_uuid:string;details:import('./types').Json;expected_updated_at?:string|null}; Returns:{id:string;updated_at:string}[] };
       claim_consultation: {

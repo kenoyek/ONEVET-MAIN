@@ -29,7 +29,8 @@ done
  supabase/migrations/20261109020000_pet_owner_health_journal.sql \
  supabase/migrations/20261110010000_license_document_integrity.sql \
  supabase/migrations/20261111010000_admin_shop_catalogue.sql \
- supabase/migrations/20261111020000_platform_image_uploads.sql
+ supabase/migrations/20261111020000_platform_image_uploads.sql \
+ supabase/migrations/20261111030000_site_analytics.sql
  echo 'BEGIN;'
  cat supabase/tests/core-security.sql \
  supabase/tests/provider-drafts.sql \
@@ -45,7 +46,8 @@ done
  supabase/tests/care-dashboard.sql \
  supabase/tests/license-document-integrity.sql \
  supabase/tests/admin-shop-catalogue.sql \
- supabase/tests/platform-images.sql
+ supabase/tests/platform-images.sql \
+ supabase/tests/site-analytics.sql
  echo 'ROLLBACK;'
 } | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet
 python scripts/test-booking-concurrency.py "$core_test_container"
