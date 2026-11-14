@@ -19,6 +19,8 @@ function BookingRequestForm() {
   const [params]=useSearchParams();const id=params.get('service_id') ?? '';const {user,profile}=useAuth();const navigate=useNavigate();
   const range=bookingDateRange();
   const [date,setDate]=useState(()=>initialBookingDate(params.get('date'),range.today,range.last));const [start,setStart]=useState(()=>params.get('start') || '');const [animal,setAnimal]=useState(()=>params.get('animal') || '');const [phone,setPhone]=useState('');const [address,setAddress]=useState('');const [notes,setNotes]=useState('');const [acceptedVersion,setAcceptedVersion]=useState<number|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const phoneEdited=useRef(false);
+  useEffect(()=>{if(!phoneEdited.current&&profile?.user_id===user?.id&&profile?.phone){const digits=profile.phone.replace(/\D/g,'');if(digits.length>=7&&digits.length<=15)setPhone(profile.phone);}},[profile?.phone,profile?.user_id,user?.id]);
   const retry=useRef({payload:'',key:''});
   const actionLock=useRef(false);
   const active=useRef(true);
@@ -32,7 +34,11 @@ function BookingRequestForm() {
   const options=choices.data?.filter(choice=>choice.kind==='pet' || ['veterinary','diagnostics'].includes(item?.category ?? '')) ?? [];
   const selected=options.find(choice=>`${choice.kind}:${choice.id}`===animal);
   const currentSlot=validDate && !slots.isFetching && !slots.isError && !!slots.data?.some(slot=>slot.start_at===start);
-  const ready=!catalog.isFetching && !catalog.isError && !!item?.booking_enabled && !!selected && currentSlot && consent;
+  const phoneDigits=phone.replace(/\D/g,'');
+  const contactReady=phoneDigits.length>=7&&phoneDigits.length<=15&&phone.trim().length<=40;
+  const addressReady=!home||(address.trim().length>=10&&address.trim().length<=500);
+  const remaining=[...(!selected?['Choose your animal or farm group.']:[]),...(!currentSlot?[slots.isFetching?'Wait for available times to finish checking.':'Choose an available appointment time.']:[]),...(!contactReady?['Add a contact phone with 7–15 digits.']:[]),...(!addressReady?['Add a visit address of at least 10 characters.']:[]),...(!consent?['Confirm the request terms and sharing of your details.']:[])];
+  const ready=contactReady && addressReady && !catalog.isFetching && !catalog.isError && !!item?.booking_enabled && !!selected && currentSlot && consent;
   const limit=range.last;
   const resume=new URLSearchParams(params);resume.set('date',date);if(start)resume.set('start',start);else resume.delete('start');resume.delete('animal');
   const animalReturn='/booking/new?'+resume.toString();
@@ -43,7 +49,7 @@ function BookingRequestForm() {
       <section className="care-path mb-6"><h2 className="text-xl">{item.name}</h2><p>{item.organization_name} · {item.city}, {item.state}</p><p className="mt-3">Base fee: {item.currency} {Number(item.base_price).toLocaleString('en-NG',{minimumFractionDigits:2})} · {item.duration_minutes} minutes</p><p className="text-sm text-muted-foreground mt-3">No online payment is collected. The provider must confirm this request; submitting does not reserve a slot. Any additional costs must be agreed separately before care.</p><Button type="button" variant="outline" className="mt-4" disabled={busy} onClick={()=>{void catalog.refetch();void slots.refetch();setAcceptedVersion(null);setStart('');}}>Refresh service details and times</Button></section>
       {!item.booking_enabled?<p>This provider is not accepting booking requests right now.</p>:choices.isPending?<p role="status">Loading your animals…</p>:choices.isError?<><p role="alert">Could not load your animals.</p><Button onClick={()=>void choices.refetch()}>Retry animals</Button></>:!options.length?<p>Add an owned <Link className="underline text-primary" to={`/pets/new?${new URLSearchParams({returnTo:animalReturn})}`}>animal profile</Link>{['veterinary','diagnostics'].includes(item.category ?? '')?<> or <Link className="underline text-primary" to={farmSetup}>farm group</Link></>:''} before requesting this service.</p>:<form className="care-path space-y-5" onSubmit={async event=>{
         event.preventDefault();if(actionLock.current || !ready || !selected)return;
-        if(phone.trim().length<7 || phone.trim().length>40 || (home && address.trim().length<10)){setError('Check your contact phone and visit address before submitting.');return;}
+        if(!contactReady || !addressReady){setError('Check your contact phone and visit address before submitting.');return;}
         actionLock.current=true;setBusy(true);setError('');
         const input={serviceId:id,serviceVersion:item.service_version!,start,animalId:selected.id,kind:selected.kind,phone,address:home?address:'',notes};const payload=JSON.stringify(input);
         if(retry.current.payload!==payload)retry.current={payload,key:crypto.randomUUID()};
@@ -56,7 +62,7 @@ function BookingRequestForm() {
           <div className="flex flex-wrap gap-4 text-sm"><Link className="text-primary underline" to={`/pets/new?${new URLSearchParams({returnTo:animalReturn})}`}>Add another animal profile</Link>{['veterinary','diagnostics'].includes(item.category ?? '')&&<Link className="text-primary underline" to={farmSetup}>Add or choose a farm group</Link>}</div>
           <div><Label htmlFor="booking-date">Date · Africa/Lagos (WAT)</Label><Input id="booking-date" type="date" required min={watDate()} max={limit} value={date} onChange={event=>{setDate(event.target.value);setStart('');}}/></div>
           <div><Label htmlFor="booking-time">Available start time · WAT</Label>{!validDate?<p className="text-sm mt-2">Choose a valid date within the next 90 days.</p>:slots.isPending?<p role="status">Loading times…</p>:slots.isError?<><p role="alert">Could not load times.</p><Button type="button" variant="outline" onClick={()=>void slots.refetch()}>Retry times</Button></>:<><select id="booking-time" required className="w-full border rounded-md bg-background p-3" value={start} onChange={event=>setStart(event.target.value)}><option value="">Choose a time</option>{slots.data?.map(slot=><option key={slot.start_at} value={slot.start_at}>{bookingTime(slot.start_at)}</option>)}</select>{start&&!slots.isFetching&&!slots.data?.some(slot=>slot.start_at===start)&&<p role="status" className="text-sm mt-2">Your selected time is no longer available. Choose another time.</p>}{!slots.data?.length&&<p className="text-sm mt-2">No times are available on this date. Choose another date.</p>}</>}</div>
-          <div><Label htmlFor="booking-phone">Contact phone (shared privately with the provider)</Label><Input id="booking-phone" required minLength={7} maxLength={40} type="tel" value={phone} onChange={event=>setPhone(event.target.value)}/></div>
+          <div><Label htmlFor="booking-phone">Contact phone (shared privately with the provider)</Label><Input id="booking-phone" required minLength={7} maxLength={40} type="tel" value={phone} onChange={event=>{phoneEdited.current=true;setPhone(event.target.value);}}/></div>
           {home&&<div><Label htmlFor="booking-address">Visit address (shared privately with the provider)</Label><Textarea id="booking-address" required minLength={10} maxLength={500} value={address} onChange={event=>setAddress(event.target.value)}/></div>}
           <div><Label htmlFor="booking-notes">Notes for the provider (optional)</Label><Textarea id="booking-notes" maxLength={2000} value={notes} onChange={event=>setNotes(event.target.value)}/></div>
           <label className="flex gap-3 items-start"><input type="checkbox" required checked={consent} onChange={event=>setAcceptedVersion(event.target.checked?item.service_version:null)} className="mt-1"/>I understand this is a pending request, the recorded base fee is {item.currency} {Number(item.base_price).toLocaleString('en-NG')}, and my selected animal details, contact phone{home?' and visit address':''} will be shared with this provider.</label>
@@ -66,7 +72,10 @@ function BookingRequestForm() {
           <dl className="grid gap-3 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Animal</dt><dd className="font-medium">{selected?.name || 'Choose your animal above'}</dd></div><div><dt className="text-muted-foreground">Provider</dt><dd className="font-medium">{item.organization_name}</dd></div><div><dt className="text-muted-foreground">Appointment time</dt><dd className="font-medium">{currentSlot ? bookingTime(start) : 'Choose an available time above'}</dd></div><div><dt className="text-muted-foreground">Base fee</dt><dd className="font-medium">{item.currency} {Number(item.base_price).toLocaleString('en-NG',{minimumFractionDigits:2})}</dd></div></dl>
           <p className="mt-4 text-xs leading-relaxed text-muted-foreground">{home ? 'Home visit. Your address is shared privately with this provider.' : 'Visit the provider location; confirm the exact address with the provider.'} This is a request, not a confirmed appointment. No payment is collected.</p>
         </section>
-        <Button type="submit" disabled={busy || !ready}>{busy?'Submitting…':'Submit booking request'}</Button>
+        <div id="booking-readiness" role="status" className="rounded-xl border p-4 text-sm">
+          {remaining.length?<><p className="font-medium mb-2">Before you can send your request</p><ul className="list-disc pl-5 space-y-1">{remaining.map(message=><li key={message}>{message}</li>)}</ul></>:<p>Ready to send. The provider will need to confirm your appointment.</p>}
+        </div>
+        <Button aria-describedby="booking-readiness" type="submit" disabled={busy || !ready}>{busy?'Submitting…':'Submit booking request'}</Button>
         {error&&<p role="alert" className="text-destructive">{error}</p>}
       </form>}
     </>}
