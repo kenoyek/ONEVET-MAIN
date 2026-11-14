@@ -1,37 +1,56 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
-import { CheckCircle2, ArrowUpRight } from 'lucide-react';
-import { useAuth } from '@/lib/auth-context';
+import {useQuery} from '@tanstack/react-query';
+import {supabase} from '@/integrations/supabase/client';
+import {Link} from 'react-router-dom';
+import {CheckCircle2, ArrowUpRight} from 'lucide-react';
+import {useAuth} from '@/lib/auth-context';
+import {Button} from '@/components/ui/button';
+import {isFeatureEnabled} from '@/lib/feature-flags';
 
-export function AccountNextSteps({ hasAnimals }: { hasAnimals?: boolean }) {
-  const { profile, role, user } = useAuth();
+export function AccountNextSteps() {
+  const {profile, role, user} = useAuth();
   const provider = role === 'service_provider';
-  const farm = profile?.customer_type === 'farm_owner' || profile?.customer_type === 'livestock_owner';
+  const farm = ['farm_owner', 'livestock_owner', 'both'].includes(profile?.customer_type ?? '');
+  const pets = !provider && !['farm_owner', 'livestock_owner'].includes(profile?.customer_type ?? '');
+  const available = !!user && profile?.user_id === user.id && profile.is_active === true;
   const records = useQuery({
-    queryKey: ['onboarding-record-count', user?.id, profile?.id, provider ? 'business' : 'farm'],
-    enabled: !!user?.id && profile?.user_id === user.id && (provider || farm || profile?.customer_type === 'both'),
+    queryKey: ['onboarding-record-count', user?.id, profile?.id, provider, farm, pets],
+    enabled: available,
     queryFn: async () => {
-      const result = provider
-        ? await supabase.from('provider_organizations').select('id', { count: 'exact', head: true }).eq('created_by', user!.id)
-        : await supabase.from('livestock_farms').select('id', { count: 'exact', head: true }).eq('owner_id', profile!.id);
-      if (result.error) throw result.error;
-      return result.count || 0;
+      const count = async (table: 'pets' | 'livestock_farms' | 'provider_organizations', field: 'owner_id' | 'created_by', owner: string) => {
+        const result = await supabase.from(table).select('id', {count: 'exact', head: true}).eq(field, owner);
+        if (result.error) throw result.error;
+        if (result.count === null) throw new Error('Record count unavailable');
+        return result.count;
+      };
+      const [animals, farms, businesses] = await Promise.all([
+        pets ? count('pets', 'owner_id', profile!.id) : 0,
+        !provider && farm ? count('livestock_farms', 'owner_id', profile!.id) : 0,
+        provider ? count('provider_organizations', 'created_by', user!.id) : 0,
+      ]);
+      return {animals, farms, businesses};
     },
   });
-  if (!profile) return null;
-  const contactComplete = !!profile.first_name?.trim() && !!profile.last_name?.trim() && !!profile.phone?.trim();
+  if (!available) return null;
+  const phoneDigits = (profile.phone ?? '').replace(/\D/g, '');
+  const contactComplete = !!profile.first_name?.trim() && !!profile.last_name?.trim() && phoneDigits.length >= 7 && phoneDigits.length <= 15;
+  const known = records.isSuccess && !records.isError;
   const steps = [
-    { title: 'Complete your contact details', description: 'Keep your name, phone and location ready for service requests.', href: '/profile', done: contactComplete },
-    provider ? { title: 'Register your organization', description: 'Save your business, attach documents and submit it for review.', href: '/provider/register', done: !!records.data }
-      : { title: farm ? 'Add your farm and animals' : 'Add an animal profile', description: farm ? 'Create farm records and animal groups before requesting care.' : 'Keep your animal’s details ready when booking a service.', href: farm ? '/farms' : '/pets/new', done: farm ? !!records.data : !!hasAnimals || (profile.customer_type === 'both' && !!records.data) },
-    { title: provider ? 'Manage your workspaces' : 'Find the right care', description: provider ? 'Open saved organizations and invitations to see their next steps. Approval is required before services can be published.' : 'Browse providers and check availability before requesting a booking.', href: provider ? '/provider/invitations' : '/find-a-vet', done: false },
+    {title: 'Complete your contact details', description: 'Add your name and a contact phone number for care requests.', href: '/profile', done: contactComplete, known: true},
+    ...(provider ? [{title: 'Register your organization', description: 'Save your business, attach documents and submit it for review.', href: '/provider/register', done: !!records.data?.businesses, known}]
+      : [...(pets ? [{title: 'Add your first pet', description: 'Keep your pet’s details ready for bookings and its health journal.', href: known && records.data?.animals ? '/pets' : '/pets/new', done: !!records.data?.animals, known}] : []),
+        ...(farm ? [{title: 'Add your farm', description: 'Keep your farm details and animal groups together before requesting care.', href: isFeatureEnabled('customer_farms_enabled') ? '/farms' : '/farm-care', done: !!records.data?.farms, known}] : [])]),
   ];
+  const completed = steps.filter(step => step.known && step.done).length;
   return <section className="mb-8 rounded-2xl border bg-card p-6 sm:p-8" aria-label="Getting started">
-    <p className="eyebrow mb-2">Getting started</p><h2 className="text-2xl mb-5">{provider ? 'Set up your business on 1Vet' : 'Your first steps on 1Vet'}</h2>
-    <div className="grid gap-4 md:grid-cols-3">{steps.map((step, index) => <Link key={step.href} to={step.href} className="rounded-xl border border-border p-4 hover:border-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
-      <span className="mb-3 flex items-center gap-2 text-xs text-primary font-semibold">{step.done ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : `${index + 1}.`}{step.done ? 'Added' : 'Next step'}</span>
-      <h3 className="font-semibold mb-2">{step.title}</h3><p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p><ArrowUpRight className="mt-4 h-4 w-4 text-primary" aria-hidden="true" />
+    <p className="eyebrow mb-2">Getting started</p>
+    <h2 className="text-2xl">{provider ? 'Set up your business on 1Vet' : 'Make yourself at home on 1Vet'}</h2>
+    <p className="mt-3 text-sm text-muted-foreground">{provider ? 'Registration is the first step. Approval is required before publishing services.' : 'Start with what you need today. You can browse care and shop while setting up your records.'}</p>
+    <p role="status" className="mt-4 text-sm font-medium">{known ? `${completed} of ${steps.length} setup steps complete` : records.isError ? 'Setup progress could not be checked.' : 'Checking your setup progress…'}</p>
+    {records.isError && <div className="mt-3"><p className="text-sm text-muted-foreground">Your saved records may already exist. Retry before creating another.</p><Button variant="outline" className="mt-3" onClick={() => void records.refetch()}>Retry setup check</Button></div>}
+    <div className="grid gap-4 md:grid-cols-3 mt-5">{steps.map((step, index) => <Link key={step.href} to={step.href} className="rounded-xl border border-border p-4 hover:border-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring">
+      <span className="mb-3 flex items-center gap-2 text-xs text-primary font-semibold">{step.known && step.done ? <CheckCircle2 className="h-4 w-4" aria-hidden="true"/> : `${index + 1}.`}{!step.known ? 'Not verified' : step.done ? 'Complete' : 'Ready when you are'}</span>
+      <h3 className="font-semibold mb-2">{step.title}</h3><p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p><ArrowUpRight className="mt-4 h-4 w-4 text-primary" aria-hidden="true"/>
     </Link>)}</div>
+    <div className="mt-6 flex flex-wrap gap-3"><Button asChild><Link to={provider ? '/provider/invitations' : '/provider-marketplace'}>{provider ? 'Open your workspaces' : 'Browse care services'}</Link></Button>{!provider && <Button asChild variant="outline"><Link to="/marketplace">Explore the marketplace</Link></Button>}</div>
   </section>;
 }
