@@ -35,3 +35,22 @@ describe('Provider draft form', () => {
     expect(screen.getByLabelText('Street address')).toBeEnabled();
   });
 });
+
+it('suggests an identifier but preserves a manually chosen identifier', () => {
+ render(<ProviderDraftForm onSave={vi.fn()}/>);
+ fireEvent.change(screen.getByLabelText('Organization name'),{target:{value:'Ada’s Veterinary Clinic'}});
+ expect(screen.getByLabelText('Organization identifier')).toHaveValue('ada-s-veterinary-clinic');
+ fireEvent.change(screen.getByLabelText('Organization identifier'),{target:{value:'ada-vet'}});
+ fireEvent.change(screen.getByLabelText('Organization name'),{target:{value:'Ada Veterinary Hospital'}});
+ expect(screen.getByLabelText('Organization identifier')).toHaveValue('ada-vet');
+});
+it('marks invalid fields, focuses the first error and never submits invalid data', async () => {
+ const save=vi.fn();render(<ProviderDraftForm onSave={save}/>);
+ fireEvent.click(screen.getByRole('button',{name:'Save organization draft'}));
+ expect(await screen.findByRole('alert')).toHaveTextContent('highlighted');
+ expect(screen.getByLabelText('Organization name')).toHaveAttribute('aria-invalid','true');
+ await waitFor(()=>expect(screen.getByLabelText('Organization name')).toHaveFocus());
+ expect(save).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText('Organization name'),{target:{value:'Ada Clinic'}});
+ expect(screen.getByLabelText('Organization name')).toHaveAttribute('aria-invalid','false');
+});
