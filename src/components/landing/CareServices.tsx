@@ -6,7 +6,7 @@ import livestock from '@/assets/marketing/livestock-care-card.webp';
 
 const services = [
   {title:'Veterinary care',description:'A new concern or a routine check. Find a veterinarian and explore the care available.',href:'/find-a-vet',image:clinic,Icon:Stethoscope},
-  {title:'Grooming & wellbeing',description:'Everyday comfort, from coat care to a little extra attention. Meet service providers.',href:'/provider-marketplace',image:grooming,Icon:Scissors},
+  {title:'Grooming & wellbeing',description:'Everyday comfort, from coat care to a little extra attention. Meet service providers.',href:'/provider-marketplace?category=grooming',image:grooming,Icon:Scissors},
   {title:'Farm & livestock care',description:'Support for your herd, flock or pond. Keep group records and find the right expertise.',href:'/farm-care',image:livestock,Icon:Sprout},
 ];
 export function CareServices(){

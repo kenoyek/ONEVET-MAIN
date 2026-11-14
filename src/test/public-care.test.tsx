@@ -1,5 +1,7 @@
+import {CareFinder} from '@/components/landing/CareFinder';
+import {careSearchFilters} from '@/lib/care-search';
 import { fireEvent, render, screen, cleanup } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Hero } from '@/components/landing/Hero';
 import { CarePathways } from '@/components/landing/CarePathways';
@@ -86,4 +88,22 @@ describe('Public care journeys', () => {
       expect.objectContaining({ query: 'poultry' }),
     );
   });
+});
+
+it('carries homepage care type and city into public discovery without an account',async()=>{
+ render(<MemoryRouter><Routes><Route path="/" element={<CareFinder/>}/><Route path="/provider-marketplace" element={<ProviderMarketplace/>}/></Routes></MemoryRouter>);
+ fireEvent.change(screen.getByLabelText('Type of care'),{target:{value:'grooming'}});
+ fireEvent.change(screen.getByLabelText(/City/),{target:{value:' Ibadan '}});
+ fireEvent.click(screen.getByRole('button',{name:'Find care'}));
+ await screen.findByText('We couldn’t load care services.');
+ expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({category:'grooming',city:'Ibadan'}));
+ expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
+});
+it('bounds shared search filters and ignores unsupported categories',()=>{
+ expect(careSearchFilters(new URLSearchParams('category=unsupported&city= Lagos &q= wellness '))).toEqual({category:'all',city:'Lagos',query:'wellness'});
+ expect(careSearchFilters(new URLSearchParams({city:'x'.repeat(200)})).city).toHaveLength(80);
+});
+it('keeps the veterinarian directory limited to veterinary care even with a shared category',()=>{
+ render(<MemoryRouter initialEntries={['/find-a-vet?category=grooming&city=Lagos']}><ProviderMarketplace/></MemoryRouter>);
+ expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({category:'veterinary',city:'Lagos'}));
 });

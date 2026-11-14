@@ -1,3 +1,4 @@
+import {CareFinder} from '@/components/landing/CareFinder';
 import {CareServices} from '@/components/landing/CareServices';
 import { MarketplaceWelcome } from '@/components/landing/MarketplaceWelcome';
 import '@/components/landing/welcome.css';
@@ -8,5 +9,5 @@ import { CarePathways } from '@/components/landing/CarePathways';
 import { SEO } from '@/components/shared/SEO';
 
 export default function Index() {
- return <div className="welcome-home min-h-screen"><SEO /><Navbar /><main id="main-content" tabIndex={-1}><Hero /><CareServices /><MarketplaceWelcome /><CarePathways /></main><Footer /></div>;
+ return <div className="welcome-home min-h-screen"><SEO /><Navbar /><main id="main-content" tabIndex={-1}><Hero /><CareFinder /><CareServices /><MarketplaceWelcome /><CarePathways /></main><Footer /></div>;
 }

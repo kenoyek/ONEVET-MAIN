@@ -1,3 +1,4 @@
+import {careSearchFilters} from '@/lib/care-search';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -48,16 +49,22 @@ const CATEGORIES = [
 ];
 
 export default function ProviderMarketplace() {
-  const veterinaryOnly = useLocation().pathname === '/find-a-vet';
+  const location=useLocation();
+  return <ProviderMarketplaceContent key={location.pathname+location.search}/>;
+}
+function ProviderMarketplaceContent() {
+  const location=useLocation();
+  const initial=careSearchFilters(new URLSearchParams(location.search));
+  const veterinaryOnly = location.pathname === '/find-a-vet';
   const [submittedSearch, setSubmittedSearch] = useState({
-    query: '',
-    city: '',
+    query: initial.query,
+    city: initial.city,
   });
   // Filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState(initial.query);
+  const [selectedCategory, setSelectedCategory] = useState(initial.category);
   const [selectedDeliveryMode, setSelectedDeliveryMode] = useState('all');
-  const [cityQuery, setCityQuery] = useState('');
+  const [cityQuery, setCityQuery] = useState(initial.city);
   const [emergencyOnly, setEmergencyOnly] = useState(false);
 
   const filter: SearchProvidersFilter = {
