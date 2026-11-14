@@ -51,7 +51,8 @@ export function FarmForm({
     defaultValues: { farm_type: 'poultry' },
   });
   return (
-    <form onSubmit={handleSubmit(onSave)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(onSave)} className="space-y-4" noValidate aria-busy={pending}>
+      <fieldset disabled={pending} className="space-y-4 min-w-0">
       <label className="block space-y-2 text-sm font-medium">
         <span>Farm name</span>
         <Input
@@ -101,6 +102,7 @@ export function FarmForm({
       </div>
       <FormErrors messages={Object.values(errors).map((e) => e.message)} />
       <SaveButton pending={pending} label="Save farm" />
+      </fieldset>
     </form>
   );
 }
@@ -120,7 +122,8 @@ export function BatchForm({
     defaultValues: { species: 'poultry', head_count: 1 },
   });
   return (
-    <form onSubmit={handleSubmit(onSave)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(onSave)} className="space-y-4" noValidate aria-busy={pending}>
+      <fieldset disabled={pending} className="space-y-4 min-w-0">
       <label className="block space-y-2 text-sm font-medium">
         <span>Group name</span>
         <Input
@@ -164,6 +167,7 @@ export function BatchForm({
       </label>
       <FormErrors messages={Object.values(errors).map((e) => e.message)} />
       <SaveButton pending={pending} label="Save animal group" />
+      </fieldset>
     </form>
   );
 }
@@ -200,7 +204,8 @@ export function ObservationForm({
     },
   });
   return (
-    <form onSubmit={handleSubmit(onSave)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(onSave)} className="space-y-4" noValidate aria-busy={pending}>
+      <fieldset disabled={pending} className="space-y-4 min-w-0">
       <p className="text-sm text-muted-foreground">
         Record what you noticed. This is an owner observation, not a diagnosis
         or prescription. Contact a veterinarian for clinical advice.
@@ -251,6 +256,7 @@ export function ObservationForm({
       </p>
       <FormErrors messages={Object.values(errors).map((e) => e.message)} />
       <SaveButton pending={pending} label="Save observation" />
+      </fieldset>
     </form>
   );
 }

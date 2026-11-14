@@ -33,6 +33,7 @@ function FarmsContent() {
   const client = useQueryClient();
   const actionLock=useRef(false);
   const draftId=useRef<string>();
+  const [createdFarm,setCreatedFarm]=useState<{id:string;name:string}|null>(null);
   const [open, setOpen] = useState(false);
   const save = useMutation({
     mutationFn: (values: FarmValues) => {
@@ -43,7 +44,7 @@ function FarmsContent() {
     onSuccess: async saved => {
       draftId.current=undefined;
       await client.invalidateQueries({queryKey:['customer-farms',ownerId]});
-      if(returnTo&&saved?.id&&active.current)navigate(farmPath(saved.id));
+      if(saved?.id&&active.current){if(returnTo)navigate(farmPath(saved.id));else setCreatedFarm({id:saved.id,name:saved.farm_name});}
     },
   });
   return (
@@ -81,6 +82,11 @@ function FarmsContent() {
             Add farm
           </Button>
         </div>
+        {createdFarm&&<section aria-label="Farm saved" className="mb-8 rounded-2xl border border-primary/20 bg-card p-6 sm:p-8">
+          <p role="status" className="eyebrow mb-3">Farm saved</p><h2 className="text-2xl break-words">{createdFarm.name} is ready for its first animal group.</h2>
+          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">Next, add your herd, flock, pond or batch. Group records keep animal counts and observations together and can be selected when requesting care.</p>
+          <div className="mt-5 flex flex-wrap gap-3"><Button asChild><Link to={farmPath(createdFarm.id)}>Add an animal group</Link></Button><Button asChild variant="outline"><Link to="/marketplace">Browse farm supplies</Link></Button><Button variant="ghost" onClick={()=>setCreatedFarm(null)}>Dismiss confirmation</Button></div>
+        </section>}
         {!ownerId ? (
           <p role="status">Loading your account…</p>
         ) : query.isLoading ? (

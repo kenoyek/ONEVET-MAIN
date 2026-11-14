@@ -141,6 +141,11 @@ describe('Customer farm workspace', () => {
     expect(livestockService.registerFarm).toHaveBeenCalledWith(
       expect.objectContaining({ owner_id: owner }),expect.any(String),
     );
+    expect(screen.getByRole('region',{name:'Farm saved'})).toHaveTextContent('Fixture Farm is ready for its first animal group.');
+    expect(screen.getByRole('link',{name:'Add an animal group'})).toHaveAttribute('href','/farms/'+farmId);
+    expect(screen.getByRole('link',{name:'Browse farm supplies'})).toHaveAttribute('href','/marketplace');
+    fireEvent.click(screen.getByRole('button',{name:'Dismiss confirmation'}));
+    expect(screen.queryByRole('region',{name:'Farm saved'})).not.toBeInTheDocument();
     fireEvent.click(farmLink);
     await screen.findByRole('heading', { name: 'Fixture Farm' });
     fireEvent.click(screen.getByRole('button', { name: 'Add animal group' }));
