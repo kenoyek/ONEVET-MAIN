@@ -22,6 +22,8 @@ export interface CartItem {
 }
 
 interface CartContextType {
+  storageError: boolean;
+  retryStorage: () => void;
   items: CartItem[];
   addItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
@@ -96,6 +98,9 @@ const ScopedCart = ({
   const [items, setItems] = useState<CartItem[]>(handoff.items);
 
   const guestConsumed = useRef(false);
+  const [storageError,setStorageError]=useState(false);
+  const [storageAttempt,setStorageAttempt]=useState(0);
+  const retryStorage=()=>setStorageAttempt(previous=>previous+1);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -106,11 +111,13 @@ const ScopedCart = ({
           localStorage.removeItem('1vet-cart:v2:guest');
           guestConsumed.current = true;
         }
+        setStorageError(false);
       }
     } catch (error) {
+      setStorageError(true);
       console.error('Failed to save cart to localStorage', error);
     }
-  }, [items, storageKey, handoff.imported]);
+  }, [items, storageKey, handoff.imported, storageAttempt]);
 
   const addItem = (newItem: CartItem) => {
     if (!Number.isFinite(newItem.price) || newItem.price < 0 || cartQuantityLimit(newItem.stock_quantity) === 0 || newItem.available === false) { toast.error('This product is unavailable.'); return; }
@@ -179,6 +186,7 @@ const ScopedCart = ({
   return (
     <CartContext.Provider
       value={{
+        storageError, retryStorage,
         items,
         addItem,
         removeItem,

@@ -13,6 +13,8 @@ function Probe() {
       <p data-testid="cart">
         {cart.items.map((i) => i.title).join(',')}|{cart.totalPrice}
       </p>
+      <p data-testid="storage-status">{cart.storageError?'unsaved':'saved'}</p>
+      <button onClick={cart.retryStorage}>Retry storage</button>
       <p data-testid="quantity">{cart.totalItems}</p>
       <button onClick={() => cart.refreshItems([{id:'one',title:'Animal feed',price:250,images:[],seller_id:'seller',stock_quantity:2}])}>Refresh stock</button>
       <button onClick={() => cart.refreshItems([])}>Unavailable</button>
@@ -47,7 +49,7 @@ beforeEach(() => {
   auth.user = { id: 'account-a' };
   auth.loading = false;
 });
-afterEach(cleanup);
+afterEach(()=>{cleanup();vi.restoreAllMocks();});
 describe('Account-scoped cart storage', () => {
   it('never carries another account’s cart through account switches or logout', () => {
     const { rerender } = render(view());
@@ -133,4 +135,14 @@ describe('Current cart stock and totals', () => {
     localStorage.setItem('1vet-cart:v2:account-a', JSON.stringify([{id:'one',title:'Sample',price:0.1,image:'',quantity:3,seller_id:'seller'}]));
     render(view());expect(screen.getByTestId('cart')).toHaveTextContent('Sample|0.3');
   });
+});
+
+it('reports failed persistence without dropping items and recovers on retry', () => {
+ const write=vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new Error('quota');});
+ render(view());fireEvent.click(screen.getByText('Add'));
+ expect(screen.getByTestId('cart')).toHaveTextContent('Animal feed|200');
+ expect(screen.getByTestId('storage-status')).toHaveTextContent('unsaved');
+ write.mockRestore();fireEvent.click(screen.getByText('Retry storage'));
+ expect(screen.getByTestId('storage-status')).toHaveTextContent('saved');
+ expect(JSON.parse(localStorage.getItem('1vet-cart:v2:account-a')!)[0].title).toBe('Animal feed');
 });

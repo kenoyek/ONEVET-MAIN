@@ -1,3 +1,4 @@
+import {CartStorageNotice} from '@/components/marketplace/CartStorageNotice';
 import { ProductImage } from '@/components/marketplace/ProductImage';
 import { cartChanges } from '@/lib/cart-changes';
 import { useEffect, useState } from 'react';
@@ -24,7 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 const Cart = () => {
-  const { items, removeItem, updateQuantity, totalPrice, totalItems, refreshItems } = useCart();
+  const { items, removeItem, updateQuantity, totalPrice, totalItems, refreshItems, storageError } = useCart();
 
   const { user } = useAuth();
   const [changes, setChanges] = useState<string[]>([]);
@@ -51,6 +52,7 @@ const Cart = () => {
               <ShoppingCart className="w-12 h-12 text-primary" />
             </div>
             <PageHeading size="workspace" className="mb-4" title={<> Your cart is empty </>}/>
+            <CartStorageNotice/>
             <p className="text-muted-foreground mb-10 text-lg font-medium">
               Explore our marketplace for premium veterinary supplies and pet products.
             </p>
@@ -83,15 +85,16 @@ const Cart = () => {
 
           <PageHeading size="workspace" className="mb-10" title={<> Shopping Cart <span className="text-primary/40 ml-2">({totalItems})</span> </>}/>
 
+          <CartStorageNotice/>
           <section className="mb-6 rounded-xl border bg-card p-4 text-sm text-muted-foreground">
-            <p>Online checkout is currently unavailable. Your cart is kept in this browser; items are not reserved.</p>
+            <p>Online checkout is currently unavailable. Cart storage is local to this browser; items are not reserved.</p>
             <p className="mt-2">Current stock may reduce a quantity in your cart. Prices are refreshed from the shop.</p>
             {catalogue.isFetching && <p role="status" className="mt-2">Checking current prices and stock…</p>}
             {catalogue.isError && <div role="alert" className="mt-2"><p>We couldn’t check current prices and stock. Your items have been kept.</p><Button variant="link" onClick={() => catalogue.refetch()}>Try again</Button></div>}
           </section>
           {!!changes.length && <section role="status" className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5"><h2 className="font-semibold">Updates to your cart</h2><ul className="mt-3 space-y-2 text-sm list-disc pl-5">{changes.map(message=><li key={message}>{message}</li>)}</ul><Button variant="ghost" className="mt-3" onClick={()=>setChanges([])}>Dismiss updates</Button></section>}
           <div className="mb-6 flex flex-wrap gap-3"><Button variant="outline" disabled={catalogue.isFetching} onClick={()=>void catalogue.refetch()}>{catalogue.isFetching?'Refreshing…':'Refresh prices and stock'}</Button>{unavailable&&<Button variant="outline" onClick={()=>unavailableItems.forEach(item=>removeItem(item.id))}>Remove unavailable items ({unavailableItems.length})</Button>}</div>
-          {!user && <section className="mb-6 rounded-2xl border bg-card p-5"><h2 className="font-semibold">Keep your shopping list with you</h2><p className="mt-2 text-sm text-muted-foreground">Your cart is saved in this browser. Sign in to move these items into your account cart. Online checkout remains unavailable.</p><div className="mt-4 flex flex-wrap gap-3"><Button asChild><Link to="/auth?mode=signup" state={{from:{pathname:'/cart'}}}>Create account</Link></Button><Button asChild variant="outline"><Link to="/auth" state={{from:{pathname:'/cart'}}}>Sign in</Link></Button></div></section>}
+          {!user && <section className="mb-6 rounded-2xl border bg-card p-5"><h2 className="font-semibold">Create your account from here</h2><p className="mt-2 text-sm text-muted-foreground">{storageError?'Your latest cart changes are not saved yet.':'Your cart is saved in this browser.'} Sign in to move these items into your account’s cart on this browser. Carts do not sync across devices. Online checkout remains unavailable.</p><div className="mt-4 flex flex-wrap gap-3"><Button asChild><Link to="/auth?mode=signup" state={{from:{pathname:'/cart'}}}>Create account</Link></Button><Button asChild variant="outline"><Link to="/auth" state={{from:{pathname:'/cart'}}}>Sign in</Link></Button></div></section>}
           <div className="grid lg:grid-cols-3 gap-12">
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
