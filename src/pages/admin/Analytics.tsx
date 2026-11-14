@@ -1,3 +1,4 @@
+import {AnalyticsBreakdown as Breakdown} from '@/components/admin/AnalyticsBreakdown';
 import { CampaignLinkBuilder } from '@/components/admin/CampaignLinkBuilder';
 import { analyticsFilters, analyticsReportLink } from '@/lib/analytics-navigation';
 import {useRef,useState} from 'react';
@@ -8,11 +9,8 @@ import {Navbar} from '@/components/layout/Navbar';
 import {PageHeading} from '@/components/layout/PageHeading';
 import {Button} from '@/components/ui/button';
 import {useAuth} from '@/lib/auth-context';
-import {analyticsCSV,siteAnalyticsService,type AnalyticsRow} from '@/lib/services/site-analytics-service';
+import {analyticsCSV,siteAnalyticsService} from '@/lib/services/site-analytics-service';
 
-function Breakdown({title,description,rows,entries=false}:{title:string;description?:string;rows:AnalyticsRow[];entries?:boolean}){
- return <section className="min-w-0 rounded-2xl border bg-card p-5 sm:p-6"><h2 className="text-xl font-semibold">{title}</h2>{description&&<p className="mt-2 text-xs leading-relaxed text-muted-foreground">{description}</p>}{!rows.length?<p className="mt-5 text-sm text-muted-foreground">No measured data in this period.</p>:<div className="mt-5 overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b text-left text-xs text-muted-foreground"><th className="pb-3 pr-3 font-medium">Detail</th><th className="pb-3 px-2 text-right font-medium">{entries?'Sessions':'Views'}</th><th className="pb-3 pl-2 text-right font-medium">Browsers</th></tr></thead><tbody>{rows.map(row=><tr key={row.label} className="border-b last:border-0"><td className="py-3 pr-3 max-w-[16rem] break-words">{row.label}</td><td className="py-3 px-2 text-right tabular-nums">{row.views.toLocaleString()}</td><td className="py-3 pl-2 text-right tabular-nums">{row.visitors.toLocaleString()}</td></tr>)}</tbody></table></div>}</section>;
-}
 export default function Analytics(){
  const {user}=useAuth();const keyLock=useRef(false);const [params,setParams]=useSearchParams();const {days,country}=analyticsFilters(params);const [reportNotice,setReportNotice]=useState('');
  function setDays(value:number){setReportNotice('');setParams(previous=>{const next=new URLSearchParams(previous);if(value===30)next.delete('days');else next.set('days',String(value));return next;});}
