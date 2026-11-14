@@ -11,7 +11,7 @@ vi.mock('@/components/pets/PetForm',()=>({PetForm:({onSubmit,isSubmitting}:{onSu
 import PetNew from '@/pages/pets/PetNew';
 import { petBookingReturn } from '@/lib/pet-booking-return';
 function Destination(){return <p>Booking return {useLocation().search}</p>;}
-function mount(){render(<MemoryRouter initialEntries={['/pets/new?'+new URLSearchParams({returnTo:'/booking/new?service_id=service-one&start=time-one'})]}><Routes><Route path="/pets/new" element={<PetNew/>}/><Route path="/booking/new" element={<Destination/>}/></Routes></MemoryRouter>);}
+function mount(booking=true){render(<MemoryRouter initialEntries={[booking ? '/pets/new?'+new URLSearchParams({returnTo:'/booking/new?service_id=service-one&start=time-one'}) : '/pets/new']}><Routes><Route path="/pets/new" element={<PetNew/>}/><Route path="/booking/new" element={<Destination/>}/></Routes></MemoryRouter>);}
 beforeEach(()=>{vi.clearAllMocks();single.mockReset();from.mockReturnValue({insert});insert.mockReturnValue({select:()=>({single})});});
 afterEach(cleanup);
 describe('pet onboarding booking handoff',()=>{
@@ -28,6 +28,18 @@ describe('pet onboarding booking handoff',()=>{
   const eq=vi.fn();const maybeSingle=vi.fn().mockResolvedValue({data:{id:'recovered-pet'},error:null});const query={eq,maybeSingle};eq.mockReturnValue(query);
   from.mockReturnValueOnce({insert}).mockReturnValue({select:()=>query});mount();fireEvent.click(screen.getByRole('button',{name:'Save pet'}));await screen.findByText(/Booking return/);
   expect(insert).toHaveBeenCalledTimes(1);expect(eq).toHaveBeenCalledWith('owner_id','profile');expect(screen.getByText(/Booking return/)).toHaveTextContent('animal=pet%3Arecovered-pet');
+ });
+ it('confirms standalone saves and offers the saved profile and useful next actions',async()=>{
+  single.mockResolvedValue({data:{id:'saved-pet'},error:null});mount(false);fireEvent.click(screen.getByRole('button',{name:'Save pet'}));
+  expect(await screen.findByRole('heading',{name:'Bello is part of your care workspace.'})).toBeInTheDocument();
+  expect(screen.getByRole('link',{name:/Open the saved profile/})).toHaveAttribute('href','/pets/saved-pet');
+  expect(screen.getByRole('link',{name:/Find care services/})).toHaveAttribute('href','/provider-marketplace');
+  expect(screen.getByRole('link',{name:/Browse the marketplace/})).toHaveAttribute('href','/marketplace');
+  expect(screen.queryByRole('button',{name:'Save pet'})).not.toBeInTheDocument();
+ });
+ it('keeps a standalone failed save in the form without showing a success screen',async()=>{
+  single.mockResolvedValue({data:null,error:new Error('offline')});mount(false);fireEvent.click(screen.getByRole('button',{name:'Save pet'}));
+  await screen.findByRole('alert');expect(screen.queryByText('Profile created')).not.toBeInTheDocument();expect(screen.getByRole('button',{name:'Save pet'})).toBeEnabled();
  });
  it('limits booking return links to the internal request route',()=>{
   expect(petBookingReturn('/booking/new?service_id=one')).toBe('/booking/new?service_id=one');for(const value of ['//example.invalid','/auth','/booking/new?date=one',null])expect(petBookingReturn(value)).toBeNull();

@@ -1,7 +1,7 @@
 import { petBookingReturn } from '@/lib/pet-booking-return';
 import {PageHeading} from '@/components/layout/PageHeading';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
@@ -30,6 +30,8 @@ const PetNewForm = () => {
   const lock=useRef(false);
   const active=useRef(true);
   useEffect(()=>{active.current=true;return()=>{active.current=false;};},[]);
+  const [saved,setSaved]=useState<{id:string;name:string}|null>(null);
+  useEffect(()=>{if(saved)document.getElementById('pet-saved-title')?.focus();},[saved]);
   const [photoBusy,setPhotoBusy]=useState(false);
   const [saveError,setSaveError]=useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,7 +76,7 @@ const PetNewForm = () => {
       toast.success(`${values.name} has been added!`);
       if(active.current){
         if(returnTo){const target=new URL(returnTo,'https://1vet.store');target.searchParams.set('animal',`pet:${data.id}`);navigate(target.pathname+target.search);}
-        else navigate(`/pets/${data.id}`);
+        else setSaved({id:data.id,name:values.name});
       }
     } catch (error) {
       console.error('Error creating pet:', error);
@@ -83,6 +85,20 @@ const PetNewForm = () => {
       lock.current=false;setIsSubmitting(false);
     }
   };
+
+  if(saved) return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container max-w-2xl pt-28 md:pt-36 pb-20">
+    <section className="rounded-3xl border bg-card p-6 sm:p-10" aria-labelledby="pet-saved-title">
+      <p className="eyebrow mb-3">Profile created</p><h1 tabIndex={-1} id="pet-saved-title" className="text-3xl sm:text-4xl break-words">{saved.name} is part of your care workspace.</h1>
+      <p role="status" className="mt-4 text-muted-foreground leading-relaxed">Your animal’s profile has been saved. Choose what you’d like to do next—you can add more details later.</p>
+      <div className="mt-7 grid gap-4 sm:grid-cols-2">
+        <Link to={`/pets/${saved.id}`} className="care-path"><h2 className="text-lg">Open the saved profile</h2><p className="mt-2 text-sm text-muted-foreground">Review details and start an owner-reported health journal.</p></Link>
+        <Link to="/provider-marketplace" className="care-path"><h2 className="text-lg">Find care services</h2><p className="mt-2 text-sm text-muted-foreground">Explore providers and request an appointment. Your request needs provider confirmation.</p></Link>
+        <Link to="/marketplace" className="care-path"><h2 className="text-lg">Browse the marketplace</h2><p className="mt-2 text-sm text-muted-foreground">Explore food, supplies and everyday animal care products.</p></Link>
+        <Link to="/dashboard" className="care-path"><h2 className="text-lg">Return to your dashboard</h2><p className="mt-2 text-sm text-muted-foreground">See your setup progress, animal records and care activity.</p></Link>
+      </div>
+      <p className="mt-6 text-sm text-muted-foreground">Creating a profile does not book an appointment or confirm a treatment plan.</p>
+    </section>
+  </main></div>;
 
   return (
     <div className="min-h-screen bg-background">
