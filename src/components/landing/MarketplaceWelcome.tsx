@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, ShoppingBag, PawPrint, Sprout, Package } from 'lucide-react';
+import { ArrowUpRight, ShoppingBag, PawPrint, Sprout, Package, HeartPulse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function MarketplaceWelcome() {
@@ -13,11 +13,12 @@ export function MarketplaceWelcome() {
           <Button asChild className="mt-7"><Link to="/marketplace">Explore marketplace<ArrowUpRight className="ml-2 h-4 w-4" aria-hidden="true" /></Link></Button>
           <p className="mt-4 text-xs text-muted-foreground">The catalogue is growing. Online checkout is currently unavailable.</p>
         </div>
-        <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">{[
-          { Icon: PawPrint, title: 'For pets', text: 'Food, care and everyday accessories.' },
-          { Icon: Sprout, title: 'For farms', text: 'Explore livestock and poultry supplies.' },
-          { Icon: Package, title: 'Your shopping list', text: 'Keep items in your cart while you browse.' },
-        ].map(({ Icon, title, text }) => <li key={title} className="flex gap-4 rounded-2xl bg-muted/40 p-5"><Icon className="h-6 w-6 shrink-0 text-primary" aria-hidden="true" /><div><h3 className="font-semibold">{title}</h3><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{text}</p></div></li>)}</ul>
+        <ul className="welcome-shop-categories">{[
+          {Icon: PawPrint,title:'Food & nutrition',text:'Browse pet food',category:'Pet Food'},
+          {Icon: HeartPulse,title:'Health & wellbeing',text:'Explore health supplies',category:'Pet Health'},
+          {Icon: Sprout,title:'Farm essentials',text:'Browse livestock supplies',category:'Livestock'},
+          {Icon: Package,title:'Everyday accessories',text:'Explore accessories',category:'Accessories'},
+        ].map(({Icon,title,text,category})=><li key={category}><Link to={'/marketplace?'+new URLSearchParams({category})}><span className="welcome-shop-category-icon"><Icon size={27} strokeWidth={1.4} aria-hidden="true"/></span><h3>{title}</h3><span className="welcome-shop-category-link">{text}<ArrowUpRight size={16} aria-hidden="true"/></span></Link></li>)}</ul>
       </div>
     </div>
   </section>;

@@ -206,3 +206,33 @@
 .welcome-finder-city svg { flex-shrink: 0; }
 .welcome-finder-note { margin-top: 18px; color: var(--welcome-soft); font-size: 11px; line-height: 1.8; }
 @media(max-width:639px) { .welcome-finder { padding-top: 28px; } .welcome-finder-card { padding: 24px; } .welcome-finder h2 { font-size: 25px; } .welcome-finder form { grid-template-columns: 1fr; gap: 18px; } .welcome-finder button { width: 100%; } }
+/* Reference-informed feature clarity, with 1Vet's own content and capabilities. */
+.welcome-workspace-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 80px; }
+.welcome-workspace-intro { max-width: 430px; color: var(--welcome-soft); font-size: 15px; line-height: 1.8; }
+.welcome-workspace-benefits { display: grid; gap: 16px; margin: 26px 0 4px; }
+.welcome-workspace-benefits li { display: flex; align-items: flex-start; gap: 12px; font-size: 13px; line-height: 1.7; }
+.welcome-workspace-benefits svg { flex-shrink: 0; margin-top: 2px; }
+.welcome-workspace-note { font-size: 11px; line-height: 1.8; max-width: 370px; color: var(--welcome-soft); margin-top: 15px; }
+.welcome-workspace-preview { background: var(--welcome-card); border: 1px solid var(--welcome-line); padding: 27px; border-radius: 26px; box-shadow: 0 20px 45px #173d3210; }
+.welcome-workspace-preview-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.welcome-preview-label { color: var(--welcome-soft); font-size: 10px; border: 1px solid var(--welcome-line); padding: 5px 9px; border-radius: 999px; }
+.welcome-workspace-switch { display: flex; gap: 5px; padding: 5px; background: var(--welcome-paper); border-radius: 13px; margin-top: 25px; }
+.welcome-workspace-switch button { display: flex; align-items: center; justify-content: center; gap: 9px; flex: 1; border-radius: 9px; min-height: 43px; font-size: 12px; color: var(--welcome-soft); }
+.welcome-workspace-switch button[aria-pressed=true] { background: var(--welcome-ink); color: var(--welcome-card); }
+.welcome-workspace-switch button:focus-visible { outline: 2px solid var(--welcome-ink); outline-offset: 2px; }
+.welcome-workspace-features > div { display: flex; align-items: flex-start; gap: 17px; padding: 23px 0; border-bottom: 1px solid var(--welcome-line); }
+.welcome-workspace-features > div > span { background: var(--welcome-sage); border-radius: 12px; width: 44px; height: 44px; display: grid; place-items: center; flex-shrink: 0; }
+.welcome-workspace-features h3 { font-size: 16px; font-weight: 600; }
+.welcome-workspace-features p { font-size: 12px; line-height: 1.8; color: var(--welcome-soft); margin-top: 7px; }
+.welcome-preview-footnote { margin-top: 18px; font-size: 10px; line-height: 1.8; color: var(--welcome-soft); }
+.welcome-shop-categories { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.welcome-shop-categories li { min-width: 0; }
+.welcome-shop-categories a { display: flex; flex-direction: column; min-height: 185px; height: 100%; padding: 23px; background: var(--welcome-paper); border: 1px solid var(--welcome-line); border-radius: 19px; transition: border-color .2s; }
+.welcome-shop-categories a:hover { border-color: var(--welcome-soft); }
+.welcome-shop-category-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--welcome-sage); margin-bottom: 20px; }
+.welcome-shop-categories h3 { font-size: 16px; font-weight: 500; line-height: 1.5; margin-bottom: 15px; }
+.welcome-shop-category-link { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: auto; font-size: 11px; line-height: 1.6; }
+.welcome-shop-category-link svg { flex-shrink: 0; }
+@media(max-width:1023px) { .welcome-workspace-grid { gap: 35px; } }
+@media(max-width:639px) { .welcome-workspace-grid { grid-template-columns: 1fr; gap: 32px; } .welcome-workspace-preview { padding: 21px; } .welcome-workspace-features > div { gap: 12px; } .welcome-workspace-features > div > span { width: 38px; height: 38px; } .welcome-shop-categories { gap: 10px; } .welcome-shop-categories a { padding: 16px; min-height: 190px; } .welcome-shop-categories h3 { font-size: 14px; } .welcome-shop-category-link { flex-wrap: wrap; } }
+@media(prefers-reduced-motion:reduce) { .welcome-shop-categories a { transition: none; } }
