@@ -1,3 +1,5 @@
+import {Link} from 'react-router-dom';
+import {SEO} from '@/components/shared/SEO';
 import {PageHeading} from '@/components/layout/PageHeading';
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -20,37 +22,41 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { contactSchema, type ContactValues } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const faqs = [
   {
     question: "How quickly will I get a response?",
-    answer: "We respond to contact form submissions within 24 hours on business days. For urgent pet health concerns, start a vet consultation for instant access to a licensed veterinarian.",
+    answer: "Response times vary. This form is for account and general support, not clinical emergencies. If your animal is in immediate distress, contact an in-person veterinarian instead of waiting for a reply.",
   },
   {
     question: "How much does a consultation cost?",
-    answer: "Consultation costs depend on your subscription plan. Visit our Services page for detailed pricing. We offer flexible plans for both pet owners and livestock farmers.",
+    answer: "Check each provider’s listed base fee and confirm any additional charges before care. Membership details are informational while online payments are unavailable.",
   },
   {
     question: "Do you support livestock?",
-    answer: "Yes! We support cattle, goats, sheep, poultry, pigs, horses, and more. Our veterinarians have expertise in both companion animals and livestock management.",
+    answer: "You can keep farm and animal-group records and explore veterinary services. Confirm the provider’s species expertise and availability before requesting care.",
   },
   {
     question: "What areas do you serve?",
-    answer: "We serve all of Nigeria through our online consultation platform. No matter where you are — from Port-Harcourt to Kano — you can connect with a vet instantly.",
+    answer: "Search the care directory by city and service type. Coverage, remote options and visit availability depend on the provider; no immediate response is guaranteed.",
   },
   {
     question: "How do I become a vet on 1vet?",
-    answer: "Sign up as a veterinarian through our registration page. You'll need to provide your license details for verification. Once approved, you can start accepting consultations.",
+    answer: "Start a provider application, save your organization details and submit the required evidence for review. Registration alone does not grant professional approval or publish services.",
   },
   {
     question: "Is my pet's data secure?",
-    answer: "Absolutely. All data is encrypted and securely stored. We follow industry best practices to protect your pet's health records and personal information.",
+    answer: "Use your account for animal records and appointment conversations. Share only the details needed for your support question; do not include passwords, payment card details or sensitive medical documents in this form. See our Privacy page for data handling information.",
   },
 ];
 
 export default function Contact() {
   const { toast } = useToast();
+  const sendLock=useRef(false);
+  const [submitted,setSubmitted]=useState(false);
+  const [sendError,setSendError]=useState('');
+  useEffect(()=>{if(submitted)document.getElementById('contact-success-heading')?.focus();},[submitted]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -63,33 +69,35 @@ export default function Contact() {
   });
 
   const onSubmit = async (data: ContactValues) => {
+    if(sendLock.current)return;sendLock.current=true;setSendError('');setSubmitted(false);
     setIsSubmitting(true);
     try {
       const { data: result, error } = await supabase.functions.invoke("contact-form", {
         body: data,
       });
 
-      if (error) throw error;
+      if (error || result?.success!==true) throw error || new Error('Submission not acknowledged');
 
       toast({
         title: "Message sent!",
-        description: "We'll get back to you within 24 hours.",
+        description: "Your support message has been received. Response times vary.",
       });
-      reset();
-    } catch (err) {
+      reset();setSubmitted(true);
+    } catch {
+      setSendError('We couldn’t confirm your submission. Your message is still here. Retry or email support@1vet.store for help.');
       toast({
         title: "Failed to send message",
         description: "Please try again later or email us directly.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      sendLock.current=false;setIsSubmitting(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <SEO title="Contact & support" description="Get help with your 1Vet account, care options or provider registration. For urgent animal health concerns, seek in-person veterinary care."/><Navbar />
 
       <main id="main-content" tabIndex={-1}>
       {/* Hero */}
@@ -99,6 +107,7 @@ export default function Contact() {
         </div>
       </section>
 
+      <section className="container-wide mb-10"><div className="rounded-2xl border bg-card p-5 sm:p-7"><h2 className="text-xl mb-3">Find the right next step</h2><p className="text-sm text-muted-foreground mb-5">For appointment updates, use your request’s conversation. For an emergency, seek in-person care.</p><div className="flex flex-wrap gap-3"><Button asChild variant="outline"><Link to="/my-bookings">Your appointment requests</Link></Button><Button asChild variant="outline"><Link to="/provider-marketplace">Find care services</Link></Button><Button asChild variant="outline"><Link to="/urgent-care">Urgent care guidance</Link></Button></div></div></section>
       {/* Contact Form + Info */}
       <section className="section-padding pt-0">
         <div className="container-wide">
@@ -111,50 +120,55 @@ export default function Contact() {
             >
               <Card className="card-elevated p-4 sm:p-8 rounded-3xl">
                 <CardHeader className="px-0 pt-0 mb-6">
-                  <CardTitle className="text-2xl font-semibold tracking-tight mb-2">Send a Secure Message</CardTitle>
+                  <CardTitle className="text-2xl font-semibold tracking-tight mb-2">Send us a message</CardTitle>
                   <CardDescription className="font-medium text-sm">Share your question and the details we need to help.</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {submitted&&<section className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5"><h3 id="contact-success-heading" tabIndex={-1} className="font-semibold">Your support message has been received</h3><p role="status" className="mt-2 text-sm text-muted-foreground">We have your submission. Response times vary. Check the email address you provided for any follow-up.</p><Button variant="link" className="mt-2 p-0" onClick={()=>setSubmitted(false)}>Write another message</Button></section>}
+                  <form noValidate aria-busy={isSubmitting} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <fieldset disabled={isSubmitting} className="space-y-6 min-w-0"><legend className="sr-only">Support message details</legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Full Name</Label>
-                        <Input id="name" placeholder="John Doe" {...register("name")} className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" />
-                        {errors.name && <p className="text-xs font-bold text-destructive mt-1">{errors.name.message}</p>}
+                        <Input id="name" maxLength={100} aria-invalid={!!errors.name} aria-describedby={errors.name?"contact-name-error":undefined} placeholder="John Doe" {...register("name")} className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" />
+                        {errors.name && <p id="contact-name-error" className="text-xs font-bold text-destructive mt-1">{errors.name.message}</p>}
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
-                        <Input id="email" type="email" placeholder="john@example.com" {...register("email")} className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" />
-                        {errors.email && <p className="text-xs font-bold text-destructive mt-1">{errors.email.message}</p>}
+                        <Input id="email" maxLength={254} aria-invalid={!!errors.email} aria-describedby={errors.email?"contact-email-error":undefined} type="email" placeholder="john@example.com" {...register("email")} className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" />
+                        {errors.email && <p id="contact-email-error" className="text-xs font-bold text-destructive mt-1">{errors.email.message}</p>}
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="subject" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Inquiry Subject</Label>
-                      <Input id="subject" placeholder="General Inquiry" {...register("subject")} className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" />
-                      {errors.subject && <p className="text-xs font-bold text-destructive mt-1">{errors.subject.message}</p>}
+                      <Input id="subject" maxLength={200} aria-invalid={!!errors.subject} aria-describedby={errors.subject?"contact-subject-error":undefined} placeholder="General Inquiry" {...register("subject")} className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" />
+                      {errors.subject && <p id="contact-subject-error" className="text-xs font-bold text-destructive mt-1">{errors.subject.message}</p>}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="message" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Your Message</Label>
                       <Textarea
-                        id="message"
+                        id="message" maxLength={1000} aria-invalid={!!errors.message} aria-describedby={errors.message?"contact-message-error":undefined}
                         placeholder="How can we support you today?"
                         rows={6}
                         {...register("message")}
                         className="rounded-2xl bg-muted/30 border-border/50 focus:bg-background transition-all resize-none"
                       />
-                      {errors.message && <p className="text-xs font-bold text-destructive mt-1">{errors.message.message}</p>}
+                      {errors.message && <p id="contact-message-error" className="text-xs font-bold text-destructive mt-1">{errors.message.message}</p>}
                     </div>
 
                     <Button type="submit" size="xl" className="w-full rounded-full font-semibold shadow-sm hover:scale-[1.02] transition-all" disabled={isSubmitting}>
                       {isSubmitting ? (
-                        <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> Processing...</>
+                        <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> Sending…</>
                       ) : (
-                        <><Send className="w-5 h-5 mr-3" /> Transmit Message</>
+                        <><Send className="w-5 h-5 mr-3" /> Send message</>
                       )}
                     </Button>
+                    </fieldset>
+                    {sendError&&<p role="alert" className="text-sm text-destructive">{sendError}</p>}
+                    <p className="text-xs leading-relaxed text-muted-foreground">For account and general support. Do not include passwords, payment card details or sensitive documents. <Link className="underline" to="/privacy">Read our privacy notice.</Link></p>
                   </form>
                 </CardContent>
               </Card>
@@ -173,7 +187,7 @@ export default function Contact() {
                   { icon: MapPin, title: "HQ Location", content: "Port-Harcourt, Rivers State", link: null },
                   { icon: Mail, title: "Official Email", content: "support@1vet.store", link: "mailto:support@1vet.store" },
                   { icon: Phone, title: "Support line", content: "+234 705 239 8371", link: "tel:+2347052398371" },
-                  { icon: Clock, title: "Service Hours", content: "Mon–Fri: 8am – 6pm", link: null },
+                  { icon: Clock, title: "Service Hours", content: "Mon–Fri: 8am – 6pm WAT", link: null },
                 ].map((item, i) => (
                   <Card key={i} className="card-elevated p-6 rounded-[2rem]">
                     <div className="p-2.5 rounded-xl bg-primary/10 text-primary w-fit mb-4">
@@ -181,7 +195,7 @@ export default function Contact() {
                     </div>
                     <h4 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">{item.title}</h4>
                     {item.link ? (
-                      <a href={item.link} className="font-bold text-foreground hover:text-primary transition-colors">{item.content}</a>
+                      <a href={item.link} className="font-bold text-foreground hover:text-primary transition-colors break-words">{item.content}</a>
                     ) : (
                       <p className="font-bold text-foreground">{item.content}</p>
                     )}
@@ -189,19 +203,7 @@ export default function Contact() {
                 ))}
               </div>
 
-              {/* Map */}
-              <Card className="overflow-hidden rounded-3xl border-8 border-background shadow-elevated h-[320px]">
-                <iframe
-                  title="1vet Location - Port-Harcourt"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127285.30909700863!2d6.953101!3d4.8156!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1069cea39a4fdd3d%3A0x2f5e7c94e5dca158!2sPort%20Harcourt%2C%20Rivers%20State!5e0!3m2!1sen!2sng!4v1700000000000"
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </Card>
+              <Card className="rounded-3xl p-6 sm:p-8"><h2 className="text-xl mb-3">Joining as a care provider?</h2><p className="text-sm text-muted-foreground leading-relaxed mb-5">Save your organization, attach evidence and submit for review. Already applied? Return to your organizations to see the current status and requested corrections.</p><div className="flex flex-wrap gap-3"><Button asChild variant="outline"><Link to="/provider/register">Provider registration</Link></Button><Button asChild variant="link"><Link to="/privacy">Privacy & your data</Link></Button></div></Card>
             </motion.div>
           </div>
         </div>
