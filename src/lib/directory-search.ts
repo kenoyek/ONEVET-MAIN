@@ -1,0 +1,16 @@
+import {careSearchFilters} from './care-search';
+const modes=['all','clinic_visit','video','home_visit'];
+export function directoryFilters(params:URLSearchParams){
+ const delivery=params.get('delivery')??'all';
+ return {...careSearchFilters(params),delivery:modes.includes(delivery)?delivery:'all',urgent:params.get('urgent')==='1'};
+}
+export function directorySearchParams(input:ReturnType<typeof directoryFilters>,veterinaryOnly=false){
+ const filters=directoryFilters(new URLSearchParams({category:input.category,city:input.city,q:input.query,delivery:input.delivery,urgent:input.urgent?'1':''}));
+ const params=new URLSearchParams();
+ if(!veterinaryOnly&&filters.category!=='all')params.set('category',filters.category);
+ if(filters.city)params.set('city',filters.city);
+ if(filters.query)params.set('q',filters.query);
+ if(filters.delivery!=='all')params.set('delivery',filters.delivery);
+ if(filters.urgent)params.set('urgent','1');
+ return params;
+}

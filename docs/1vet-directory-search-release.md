@@ -1,0 +1,7 @@
+# Care directory search persistence — 15 November 2026
+
+Directory searches now preserve category, city, service/provider query, delivery mode and the listed urgent-service filter in validated URL parameters. Submitted criteria survive reloads, sharing and browser back/forward navigation. Text typing alone does not submit a search; choosing a category/delivery/urgent filter applies the current typed search along with that choice.
+
+A current-search summary explains the applied criteria. Clear search filters restores the default directory, while /find-a-vet always remains limited to veterinary care. Incoming query/city lengths and accepted categories/modes are bounded; unrecognized URL fields are excluded when building a search. Urgent listings are explicitly distinguished from confirmed emergency capacity and link to in-person urgent guidance.
+
+Validation includes full filter round trips, unknown/bounded inputs, city search, browser back, reset and mandatory veterinary filtering, plus existing discovery/error tests. Application/API typechecks, lint and production build pass. Local Chromium checks full-filter URLs, reload, back navigation, reset, veterinary restriction and no overflow at 1440, 390 and 320 using intercepted synthetic backend responses without production writes. Screenshots: /workspace/artifacts/1vet/directory-search/. These checks do not establish live deployment or actual provider availability.

@@ -1,7 +1,7 @@
 import {CareFinder} from '@/components/landing/CareFinder';
 import {careSearchFilters} from '@/lib/care-search';
 import { fireEvent, render, screen, cleanup } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Hero } from '@/components/landing/Hero';
 import { CarePathways } from '@/components/landing/CarePathways';
@@ -106,4 +106,22 @@ it('bounds shared search filters and ignores unsupported categories',()=>{
 it('keeps the veterinarian directory limited to veterinary care even with a shared category',()=>{
  render(<MemoryRouter initialEntries={['/find-a-vet?category=grooming&city=Lagos']}><ProviderMarketplace/></MemoryRouter>);
  expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({category:'veterinary',city:'Lagos'}));
+});
+
+it('keeps delivery and urgent filters through search, browser back and reset',()=>{
+ function Navigation(){const location=useLocation();const navigate=useNavigate();return <><output data-testid="search-url">{location.search}</output><button onClick={()=>navigate(-1)}>Browser back</button></>;}
+ render(<MemoryRouter initialEntries={['/provider-marketplace?category=grooming&city=Ibadan&delivery=home_visit&urgent=1']}><ProviderMarketplace/><Navigation/></MemoryRouter>);
+ expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({category:'grooming',city:'Ibadan',delivery_mode:'home_visit',is_emergency_service:true}));
+ fireEvent.change(screen.getByLabelText('City'),{target:{value:'Lagos'}});fireEvent.click(screen.getByRole('button',{name:'Search'}));
+ expect(new URLSearchParams(screen.getByTestId('search-url').textContent!).get('city')).toBe('Lagos');
+ expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({city:'Lagos',delivery_mode:'home_visit',is_emergency_service:true}));
+ fireEvent.click(screen.getByRole('button',{name:'Browser back'}));expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
+ fireEvent.click(screen.getByRole('button',{name:'Clear search filters'}));
+ expect(screen.getByTestId('search-url').textContent).toBe('');
+ expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({category:undefined,city:undefined,delivery_mode:undefined,is_emergency_service:undefined}));
+});
+it('resets a veterinary search without removing the required veterinary category',()=>{
+ render(<MemoryRouter initialEntries={['/find-a-vet?city=Ibadan&delivery=video']}><ProviderMarketplace/></MemoryRouter>);
+ fireEvent.click(screen.getByRole('button',{name:'Clear search filters'}));
+ expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({category:'veterinary',city:undefined,delivery_mode:undefined}));
 });

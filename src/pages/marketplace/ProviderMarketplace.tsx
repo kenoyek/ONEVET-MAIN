@@ -1,7 +1,7 @@
-import {careSearchFilters} from '@/lib/care-search';
+import {directoryFilters,directorySearchParams} from '@/lib/directory-search';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Footer } from '@/components/layout/Footer';
 import { SEO } from '@/components/shared/SEO';
 import { Navbar } from '@/components/layout/Navbar';
@@ -54,18 +54,18 @@ export default function ProviderMarketplace() {
 }
 function ProviderMarketplaceContent() {
   const location=useLocation();
-  const initial=careSearchFilters(new URLSearchParams(location.search));
+  const [,setParams]=useSearchParams();
+  const initial=directoryFilters(new URLSearchParams(location.search));
   const veterinaryOnly = location.pathname === '/find-a-vet';
-  const [submittedSearch, setSubmittedSearch] = useState({
-    query: initial.query,
-    city: initial.city,
-  });
-  // Filter states
   const [searchQuery, setSearchQuery] = useState(initial.query);
-  const [selectedCategory, setSelectedCategory] = useState(initial.category);
-  const [selectedDeliveryMode, setSelectedDeliveryMode] = useState('all');
   const [cityQuery, setCityQuery] = useState(initial.city);
-  const [emergencyOnly, setEmergencyOnly] = useState(false);
+  const selectedCategory=initial.category;
+  const selectedDeliveryMode=initial.delivery;
+  const emergencyOnly=initial.urgent;
+  const hasFilters=!!(initial.query||initial.city||initial.delivery!=='all'||initial.urgent||(!veterinaryOnly&&initial.category!=='all'));
+  function applySearch(change:Partial<ReturnType<typeof directoryFilters>>={}){
+    setParams(directorySearchParams({...initial,query:searchQuery,city:cityQuery,...change},veterinaryOnly));
+  }
 
   const filter: SearchProvidersFilter = {
     category: veterinaryOnly
@@ -78,8 +78,8 @@ function ProviderMarketplaceContent() {
         ? (selectedDeliveryMode as ServiceDeliveryMode)
         : undefined,
     is_emergency_service: emergencyOnly ? true : undefined,
-    query: submittedSearch.query || undefined,
-    city: submittedSearch.city || undefined,
+    query: initial.query || undefined,
+    city: initial.city || undefined,
   };
 
   const {
@@ -91,7 +91,7 @@ function ProviderMarketplaceContent() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmittedSearch({ query: searchQuery.trim(), city: cityQuery.trim() });
+    applySearch();
   };
 
   const getDeliveryIcon = (mode: string) => {
@@ -138,7 +138,7 @@ function ProviderMarketplaceContent() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  aria-label="Search services or providers"
+                  aria-label="Search services or providers" maxLength={120}
                   placeholder="Service or provider name"
                   className="pl-9 bg-background"
                   value={searchQuery}
@@ -148,7 +148,7 @@ function ProviderMarketplaceContent() {
               <div className="relative sm:w-48">
                 <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  aria-label="City"
+                  aria-label="City" maxLength={80}
                   placeholder="City (e.g. Lagos)"
                   className="pl-9 bg-background"
                   value={cityQuery}
@@ -171,7 +171,7 @@ function ProviderMarketplaceContent() {
                 <Select
                   disabled={veterinaryOnly}
                   value={veterinaryOnly ? 'veterinary' : selectedCategory}
-                  onValueChange={setSelectedCategory}
+                  onValueChange={category=>applySearch({category})}
                 >
                   <SelectTrigger aria-label="Service category">
                     <SelectValue placeholder="Service Category" />
@@ -189,7 +189,7 @@ function ProviderMarketplaceContent() {
               <div className="w-48">
                 <Select
                   value={selectedDeliveryMode}
-                  onValueChange={setSelectedDeliveryMode}
+                  onValueChange={delivery=>applySearch({delivery})}
                 >
                   <SelectTrigger aria-label="Consultation delivery mode">
                     <SelectValue placeholder="Delivery Mode" />
@@ -207,7 +207,7 @@ function ProviderMarketplaceContent() {
                 <Switch
                   id="emergency"
                   checked={emergencyOnly}
-                  onCheckedChange={setEmergencyOnly}
+                  onCheckedChange={urgent=>applySearch({urgent})}
                 />
                 <Label
                   htmlFor="emergency"
@@ -228,6 +228,8 @@ function ProviderMarketplaceContent() {
             </p>
           </div>
 
+          {hasFilters&&<section aria-label="Current care search" className="mb-6 rounded-xl border bg-card p-4"><p className="text-sm leading-relaxed break-words">Searching {veterinaryOnly?'veterinary care':CATEGORIES.find(category=>category.value===initial.category)?.label.toLowerCase()||'all services'}{initial.city?` in ${initial.city}`:''}{initial.query?` matching “${initial.query}”`:''}{initial.delivery!=='all'?` · ${initial.delivery.replaceAll('_',' ')}`:''}{initial.urgent?' · listed urgent-care services':''}</p><Button variant="link" className="mt-2 px-0" onClick={()=>setParams(new URLSearchParams())}>Clear search filters</Button></section>}
+          {emergencyOnly&&<p className="mb-6 text-sm text-muted-foreground">An urgent-service listing does not confirm current emergency capacity. If your animal is in immediate distress, <Link className="underline" to="/urgent-care">seek in-person care now</Link>.</p>}
           {/* Services Grid */}
           {isError ? (
             <Card role="alert" className="p-8 text-center">
@@ -280,7 +282,7 @@ function ProviderMarketplaceContent() {
 
                       {item.is_emergency_service && (
                         <Badge variant="destructive" className="gap-1">
-                          <Zap className="h-3 w-3" /> Emergency
+                          <Zap className="h-3 w-3" /> Listed urgent care
                         </Badge>
                       )}
                     </div>
