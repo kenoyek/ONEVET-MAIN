@@ -32,6 +32,10 @@ interface ProfileFormData {
 }
 
 export default function Profile() {
+  const {user}=useAuth();
+  return <ProfileEditor key={user?.id||'guest'}/>;
+}
+function ProfileEditor() {
   const { user, profile, role, refreshProfile } = useAuth();
   const [formData, setFormData] = useState<ProfileFormData>({
     first_name: '',
@@ -44,6 +48,12 @@ export default function Profile() {
     business_address: '',
     license_number: '',
   });
+  const ownerReady=!!user?.id&&profile?.user_id===user.id;
+  const active=useRef(true);
+  const saveLock=useRef(false);
+  const [saveError,setSaveError]=useState('');
+  const [saveNotice,setSaveNotice]=useState('');
+  useEffect(()=>{active.current=true;return()=>{active.current=false;};},[]);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingLicense, setIsUploadingLicense] = useState(false);
@@ -57,7 +67,7 @@ export default function Profile() {
   const isServiceProvider = role === 'service_provider';
 
   useEffect(() => {
-    if (profile && (loadedProfileId.current !== profile.id || !profileDirty.current)) {
+    if (profile && profile.user_id===user?.id && (loadedProfileId.current !== profile.id || !profileDirty.current)) {
       if (loadedProfileId.current !== profile.id) { profileDirty.current = false; profileRevision.current = 0; }
       loadedProfileId.current = profile.id;
       setFormData({
@@ -72,28 +82,29 @@ export default function Profile() {
         license_number: profile.license_number || '',
       });
     }
-  }, [profile]);
+  }, [profile,user?.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    setSaveNotice('');setSaveError('');
     profileDirty.current = true; profileRevision.current++;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSaveProfile = async () => {
-    if (!profile?.id) return;
-
-    if (isSaving) return;
-    if (!formData.first_name.trim() || !formData.last_name.trim()) { toast.error('Enter your first and last names.'); return; }
+    if (!ownerReady||!profile?.id||saveLock.current) return;
+    setSaveError('');setSaveNotice('');
+    if (!formData.first_name.trim() || !formData.last_name.trim()) { setSaveError('Enter your first and last names.');document.getElementById(!formData.first_name.trim()?'first_name':'last_name')?.focus(); return; }
     const digits = formData.phone.replace(/\D/g, '');
-    if (formData.phone.trim() && (digits.length < 7 || digits.length > 15)) { toast.error('Enter a valid contact phone number.'); return; }
+    if (formData.phone.trim() && (digits.length < 7 || digits.length > 15)) { setSaveError('Enter a valid contact phone number with 7–15 digits.');document.getElementById('phone')?.focus(); return; }
+    saveLock.current=true;
     const savingRevision = profileRevision.current;
     setIsSaving(true);
     try {
       const updateData: Record<string, string> = {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        phone: formData.phone.trim(),
         location: formData.location,
         bio: formData.bio,
       };
@@ -108,27 +119,30 @@ export default function Profile() {
         updateData.business_address = formData.business_address;
       }
 
-      const { error } = await supabase
+      const { data:saved,error } = await supabase
         .from('profiles')
         .update(updateData)
-        .eq('id', profile.id);
+        .eq('id', profile.id).eq('user_id',user!.id).select('id').single();
 
-      if (error) throw error;
+      if (error||!saved) throw error||new Error('No profile update acknowledged');
+      if(!active.current)return;
 
       if (profileRevision.current === savingRevision) profileDirty.current = false;
-      await refreshProfile();
+      let refreshFailed=false;try{await refreshProfile();}catch{refreshFailed=true;}
+      if(!active.current)return;
+      setSaveNotice(profileRevision.current!==savingRevision?'Submitted changes were saved. Newer edits are still unsaved.':refreshFailed?'Your changes were saved. Refresh this page to reload your profile.':'Your profile changes have been saved.');
       toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      if(active.current)setSaveError('We couldn’t confirm your profile update. Your entries are still here. Please try again.');
     } finally {
-      setIsSaving(false);
+      saveLock.current=false;if(active.current)setIsSaving(false);
     }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id || !profile?.id) return;
+    if (!file || !user?.id || !profile?.id || !ownerReady || isUploadingAvatar) return;
 
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file');
@@ -155,18 +169,19 @@ export default function Profile() {
         .from('pet-avatars')
         .getPublicUrl(filePath);
 
-      const { error: updateError } = await supabase
+      const { data:avatarSaved,error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
-        .eq('id', profile.id);
+        .eq('id', profile.id).eq('user_id',user.id).select('id').single();
 
-      if (updateError) throw updateError;
+      if (updateError||!avatarSaved) throw updateError||new Error('Avatar update not acknowledged');
+      if(!active.current)return;
 
       await refreshProfile();
-      toast.success('Avatar updated!');
+      if(active.current)toast.success('Avatar updated!');
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      if(active.current)toast.error('Failed to upload avatar');
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -174,7 +189,7 @@ export default function Profile() {
 
   const handleLicenseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id || !profile?.id || isUploadingLicense) return;
+    if (!file || !user?.id || !profile?.id || !ownerReady || isUploadingLicense) return;
 
     if (!formData.license_number.trim() || formData.license_number.trim().length > 100) { toast.error('Enter your license number before uploading a document.'); e.target.value = ''; return; }
 
@@ -192,12 +207,13 @@ export default function Profile() {
     setIsUploadingLicense(true);
     try {
       await uploadVeterinaryLicense(user.id, profile.id, file, formData.license_number);
+      if(!active.current)return;
 
       await refreshProfile();
-      toast.success('License uploaded! Pending verification.');
+      if(active.current)toast.success('License uploaded! Pending verification.');
     } catch (error) {
       console.error('Error uploading license:', error);
-      toast.error('Failed to upload license');
+      if(active.current)toast.error('Failed to upload license');
     } finally {
       setIsUploadingLicense(false);
       if (licenseInputRef.current) licenseInputRef.current.value = '';
@@ -224,6 +240,7 @@ export default function Profile() {
   const verificationStatus = getVerificationStatus();
   const VerificationIcon = verificationStatus.icon;
 
+  if(!ownerReady)return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" className="container-wide pt-32"><p role="status">Checking your account profile…</p></main></div>;
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -242,7 +259,7 @@ export default function Profile() {
             </Badge>
             <PageHeading size="workspace" className="mb-2" title={<> Profile Settings </>}/>
             <p className="text-muted-foreground font-medium">
-              Update your presence and professional identity on the platform.
+              Keep your contact details ready for care requests and conversations.
             </p>
           </div>
 
@@ -254,7 +271,7 @@ export default function Profile() {
                   <div className="p-2 rounded-lg bg-primary/10 text-primary">
                     <User className="h-5 w-5" />
                   </div>
-                  Professional Identity
+                  {isVet||isServiceProvider?'Professional identity':'Your profile'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-2">
@@ -332,7 +349,7 @@ export default function Profile() {
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
                     <Input
-                      id="phone"
+                      id="phone" type="tel" autoComplete="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
@@ -353,7 +370,7 @@ export default function Profile() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Professional Bio</Label>
+                  <Label htmlFor="bio" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">{isVet||isServiceProvider?'Professional Bio':'About you'}</Label>
                   <Textarea
                     id="bio"
                     name="bio"
@@ -518,6 +535,8 @@ export default function Profile() {
               </Card>
             )}
 
+            {saveError&&<p role="alert" className="rounded-xl border border-destructive/30 p-4 text-sm text-destructive">{saveError}</p>}
+            {saveNotice?<p role="status" className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{saveNotice}</p>:profileDirty.current&&!isSaving?<p role="status" className="text-sm text-muted-foreground">You have unsaved profile changes.</p>:null}
             {/* Save Button */}
             <div className="flex justify-center sm:justify-end pt-4">
               <Button onClick={handleSaveProfile} disabled={isSaving} size="xl" className="rounded-full font-semibold px-12 shadow-sm hover:scale-105 transition-all">
@@ -529,7 +548,7 @@ export default function Profile() {
                 ) : (
                   <>
                     <Save className="mr-3 h-6 w-6" />
-                    Synchronize Profile
+                    Save profile
                   </>
                 )}
               </Button>
