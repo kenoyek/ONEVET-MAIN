@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import { Link } from 'react-router-dom';
 import { PawPrint, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,26 +17,27 @@ interface PetCardProps {
 }
 
 export const PetCard = ({ pet }: PetCardProps) => {
+  const [failedUrl,setFailedUrl]=useState<string|null>(null);
   return (
     <Link to={`/pets/${pet.id}`}>
       <Card className="group hover:shadow-md transition-all hover:border-primary/50">
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center flex-shrink-0">
-              {pet.avatar_url ? (
-                <img 
-                  src={pet.avatar_url} 
-                  alt={pet.name} 
+              {pet.avatar_url&&failedUrl!==pet.avatar_url ? (
+                <img
+                  src={pet.avatar_url} loading="lazy" decoding="async" width="64" height="64" onError={()=>setFailedUrl(pet.avatar_url)}
+                  alt={pet.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <PawPrint className="h-8 w-8 text-primary" />
+                <PawPrint className="h-8 w-8 text-primary" aria-hidden="true" />
               )}
             </div>
-            
+
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h3 className="font-semibold break-words group-hover:text-primary transition-colors">
                   {pet.name}
                 </h3>
                 {pet.is_livestock && pet.livestock_count && pet.livestock_count > 1 && (
@@ -48,8 +50,8 @@ export const PetCard = ({ pet }: PetCardProps) => {
                 {pet.species}{pet.breed ? ` • ${pet.breed}` : ''}
               </p>
             </div>
-            
-            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+
+            <ChevronRight aria-hidden="true" className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
           </div>
         </CardContent>
       </Card>
