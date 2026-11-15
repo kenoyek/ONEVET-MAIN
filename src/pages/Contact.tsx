@@ -184,7 +184,7 @@ export default function Contact() {
               {/* Contact Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { icon: MapPin, title: "HQ Location", content: "Port-Harcourt, Rivers State", link: null },
+                  { icon: MapPin, title: "HQ Location", content: "Ibadan, Oyo State", link: null },
                   { icon: Mail, title: "Official Email", content: "support@1vet.store", link: "mailto:support@1vet.store" },
                   { icon: Phone, title: "Support line", content: "+234 705 239 8371", link: "tel:+2347052398371" },
                   { icon: Clock, title: "Service Hours", content: "Mon–Fri: 8am – 6pm WAT", link: null },
