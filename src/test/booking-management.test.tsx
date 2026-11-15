@@ -55,4 +55,20 @@ describe('Booking management',()=>{
  it('starts schedules disabled and saves explicit WAT windows with their version',async()=>{
   list.mockResolvedValue({rows:[],hasNext:false});mount(<ProviderBookingManager providerId="org-id"/>);const enabled=await screen.findByLabelText('Accept booking requests for published services');expect(enabled).not.toBeChecked();fireEvent.click(enabled);fireEvent.click(screen.getByLabelText('Monday'));fireEvent.click(screen.getByRole('button',{name:'Save availability'}));await waitFor(()=>expect(saveSchedule).toHaveBeenCalledWith('org-id',true,[{weekday:1,opens:540,closes:1020}],[],0));
  });
+ it('distinguishes an empty later page and returns to page one without losing the view',async()=>{
+  list.mockResolvedValue({rows:[],hasNext:false});mount(<BookingRequestList/>,['/my-bookings?view=history&page=8']);
+  expect(await screen.findByRole('heading',{name:'No requests on this page'})).toBeInTheDocument();expect(screen.queryByText('No requests in this view')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Return to first page'}));await waitFor(()=>expect(list).toHaveBeenCalledWith({customerId:'customer-id'},0,'history'));
+ });
+ it('recovers provider pagination using provider-prefixed filters',async()=>{
+  list.mockResolvedValue({rows:[],hasNext:false});mount(<BookingRequestList providerId="org-id"/>,['/provider/organization/clinic?booking_view=past_open&booking_page=4']);
+  await screen.findByRole('heading',{name:'No requests on this page'});fireEvent.click(screen.getByRole('button',{name:'Return to first page'}));
+  await waitFor(()=>expect(list).toHaveBeenCalledWith({providerId:'org-id'},0,'past_open'));
+ });
+ it('offers an inline retry without discarding the selected view',async()=>{
+  list.mockRejectedValueOnce(new Error('offline')).mockResolvedValue({rows:[],hasNext:false});mount(<BookingRequestList/>,['/my-bookings?view=past_open']);
+  expect(await screen.findByRole('alert')).toHaveTextContent('your chosen view has been kept');fireEvent.click(screen.getByRole('button',{name:'Retry booking requests'}));
+  await screen.findByRole('heading',{name:'No past requests still open'});expect(list).toHaveBeenLastCalledWith({customerId:'customer-id'},0,'past_open');
+ });
+
 });
