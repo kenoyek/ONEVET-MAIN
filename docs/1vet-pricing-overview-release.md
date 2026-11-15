@@ -1,0 +1,9 @@
+# Pricing clarity while payments are paused — 15 November 2026
+
+The public pricing page now has a dedicated payment-paused view matching the refreshed landing-page direction. It separates a free account from provider-priced care and read-only membership information. It removes the current user flow's claims of instant Paystack activation, automatic free trials and unverified consultation inclusions.
+
+Active listed plans load through a public query with explicit loading, error/retry and empty states. Prices use each plan's currency and the exact duration in months, so a three-month plan is not presented as monthly and a two-year plan is not presented as annual. Invalid price metadata prompts support confirmation. Only string benefit entries are displayed; absent/malformed benefits show a confirmation prompt. No popularity/value badge is inferred from duration.
+
+When payments are paused, the route does not mount payment or subscription hooks, does not offer activation and does not change existing memberships. FAQ/support guidance explains costs, provider confirmation, urgent care and existing-member questions. The existing payment-enabled route remains behind its existing flag for a future separately authorized release. No payment flag, backend schema, membership or transaction was changed.
+
+Validation covers free-account links, no payment/subscription hook initialization, paused-payment FAQ, accurate quarterly/currency display, malformed benefit metadata, failed lookup recovery and empty states. Application/API typechecks, lint and production build pass. Local Chromium checks use synthetic intercepted plan data to verify read-only plans, payment messaging, billing period, FAQ and no overflow at 1440, 390 and 320 in light/dark themes without production writes. This does not establish live deployment.

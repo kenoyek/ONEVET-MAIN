@@ -1,3 +1,4 @@
+import {PricingOverview} from '@/components/landing/PricingOverview';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 import { useEffect, useState } from 'react';
@@ -69,6 +70,10 @@ function formatNGN(amount: number) {
 }
 
 export default function Pricing() {
+  return isFeatureEnabled('payments_enabled') ? <PaymentEnabledPricing/> : <PricingOverview/>;
+}
+
+function PaymentEnabledPricing() {
   const { user, profile } = useAuth();
   const { subscription, isActive, loading: subLoading, refetch } = useSubscription();
   const { initializePayment } = usePaystack();
