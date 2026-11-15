@@ -1,0 +1,31 @@
+.urgent-care-header { max-width: 760px; margin: 20px 0 35px; }
+.urgent-care-header h1 { font-size: clamp(43px,5.4vw,72px); line-height: 1.06; letter-spacing: -.05em; font-weight: 500; margin: 20px 0 25px; }
+.urgent-care-header h1 em { font-family: Georgia,serif; font-weight: 400; }
+.urgent-care-header > p:last-child { color: hsl(var(--muted-foreground)); font-size: 17px; line-height: 1.85; max-width: 670px; }
+.urgent-care-notice { display: flex; align-items: flex-start; gap: 15px; padding: 23px; border: 1px solid hsl(var(--destructive)/.25); background: hsl(var(--destructive)/.035); border-radius: 18px; margin-bottom: 28px; }
+.urgent-care-notice svg { flex-shrink: 0; margin-top: 3px; color: hsl(var(--destructive)); }
+.urgent-care-notice p { font-size: 14px; line-height: 1.8; }
+.urgent-care-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 26px; }
+.urgent-care-grid > section { padding: 35px; border: 1px solid hsl(var(--border)); border-radius: 24px; background: hsl(var(--card)); }
+.urgent-care-grid h2 { font-size: 26px; letter-spacing: -.03em; margin: 24px 0 15px; }
+.urgent-care-grid > section > p { font-size: 14px; line-height: 1.85; color: hsl(var(--muted-foreground)); }
+.urgent-clinic-search form { display: flex; flex-direction: column; align-items: flex-start; margin-top: 26px; }
+.urgent-clinic-search label { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+.urgent-clinic-search label span { color: hsl(var(--muted-foreground)); font-weight: 400; }
+.urgent-clinic-search input:not([type=hidden]) { width: 100%; min-height: 50px; border: 1px solid hsl(var(--border)); border-radius: 12px; background: hsl(var(--background)); padding: 12px; color: hsl(var(--foreground)); font-size: 14px; }
+.urgent-clinic-search button { margin-top: 18px; }
+.urgent-clinic-search .urgent-external-note { font-size: 11px; line-height: 1.8; margin-top: 17px; }
+.urgent-call-guide ul { display: grid; gap: 21px; margin: 27px 0; }
+.urgent-call-guide li { display: flex; gap: 12px; font-size: 14px; line-height: 1.8; }
+.urgent-call-guide li svg { flex-shrink: 0; margin-top: 4px; color: hsl(var(--primary)); }
+.urgent-call-guide .urgent-clinician-note { border-top: 1px solid hsl(var(--border)); padding-top: 22px; font-size: 12px; }
+.urgent-support { display: flex; align-items: flex-start; gap: 23px; padding: 30px; border: 1px solid hsl(var(--border)); border-radius: 22px; margin-top: 35px; }
+.urgent-support > svg { flex-shrink: 0; margin-top: 3px; color: hsl(var(--primary)); }
+.urgent-support h2 { font-size: 23px; letter-spacing: -.03em; margin: 12px 0; }
+.urgent-support p:not(.eyebrow) { font-size: 13px; line-height: 1.85; color: hsl(var(--muted-foreground)); max-width: 610px; }
+.urgent-support > a { flex-shrink: 0; align-self: center; margin-left: auto; }
+.urgent-routine { margin-top: 45px; }
+.urgent-routine h2 { font-size: 23px; letter-spacing: -.03em; }
+.urgent-routine p { font-size: 14px; line-height: 1.8; color: hsl(var(--muted-foreground)); margin-top: 12px; }
+@media(max-width:1023px) { .urgent-support { flex-wrap: wrap; } .urgent-support > a { margin-left: 49px; } }
+@media(max-width:639px) { .urgent-care-header { margin-top: 0; } .urgent-care-header > p:last-child { font-size: 15px; } .urgent-care-grid { grid-template-columns: 1fr; gap: 23px; } .urgent-care-grid > section { padding: 27px; } .urgent-support { padding: 25px; gap: 18px; } .urgent-support > a { margin-left: 0; } .urgent-clinic-search button { width: 100%; white-space: normal; min-height: 48px; height: auto; } }

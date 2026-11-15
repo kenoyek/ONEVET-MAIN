@@ -18,6 +18,7 @@ import { LiveChatWidget } from "./components/chat/LiveChatWidget";
 import { MobileBottomNav } from "./components/layout/MobileBottomNav";
 
 // Route-level splitting with bounded recovery for failed page downloads.
+const UrgentCare = lazyRoute(() => import("./pages/UrgentCare"));
 const Services = lazyRoute(() => import("./pages/Services"));
 const CareGuide = lazyRoute(() => import("./pages/CareGuide"));
 const Index = lazyRoute(() => import("./pages/Index"));
@@ -97,7 +98,7 @@ const App = () => (
                     <Route path="/services" element={<Services />} />
                     <Route path="/pet-care" element={<CareGuide />} />
                     <Route path="/farm-care" element={<CareGuide />} />
-                    <Route path="/urgent-care" element={<CareGuide />} />
+                    <Route path="/urgent-care" element={<UrgentCare />} />
                     <Route path="/find-a-vet" element={<ProviderMarketplace />} />
 
                     {/* Core Portals & Dashboards */}

@@ -1,0 +1,7 @@
+# Urgent-care guidance — 15 November 2026
+
+The public urgent-care route now has a dedicated, lazily loaded page. It prioritizes seeking an in-person veterinarian and provides a city-or-nearby Google Maps clinic search. The external destination is labelled and opens in a separate tab with noopener/noreferrer. The page states that map listings do not confirm current opening hours or emergency capacity and prompts visitors to call ahead.
+
+A short call-preparation checklist focuses on species/age, symptoms and timing, location/travel and known treatment history. General platform support is separated from emergency veterinary care. Routine discovery and appointment links remain secondary. No emergency dispatch, immediate response or round-the-clock service is promised; the page is not a diagnosis or treatment flow.
+
+Validation covers the external GET form, default/selected-area query, data fields and support separation, plus the existing regression suite. Application/API typechecks, lint and production build pass. Local Chromium checks anonymous access, query/destination construction and no overflow at 1440, 390 and 320 in light/dark themes using intercepted synthetic backend responses without production writes. No Maps searches, calls or support messages were submitted, and no actual clinic availability was verified. Screenshots: /workspace/artifacts/1vet/urgent-care/. These checks do not establish live deployment.
