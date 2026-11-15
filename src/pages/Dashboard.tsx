@@ -1,3 +1,4 @@
+import {OverviewSectionState} from '@/components/customer/OverviewSectionState';
 import { AccountNextSteps } from '@/components/onboarding/AccountNextSteps';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Link } from 'react-router-dom';
@@ -18,9 +19,10 @@ import { CarePreferences } from '@/components/farms/CarePreferences';
 import { isFeatureEnabled } from '@/lib/feature-flags';
 
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile,user } = useAuth();
   const query = useCustomerOverview();
-  const data = query.data;
+  const data={pets:query.pets.data??[],consultations:query.consultations.data??[],subscription:query.subscription.data,orders:query.orders.data??[]};
+  if(!user||profile?.user_id!==user.id)return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container-wide pt-32"><p role="status">Checking your dashboard profile…</p></main></div>;
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -82,25 +84,6 @@ export default function Dashboard() {
           </Link>
         </div>
         <CareDashboard/>
-        {!profile || query.isLoading ? (
-          <p role="status" className="py-8">
-            Loading your care overview…
-          </p>
-        ) : query.isError ? (
-          <section role="alert" className="care-path mb-8">
-            <h2 className="text-xl mb-3">
-              We couldn’t load your care overview.
-            </h2>
-            <p className="text-muted-foreground mb-4">
-              Your account is available, but these records could not be
-              retrieved. Try again before starting a new request.
-            </p>
-            <Button variant="outline" onClick={() => query.refetch()}>
-              Try again
-            </Button>
-          </section>
-        ) : (
-          data && (
             <div className="grid lg:grid-cols-[1.3fr_1fr] gap-6 mb-8">
               <section className="rounded-2xl border bg-card p-6">
                 <div className="flex justify-between items-center gap-3 mb-6">
@@ -112,6 +95,7 @@ export default function Dashboard() {
                     View all
                   </Link>
                 </div>
+                <OverviewSectionState query={query.consultations} label="consultations">
                 {!data.consultations.length ? (
                   <div className="py-6">
                     <MessageCircle className="text-primary mb-4" />
@@ -151,6 +135,7 @@ export default function Dashboard() {
                     ))}
                   </ul>
                 )}
+                </OverviewSectionState>
               </section>
               <div className="space-y-6">
                 <section className="rounded-2xl border bg-card p-6">
@@ -164,6 +149,7 @@ export default function Dashboard() {
                       <Plus size={19} />
                     </Link>
                   </div>
+                  <OverviewSectionState query={query.pets} label="pet profiles">
                   {!data.pets.length ? (
                     <p className="text-sm text-muted-foreground">
                       No pet profiles yet.{' '}
@@ -196,12 +182,14 @@ export default function Dashboard() {
                       ))}
                     </ul>
                   )}
+                  </OverviewSectionState>
                 </section>
                 <section className="rounded-2xl border bg-card p-6">
                   <h2 className="text-lg mb-3">Membership</h2>
+                  <OverviewSectionState query={query.subscription} label="membership">
                   <p className="text-sm text-muted-foreground mb-4">
                     {data.subscription
-                      ? `Current status: ${data.subscription.status}.`
+                      ? `Latest recorded status: ${data.subscription.status}.`
                       : 'No membership found.'}{' '}
                     Provider availability must be confirmed separately.
                   </p>
@@ -211,6 +199,7 @@ export default function Dashboard() {
                   >
                     Review plans and inclusions
                   </Link>
+                  </OverviewSectionState>
                 </section>
               </div>
               <section className="rounded-2xl border bg-card p-6 lg:col-span-2">
@@ -218,6 +207,7 @@ export default function Dashboard() {
                   <ShoppingBag size={20} className="text-primary" />
                   <h2 className="text-xl">Recent orders</h2>
                 </div>
+                <OverviewSectionState query={query.orders} label="orders">
                 {!data.orders.length ? (
                   <p className="text-sm text-muted-foreground">
                     No orders to display.
@@ -244,10 +234,9 @@ export default function Dashboard() {
                     ))}
                   </ul>
                 )}
+                </OverviewSectionState>
               </section>
             </div>
-          )
-        )}
         <CarePreferences />
         <p className="text-sm text-muted-foreground mt-8">
           Need urgent treatment?{' '}

@@ -1,0 +1,7 @@
+# Independent client dashboard sections — 15 November 2026
+
+Pets, consultations, membership and orders now load as independently scoped queries. Each section has its own loading, failed-read and retry states, so a failed or slow membership/order read no longer blocks successful animal and care data. A failed read never renders that section's empty-state message or cached content. Section retries reload only that section.
+
+Membership summary now selects the latest record by creation time before maybeSingle, avoiding errors when multiple historical records exist. The summary labels its status as recorded rather than implying current entitlement. All queries retain the existing profile/user ownership filters and user/profile cache keys. The dashboard also waits for a matching signed-in profile before rendering account content.
+
+Validation covers ownership columns, successful data surviving order failure, targeted retry, pending membership isolation, latest-record limit and mismatched-account blocking. Application/API typechecks, lint and production build pass. Local Chromium uses intercepted synthetic data to verify an order failure while pet records remain visible, no false empty orders, targeted recovery and no overflow at 1440, 390 and 320 in both themes without production writes. Screenshots: /workspace/artifacts/1vet/dashboard-resilience/. These checks do not establish live deployment or membership entitlement.

@@ -1,15 +1,16 @@
 import type { ReactNode } from 'react';
-import { cleanup, renderHook, waitFor } from '@testing-library/react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCustomerOverview } from '@/hooks/useCustomerOverview';
 const state = vi.hoisted(() => ({
   calls: [] as { table: string; column: string; value: unknown }[],
   failure: '',
+  pending:'',mismatch:false,limits:[] as {table:string;count:number}[],
 }));
 vi.mock('@/lib/auth-context', () => ({
   useAuth: () => ({
-    user: { id: 'auth-a' },
+    user: { id: state.mismatch?'auth-b':'auth-a' },
     profile: { id: 'profile-a', user_id: 'auth-a' },
   }),
 }));
@@ -17,8 +18,8 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (table: string) => {
       const result = () =>
-        Promise.resolve({
-          data: table === 'subscriptions' ? null : [],
+        state.pending===table?new Promise(()=>{}):Promise.resolve({
+          data: table === 'subscriptions' ? null : table==='pets'?[{id:'pet-a',name:'Milo',species:'dog',avatar_url:null}]:[],
           error: state.failure === table ? { message: 'offline' } : null,
         });
       const builder = {
@@ -28,7 +29,8 @@ vi.mock('@/integrations/supabase/client', () => ({
           return builder;
         },
         order: () => builder,
-        limit: result,
+        limit: (count:number) => {state.limits.push({table,count});return builder;},
+        then:(resolve:(value:unknown)=>unknown,reject:(error:unknown)=>unknown)=>result().then(resolve,reject),
         maybeSingle: result,
       };
       return builder;
@@ -43,13 +45,13 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 beforeEach(() => {
   state.calls = [];
-  state.failure = '';
+  state.failure = '';state.pending='';state.mismatch=false;state.limits=[];
 });
 afterEach(cleanup);
 describe('Customer dashboard data contract', () => {
   it('uses schema-defined subscription and order ownership columns', async () => {
     const { result } = renderHook(useCustomerOverview, { wrapper });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(Object.values(result.current).every(query=>query.isSuccess)).toBe(true));
     expect(state.calls).toContainEqual({
       table: 'subscriptions',
       column: 'user_id',
@@ -71,10 +73,23 @@ describe('Customer dashboard data contract', () => {
       value: 'profile-a',
     });
   });
-  it('does not turn one failed query into a successful empty dashboard', async () => {
+  it('isolates an order failure, preserves successful pet data and retries only orders', async () => {
     state.failure = 'orders';
     const { result } = renderHook(useCustomerOverview, { wrapper });
-    await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(result.current.data).toBeUndefined();
+    await waitFor(() => expect(result.current.orders.isError).toBe(true));
+    await waitFor(()=>expect(result.current.pets.isSuccess).toBe(true));
+    expect(result.current.orders.data).toBeUndefined();expect(result.current.pets.data?.[0]?.name).toBe('Milo');
+    expect(result.current.subscription.isSuccess).toBe(true);
+    state.failure='';state.calls=[];await act(async()=>{await result.current.orders.refetch();});
+    await waitFor(()=>expect(result.current.orders.isSuccess).toBe(true));expect(state.calls.map(call=>call.table)).toEqual(['orders']);
   });
+  it('does not wait for membership to load before making other records available',async()=>{
+    state.pending='subscriptions';const {result}=renderHook(useCustomerOverview,{wrapper});
+    await waitFor(()=>expect(result.current.pets.isSuccess).toBe(true));expect(result.current.subscription.isPending).toBe(true);
+    expect(result.current.pets.data?.[0]?.name).toBe('Milo');expect(state.limits).toContainEqual({table:'subscriptions',count:1});
+  });
+  it('does not load private records while the profile belongs to another account',()=>{
+    state.mismatch=true;renderHook(useCustomerOverview,{wrapper});expect(state.calls).toEqual([]);
+  });
+
 });
