@@ -224,4 +224,13 @@ describe('Customer farm workspace', () => {
       expect(livestockService.getOwnerFarms).not.toHaveBeenCalled(),
     );
   });
+  it('keeps the booking return path when searching farms and recovers a no-match filter',async()=>{
+    state.farms=[{id:farmId,owner_id:owner,farm_name:'Pond Farm',farm_type:'aquaculture',city:'Ibadan',state:'Oyo',location_address:'Main road',created_at:'2026-11-06',updated_at:'2026-11-06'} as FarmRecord];
+    renderPage('/farms?'+new URLSearchParams({returnTo:'/booking/new?service_id=service-one&start=time-one'}));
+    const search=await screen.findByLabelText('Search your farms');fireEvent.change(search,{target:{value:' missing '}});expect(screen.getByText('No farms match these filters')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'Show all farms'}));const link=screen.getByRole('link',{name:/Pond Farm/});
+    expect(new URL(link.getAttribute('href')!,'https://1vet.store').searchParams.get('returnTo')).toBe('/booking/new?service_id=service-one&start=time-one');
+    fireEvent.change(screen.getByLabelText('Filter production type'),{target:{value:'poultry'}});expect(screen.getByText('No farms match these filters')).toBeInTheDocument();
+  });
+
 });

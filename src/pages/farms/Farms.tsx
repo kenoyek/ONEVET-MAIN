@@ -1,3 +1,5 @@
+import {discoverFarms,farmTypeOptions} from '@/lib/farm-discovery';
+import {Input} from '@/components/ui/input';
 import { farmSaveError } from '@/lib/confirmed-create';
 import { petBookingReturn } from '@/lib/pet-booking-return';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -34,6 +36,9 @@ function FarmsContent() {
   const actionLock=useRef(false);
   const draftId=useRef<string>();
   const [createdFarm,setCreatedFarm]=useState<{id:string;name:string}|null>(null);
+  const [search,setSearch]=useState('');const [type,setType]=useState('all');const [sort,setSort]=useState('recent');
+  const visible=discoverFarms(query.data??[],search,type,sort);
+  function clearFilters(){setSearch('');setType('all');setSort('recent');}
   const [open, setOpen] = useState(false);
   const save = useMutation({
     mutationFn: (values: FarmValues) => {
@@ -44,7 +49,7 @@ function FarmsContent() {
     onSuccess: async saved => {
       draftId.current=undefined;
       await client.invalidateQueries({queryKey:['customer-farms',ownerId]});
-      if(saved?.id&&active.current){if(returnTo)navigate(farmPath(saved.id));else setCreatedFarm({id:saved.id,name:saved.farm_name});}
+      if(saved?.id&&active.current){if(returnTo)navigate(farmPath(saved.id));else {clearFilters();setCreatedFarm({id:saved.id,name:saved.farm_name});}}
     },
   });
   return (
@@ -87,6 +92,7 @@ function FarmsContent() {
           <p className="mt-3 text-sm text-muted-foreground leading-relaxed">Next, add your herd, flock, pond or batch. Group records keep animal counts and observations together and can be selected when requesting care.</p>
           <div className="mt-5 flex flex-wrap gap-3"><Button asChild><Link to={farmPath(createdFarm.id)}>Add an animal group</Link></Button><Button asChild variant="outline"><Link to="/marketplace">Browse farm supplies</Link></Button><Button variant="ghost" onClick={()=>setCreatedFarm(null)}>Dismiss confirmation</Button></div>
         </section>}
+        {ownerId&&!query.isLoading&&!query.isError&&!!query.data?.length&&<section aria-label="Find your farm" className="mb-7 space-y-4"><div className="flex flex-col gap-4 sm:flex-row"><label className="flex-1 min-w-0"><span className="block mb-2 text-xs font-semibold">Search your farms</span><Input type="search" maxLength={120} placeholder="Name, city or production type" value={search} onChange={event=>setSearch(event.target.value)}/></label><label><span className="block mb-2 text-xs font-semibold">Filter production type</span><select className="min-h-11 w-full rounded-xl border bg-background p-3 text-sm sm:w-48" value={type} onChange={event=>setType(event.target.value)}><option value="all">All production types</option>{farmTypeOptions.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><label><span className="block mb-2 text-xs font-semibold">Sort farms</span><select className="min-h-11 w-full rounded-xl border bg-background p-3 text-sm sm:w-44" value={sort} onChange={event=>setSort(event.target.value)}><option value="recent">Recently added</option><option value="name">Name · A–Z</option></select></label></div><div className="flex flex-wrap justify-between items-center gap-3"><p role="status" className="text-sm text-muted-foreground">Showing {visible.length} of {query.data.length} farms</p>{(search||type!=='all'||sort!=='recent')&&<Button variant="ghost" onClick={clearFilters}>Clear farm filters</Button>}</div></section>}
         {!ownerId ? (
           <p role="status">Loading your account…</p>
         ) : query.isLoading ? (
@@ -112,10 +118,10 @@ function FarmsContent() {
             </p>
             <Button onClick={() => setOpen(true)}>Add your first farm</Button>
           </section>
-        ) : (
+        ) : !visible.length ? <section className="care-path"><h2 className="text-xl mb-3">No farms match these filters</h2><p className="text-sm text-muted-foreground">Your saved records are still available. Clear the filters to see all farms.</p><Button variant="outline" className="mt-4" onClick={clearFilters}>Show all farms</Button></section> : (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {query.data.map((f) => (
-              <Link className="care-path" to={farmPath(f.id)} key={f.id}>
+            {visible.map((f) => (
+              <Link className="care-path min-w-0 break-words" to={farmPath(f.id)} key={f.id}>
                 <Sprout className="text-primary mb-5" />
                 <h2 className="text-xl mb-2">{f.farm_name}</h2>
                 <p className="text-muted-foreground text-sm capitalize">
