@@ -1,3 +1,4 @@
+import {CareGettingStarted} from '@/components/landing/CareGettingStarted';
 import petCareImage from '@/assets/marketing/welcome-pets-760.webp';
 import farmCareImage from '@/assets/marketing/welcome-farm-760.webp';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -131,10 +132,12 @@ export default function CareGuide() {
       <main id="main-content" tabIndex={-1} className="pt-32 md:pt-40 pb-20">
         <div className="container-wide">
           <div className={`public-intro ${urgent?'':'public-intro-grid'}`}>
-            <PageHeading size="display"
+            <div><PageHeading size="display"
               eyebrow={urgent?'Urgent care guidance':farm?'For livestock farmers':services?'Care, connected':'For pet owners'}
               title={urgent?title:services?<>The next step in <em>animal care.</em></>:farm?<>Healthy animals.<br/><em>Stronger livelihoods.</em></>:<>Better care<br/><em>for every paw.</em></>}
               description={description}/>
+            {!urgent&&!services&&<div className="flex flex-wrap gap-3 mt-7"><Button asChild><Link to="/find-a-vet">Find veterinary care<ArrowRight size={16} aria-hidden="true"/></Link></Button><Button asChild variant="outline"><Link to={farm?(isFeatureEnabled('customer_farms_enabled')?'/farms':'/contact'):'/pets/new'}>{farm?(isFeatureEnabled('customer_farms_enabled')?'Start your farm records':'Ask about farm records'):'Add your first pet'}</Link></Button></div>}
+            </div>
             {!urgent&&<img className="public-intro-image" src={farm?farmCareImage:petCareImage} alt={farm?'Veterinary care for farm animals':'An owner spending time with her pets'} width="760" height="570" decoding="async"/>}
           </div>
           <div className="grid md:grid-cols-2 gap-6 mt-12">
@@ -154,6 +157,7 @@ export default function CareGuide() {
               </article>
             ))}
           </div>
+          {!urgent&&!services&&<CareGettingStarted key={farm?'farm':'pet'} farm={farm}/>}
           {!urgent && (
             <p className="mt-8 text-sm text-muted-foreground">
               Need urgent treatment?{' '}
