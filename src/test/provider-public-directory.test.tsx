@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const { publicServices, directory } = vi.hoisted(() => ({ publicServices: vi.fn(), directory: vi.fn() }));
 vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => <nav>Navigation</nav> }));
 vi.mock('@/components/layout/Footer', () => ({ Footer: () => <footer>Footer</footer> }));
@@ -14,6 +14,7 @@ function profile() {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/provider/public/approved-org']}><Routes><Route path="/provider/public/:slug" element={<PublicProviderProfile />} /></Routes></MemoryRouter></QueryClientProvider>);
 }
+afterEach(cleanup);
 describe('Published provider directory', () => {
   beforeEach(() => { vi.clearAllMocks(); });
   it('keeps unpublished or ineligible providers unavailable without exposing private registration data', async () => {
@@ -41,4 +42,15 @@ describe('Published provider directory', () => {
     expect(screen.getByRole('link', { name: 'Request veterinary care' })).toHaveAttribute('href', '/consultations/new');
     expect(screen.queryByRole('link', { name: 'Request appointment' })).not.toBeInTheDocument();
   });
+});
+
+it('filters only the current published list and restores services on clear',async()=>{
+ const base={organization_name:'Approved Organization',city:'Ibadan',state:'Oyo',country:'Nigeria',currency:'NGN',duration_minutes:30,delivery_mode:'clinic_visit',booking_enabled:false};
+ publicServices.mockResolvedValue([{...base,id:'vet',name:'Wellness visit',description:'Routine veterinary care.',category:'veterinary',base_price:5000},{...base,id:'groom',name:'Coat care',description:'Grooming for companions.',category:'grooming',base_price:null,delivery_mode:null}]);
+ profile();await screen.findByRole('heading',{name:'Approved Organization'});
+ fireEvent.change(screen.getByLabelText('Service category'),{target:{value:'grooming'}});
+ expect(screen.getByRole('heading',{name:'Coat care'})).toBeInTheDocument();expect(screen.queryByRole('heading',{name:'Wellness visit'})).not.toBeInTheDocument();
+ expect(screen.getByText('Base fee: Confirm with provider')).toBeInTheDocument();expect(screen.getByText(/Confirm delivery with provider/)).toBeInTheDocument();
+ fireEvent.change(screen.getByLabelText('Search this provider’s services'),{target:{value:'unmatched'}});expect(screen.getByText('No published services match these filters.')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Clear service filters'}));expect(screen.getByRole('heading',{name:'Wellness visit'})).toBeInTheDocument();
 });

@@ -35,3 +35,10 @@ describe('public appointment availability', () => {
     for(const value of ['2026-11-10','2027-02-30','bad',null])expect(initialBookingDate(value,'2026-11-11','2027-02-28')).toBe('2026-11-11');
   });
 });
+
+it('names availability controls for their service and associates the expanded panel',async()=>{
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter><PublicServiceAvailability serviceId="named" version={1} serviceName="Coat care"/></MemoryRouter></QueryClientProvider>);
+ const button=screen.getByRole('button',{name:'Check available times for Coat care'});fireEvent.click(button);
+ expect(await screen.findByLabelText('Appointment date · WAT')).toBeInTheDocument();expect(document.getElementById(button.getAttribute('aria-controls')!)).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Hide available times for Coat care'})).toHaveAttribute('aria-expanded','true');
+});
