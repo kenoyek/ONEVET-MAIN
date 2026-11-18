@@ -1,3 +1,4 @@
+import {validContactPhone} from '@/lib/contact-phone';
 import {useQuery} from '@tanstack/react-query';
 import {supabase} from '@/integrations/supabase/client';
 import {Link} from 'react-router-dom';
@@ -31,8 +32,7 @@ export function AccountNextSteps() {
     },
   });
   if (!available) return null;
-  const phoneDigits = (profile.phone ?? '').replace(/\D/g, '');
-  const contactComplete = !!profile.first_name?.trim() && !!profile.last_name?.trim() && phoneDigits.length >= 7 && phoneDigits.length <= 15;
+  const contactComplete = !!profile.first_name?.trim() && !!profile.last_name?.trim() && validContactPhone(profile.phone);
   const loaded = records.isSuccess && !records.isError;
   const petsKnown = loaded && records.data?.animals != null;
   const farmsKnown = loaded && records.data?.farms != null;

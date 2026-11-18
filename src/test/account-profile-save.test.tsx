@@ -27,3 +27,9 @@ it('drops the old draft and ignores pending save feedback after an account switc
  await act(async()=>{finish({data:{id:'profile-a'},error:null});});expect(mock.refresh).not.toHaveBeenCalled();expect(mock.success).not.toHaveBeenCalled();
  mock.profile={id:'profile-b',user_id:'user-b',first_name:'Bola',last_name:'Ade',phone:''};rendered.rerender(view());await waitFor(()=>expect(screen.getByLabelText('First Name')).toHaveValue('Bola'));
 });
+
+it('does not save contact text containing letters even when it has enough digits',()=>{
+ render(view());fireEvent.change(screen.getByLabelText('Phone Number'),{target:{value:'Call 07052398371'}});
+ fireEvent.click(screen.getByRole('button',{name:'Save profile'}));expect(screen.getByRole('alert')).toHaveTextContent('valid contact phone');expect(mock.update).not.toHaveBeenCalled();
+ expect(screen.getByLabelText('Phone Number')).toHaveValue('Call 07052398371');
+});

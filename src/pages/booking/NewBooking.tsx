@@ -1,3 +1,4 @@
+import { validContactPhone } from '@/lib/contact-phone';
 import { bookingAnimalContext, withBookingAnimal } from '@/lib/booking-animal-context';
 import { bookingDateRange, initialBookingDate } from '@/lib/booking-date-range';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -21,7 +22,8 @@ function BookingRequestForm() {
   const range=bookingDateRange();
   const [date,setDate]=useState(()=>initialBookingDate(params.get('date'),range.today,range.last));const [start,setStart]=useState(()=>params.get('start') || '');const [animal,setAnimal]=useState(()=>bookingAnimalContext(params.get('animal')));const [phone,setPhone]=useState('');const [address,setAddress]=useState('');const [notes,setNotes]=useState('');const [acceptedVersion,setAcceptedVersion]=useState<number|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const phoneEdited=useRef(false);
-  useEffect(()=>{if(!phoneEdited.current&&profile?.user_id===user?.id&&profile?.phone){const digits=profile.phone.replace(/\D/g,'');if(digits.length>=7&&digits.length<=15)setPhone(profile.phone);}},[profile?.phone,profile?.user_id,user?.id]);
+  const savedPhone=profile?.phone;
+  useEffect(()=>{if(!phoneEdited.current&&profile?.user_id===user?.id&&validContactPhone(savedPhone)){setPhone(savedPhone ?? '');}},[savedPhone,profile?.user_id,user?.id]);
   const retry=useRef({payload:'',key:''});
   const actionLock=useRef(false);
   const animalCheckLock=useRef(false);
@@ -42,8 +44,7 @@ function BookingRequestForm() {
   const options=choices.data?.filter(choice=>choice.kind==='pet' || ['veterinary','diagnostics'].includes(item?.category ?? '')) ?? [];
   const selected=options.find(choice=>`${choice.kind}:${choice.id}`===animal);
   const currentSlot=validDate && !slots.isFetching && !slots.isError && !!slots.data?.some(slot=>slot.start_at===start);
-  const phoneDigits=phone.replace(/\D/g,'');
-  const contactReady=phoneDigits.length>=7&&phoneDigits.length<=15&&phone.trim().length<=40;
+  const contactReady=validContactPhone(phone);
   const addressReady=!home||(address.trim().length>=10&&address.trim().length<=500);
   const remaining=[...((checkingAnimals || choices.isFetching)?['Wait for your animal records to finish checking.']:!selected?['Choose your animal or farm group.']:[]),...(!currentSlot?[slots.isFetching?'Wait for available times to finish checking.':'Choose an available appointment time.']:[]),...(!contactReady?['Add a contact phone with 7–15 digits.']:[]),...(!addressReady?['Add a visit address of at least 10 characters.']:[]),...(!consent?['Confirm the request terms and sharing of your details.']:[])];
   const ready=!checkingAnimals && contactReady && addressReady && !choices.isFetching && !choices.isError && !catalog.isFetching && !catalog.isError && !!item?.booking_enabled && !!selected && currentSlot && consent;
@@ -76,7 +77,7 @@ function BookingRequestForm() {
           <div className="flex flex-wrap gap-4 text-sm"><Link className="text-primary underline" to={`/pets/new?${new URLSearchParams({returnTo:animalReturn})}`}>Add another animal profile</Link>{['veterinary','diagnostics'].includes(item.category ?? '')&&<Link className="text-primary underline" to={farmSetup}>Add or choose a farm group</Link>}</div>
           <div><Label htmlFor="booking-date">Date · Africa/Lagos (WAT)</Label><Input id="booking-date" type="date" required min={watDate()} max={limit} value={date} onChange={event=>{setDate(event.target.value);setStart('');}}/></div>
           <div><Label htmlFor="booking-time">Available start time · WAT</Label>{!validDate?<p className="text-sm mt-2">Choose a valid date within the next 90 days.</p>:slots.isPending?<p role="status">Loading times…</p>:slots.isError?<><p role="alert">Could not load times.</p><Button type="button" variant="outline" onClick={()=>void slots.refetch()}>Retry times</Button></>:<><select id="booking-time" required className="w-full border rounded-md bg-background p-3" value={start} onChange={event=>setStart(event.target.value)}><option value="">Choose a time</option>{slots.data?.map(slot=><option key={slot.start_at} value={slot.start_at}>{bookingTime(slot.start_at)}</option>)}</select>{start&&!slots.isFetching&&!slots.data?.some(slot=>slot.start_at===start)&&<p role="status" className="text-sm mt-2">Your selected time is no longer available. Choose another time.</p>}{!slots.data?.length&&<div className="mt-2 space-y-2"><p className="text-sm">No times are available on this date. Choose another date.</p><Link className="inline-block text-sm text-primary underline" to={alternatives}>Browse other care services</Link></div>}</>}</div>
-          <div><Label htmlFor="booking-phone">Contact phone (shared privately with the provider)</Label><Input id="booking-phone" required minLength={7} maxLength={40} type="tel" value={phone} onChange={event=>{phoneEdited.current=true;setPhone(event.target.value);}}/></div>
+          <div><Label htmlFor="booking-phone">Contact phone (shared privately with the provider)</Label><Input id="booking-phone" aria-describedby="booking-phone-format" aria-invalid={!!phone.trim() && !contactReady} required minLength={7} maxLength={40} type="tel" value={phone} onChange={event=>{phoneEdited.current=true;setPhone(event.target.value);}}/><p id="booking-phone-format" className="mt-2 text-xs text-muted-foreground">Use 7–15 digits without letters or extensions. A leading + and common phone separators are accepted.</p></div>
           {home&&<div><Label htmlFor="booking-address">Visit address (shared privately with the provider)</Label><Textarea id="booking-address" required minLength={10} maxLength={500} value={address} onChange={event=>setAddress(event.target.value)}/></div>}
           <div><Label htmlFor="booking-notes">Notes for the provider (optional)</Label><Textarea id="booking-notes" maxLength={2000} value={notes} onChange={event=>setNotes(event.target.value)}/></div>
           <label className="flex gap-3 items-start"><input type="checkbox" required checked={consent} onChange={event=>setAcceptedVersion(event.target.checked?item.service_version:null)} className="mt-1"/>I understand this is a pending request, the recorded base fee is {item.currency} {Number(item.base_price).toLocaleString('en-NG')}, and my selected animal details, contact phone{home?' and visit address':''} will be shared with this provider.</label>

@@ -57,3 +57,8 @@ it('does not treat missing count metadata as a verified empty record list', asyn
  fixture.type='pet_owner'; delete fixture.counts.pets; mount(); await screen.findByText('Some setup steps could not be checked.');
  expect(screen.getByRole('link',{name:/Check your pet records/})).toHaveAttribute('href','/pets');
 });
+
+it('keeps contact setup incomplete for phone text with letters and otherwise sufficient digits',async()=>{
+ fixture.type='pet_owner';fixture.phone='Call 07052398371';mount();await screen.findByText('1 of 2 setup steps complete');
+ expect(screen.getByRole('link',{name:/Complete your contact details/})).toHaveAttribute('href','/profile');expect(screen.queryByText('Your care setup is ready')).not.toBeInTheDocument();
+});

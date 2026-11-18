@@ -1,3 +1,4 @@
+import { validContactPhone } from '@/lib/contact-phone';
 import { vetOnboardingStatus } from '@/lib/vet-onboarding';
 import { uploadVeterinaryLicense } from '@/lib/services/license-service';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -100,8 +101,7 @@ function ProfileEditor() {
     if (!ownerReady||!profile?.id||saveLock.current||licenseUploadLock.current) return;
     setSaveError('');setSaveNotice('');
     if (!formData.first_name.trim() || !formData.last_name.trim()) { setSaveError('Enter your first and last names.');document.getElementById(!formData.first_name.trim()?'first_name':'last_name')?.focus(); return; }
-    const digits = formData.phone.replace(/\D/g, '');
-    if (formData.phone.trim() && (digits.length < 7 || digits.length > 15)) { setSaveError('Enter a valid contact phone number with 7–15 digits.');document.getElementById('phone')?.focus(); return; }
+    if (formData.phone.trim() && !validContactPhone(formData.phone)) { setSaveError('Enter a valid contact phone number with 7–15 digits. Letters and extensions are not supported.');document.getElementById('phone')?.focus(); return; }
     saveLock.current=true;
     const savingRevision = profileRevision.current;
     setIsSaving(true);
@@ -348,12 +348,15 @@ function ProfileEditor() {
                     <Label htmlFor="phone" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
                     <Input
                       id="phone" type="tel" autoComplete="tel"
+                      aria-describedby="profile-phone-format"
+                      aria-invalid={!!formData.phone.trim() && !validContactPhone(formData.phone)}
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="+234 XXX XXX XXXX"
                       className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                     />
+                    <p id="profile-phone-format" className="text-xs leading-relaxed text-muted-foreground">Use 7–15 digits without letters or extensions. A leading + and common phone separators are accepted.</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="location" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Location</Label>

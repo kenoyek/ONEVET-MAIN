@@ -113,3 +113,10 @@ it('offers another service when no times remain on a date',async()=>{
  expect(screen.getByRole('link',{name:'Browse other care services'})).toHaveAttribute('href','/provider-marketplace');
  expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();
 });
+
+it('does not prefill or submit contact text that contains letters and enough digits',async()=>{
+ contact.phone='Call 07052398371';const {container}=mount();await screen.findByLabelText(/Contact phone/);
+ expect(screen.getByLabelText(/Contact phone/)).toHaveValue('');await fill();
+ fireEvent.change(screen.getByLabelText(/Contact phone/),{target:{value:'Call 07052398371'}});
+ expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();fireEvent.submit(container.querySelector('form')!);expect(request).not.toHaveBeenCalled();
+});

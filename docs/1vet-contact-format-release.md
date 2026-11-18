@@ -1,0 +1,9 @@
+# Consistent client phone format — 18 November 2026
+
+Profile saving, onboarding contact completion and booking contact readiness now share one phone-format check. Previously those paths stripped non-digits and counted the remainder, allowing values such as Call 07052398371 to appear ready for care requests. Booking prefill now also skips saved contact text that fails the shared check.
+
+Supported formats retain seven to fifteen digits, the existing forty-character bound, common phone separators and an optional leading plus. Local and formatted international numbers remain accepted. Letters, extensions, embedded plus signs, emails and line breaks inside numbers are rejected. Empty phone fields remain optional on the profile, but do not complete contact setup or satisfy booking requirements.
+
+The profile and booking fields explain the format and expose invalid input and help text to assistive technology. Failed validation preserves typed entries and performs no profile or booking write. This is a frontend format check, not proof of number ownership, reachability or carrier validity. Existing records are not rewritten; server authorization and booking validation remain unchanged.
+
+All 568 tests across 129 files pass. Type checking and production build pass; lint reports zero errors and nine existing warnings. Validation covers supported formats and bounds, invalid contact text, profile write prevention with retained input, truthful setup progress and safe booking prefill/submission. Local Chromium confirms blocked invalid contact writes, retained edits, accessible format help and one successful formatted-number save at widths 1440, 390 and 320 without runtime exceptions. Browser scenarios use synthetic intercepted records rather than production accounts. No database migration, backend deployment, payment change or cloud environment publication is included.
