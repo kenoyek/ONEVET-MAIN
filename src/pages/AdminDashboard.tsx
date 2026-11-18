@@ -1,3 +1,4 @@
+import {adminVetSummaryService,type PendingVet} from '@/lib/services/admin-vet-summary-service';
 import { licenseBelongsToApplicant } from '@/lib/services/license-service';
 import { LicenseDocumentLink } from '@/components/onboarding/LicenseDocumentLink';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -22,30 +23,18 @@ import { toast } from 'sonner';
 
 interface DashboardStats {
   totalUsers: number;
-  totalVets: number;
+  approvedVets: number;
   pendingVets: number;
   activeSubscriptions: number;
   totalConsultations: number;
   consultationsToday: number;
 }
 
-interface PendingVet {
-  user_id: string;
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  license_number: string | null;
-  license_url: string | null;
-  created_at: string;
-  vendor_type: string | null;
-}
-
 const AdminDashboard = () => {
   const { profile } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
-    totalVets: 0,
+    approvedVets: 0,
     pendingVets: 0,
     activeSubscriptions: 0,
     totalConsultations: 0,
@@ -74,20 +63,7 @@ const AdminDashboard = () => {
         .select('*', { count: 'exact', head: true });
       if (usersError) throw new Error(`Profiles: ${usersError.message}`);
 
-      // Fetch vet counts
-      const { data: vetAccounts, count: vetsCount, error: vetsError } = await supabase
-        .from('user_roles')
-        .select('user_id', { count: 'exact' })
-        .eq('role', 'veterinarian');
-      if (vetsError) throw new Error(`User Roles: ${vetsError.message}`);
-
-      // Fetch pending vendors
-      const { data: pendingVetsData, error: pendingError } = await supabase
-        .from('profiles')
-        .select('id, user_id, first_name, last_name, email, license_number, license_url, created_at, vendor_type')
-        .eq('verification_status', 'pending')
-        .in('user_id', (vetAccounts || []).map(account => account.user_id));
-      if (pendingError) throw new Error(`Pending Veterinarians: ${pendingError.message}`);
+      const veterinarianSummary=await adminVetSummaryService.load();
 
       // Fetch active subscriptions
       const { count: activeSubsCount, error: subsError } = await supabase
@@ -110,14 +86,14 @@ const AdminDashboard = () => {
 
       setStats({
         totalUsers: usersCount || 0,
-        totalVets: vetsCount || 0,
-        pendingVets: pendingVetsData?.length || 0,
+        approvedVets: veterinarianSummary.approvedCount,
+        pendingVets: veterinarianSummary.pendingVets.length,
         activeSubscriptions: activeSubsCount || 0,
         totalConsultations: consultationsCount || 0,
         consultationsToday: consultationsTodayCount || 0,
       });
 
-      setPendingVets(pendingVetsData || []);
+      setPendingVets(veterinarianSummary.pendingVets);
     } catch (err: unknown) {
       console.error('Error fetching admin dashboard data:', err);
       setError((err as Error).message || 'An unexpected error occurred');
@@ -222,6 +198,7 @@ const AdminDashboard = () => {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
+              <Button variant="outline" onClick={()=>void fetchDashboardData()}><RefreshCcw className="mr-2 h-4 w-4"/>Refresh dashboard</Button>
               <Button variant="outline" asChild><Link to="/admin/verifications">Organization verification</Link></Button>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -255,8 +232,8 @@ const AdminDashboard = () => {
                   <Stethoscope className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xl font-semibold tracking-tight">{stats.totalVets}</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Vets</p>
+                  <p className="text-xl font-semibold tracking-tight">{stats.approvedVets}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Onboarded vets</p><p className="mt-1 text-xs text-muted-foreground">Active, approved and licence verified</p>
                 </div>
               </div>
             </Card>
@@ -267,7 +244,7 @@ const AdminDashboard = () => {
                 </div>
                 <div>
                   <p className="text-xl font-semibold tracking-tight">{stats.pendingVets}</p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pending</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Awaiting verification</p>
                 </div>
               </div>
             </Card>
@@ -343,7 +320,7 @@ const AdminDashboard = () => {
                 <CardHeader>
                   <CardTitle>Pending Veterinarian Verifications</CardTitle>
                   <CardDescription>
-                    Review and verify veterinarian licenses
+                    Submitted licence numbers and applicant-owned documents awaiting review. Incomplete registrations are not included.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
