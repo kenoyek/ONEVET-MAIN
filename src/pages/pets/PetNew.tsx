@@ -1,3 +1,4 @@
+import { withBookingAnimal } from '@/lib/booking-animal-context';
 import { petBookingReturn } from '@/lib/pet-booking-return';
 import {PageHeading} from '@/components/layout/PageHeading';
 import { useEffect, useRef, useState } from 'react';
@@ -47,32 +48,37 @@ const PetNewForm = () => {
     lock.current=true;setSaveError('');
     setIsSubmitting(true);
     try {
+      const details = {
+        name: values.name,
+        species: values.species as SpeciesType,
+        breed: values.breed || null,
+        date_of_birth: values.dateOfBirth || null,
+        weight: values.weight || null,
+        gender: values.gender || null,
+        is_livestock: values.isLivestock,
+        livestock_count: values.isLivestock ? values.livestockCount : 1,
+        medical_notes: values.medicalNotes || null,
+        avatar_url: avatarUrl,
+      };
       let { data, error } = await supabase
         .from('pets')
-        .insert({
-          id:petId,
-          owner_id: profile.id,
-          name: values.name,
-          species: values.species as SpeciesType,
-          breed: values.breed || null,
-          date_of_birth: values.dateOfBirth || null,
-          weight: values.weight || null,
-          gender: values.gender || null,
-          is_livestock: values.isLivestock,
-          livestock_count: values.isLivestock ? values.livestockCount : 1,
-          medical_notes: values.medicalNotes || null,
-          avatar_url: avatarUrl,
-        })
+        .insert({id:petId,owner_id:profile.id,...details})
         .select('id')
         .single();
 
       if(error?.code==='23505'){
         const recovered=await supabase.from('pets').select('id').eq('id',petId).eq('owner_id',profile.id).maybeSingle();
-        if(!recovered.error&&recovered.data){data=recovered.data;error=null;}
+        if(!recovered.error&&recovered.data){
+          // A lost create response may be followed by edits. Acknowledge those edits,
+          // not merely the existence of the earlier row, before reporting success.
+          const updated=await supabase.from('pets').update(details).eq('id',petId).eq('owner_id',profile.id).select('id').single();
+          data=updated.data;error=updated.error;
+        }
       }
       if (error) throw error;
       if(!data)throw new Error('No pet profile returned');
 
+      if(!active.current)return;
       toast.success(`${values.name} has been added!`);
       if(active.current){
         if(returnTo){const target=new URL(returnTo,'https://1vet.store');target.searchParams.set('animal',`pet:${data.id}`);navigate(target.pathname+target.search);}
@@ -80,9 +86,9 @@ const PetNewForm = () => {
       }
     } catch (error) {
       console.error('Error creating pet:', error);
-      setSaveError('Your pet could not be saved. Your entries are still here. Please try again.');
+      if(active.current)setSaveError('Your pet could not be saved. Your entries are still here. Please try again.');
     } finally {
-      lock.current=false;setIsSubmitting(false);
+      lock.current=false;if(active.current)setIsSubmitting(false);
     }
   };
 
@@ -92,7 +98,7 @@ const PetNewForm = () => {
       <p role="status" className="mt-4 text-muted-foreground leading-relaxed">Your animal’s profile has been saved. Choose what you’d like to do next—you can add more details later.</p>
       <div className="mt-7 grid gap-4 sm:grid-cols-2">
         <Link to={`/pets/${saved.id}`} className="care-path"><h2 className="text-lg">Open the saved profile</h2><p className="mt-2 text-sm text-muted-foreground">Review details and start an owner-reported health journal.</p></Link>
-        <Link to="/provider-marketplace" className="care-path"><h2 className="text-lg">Find care services</h2><p className="mt-2 text-sm text-muted-foreground">Explore providers and request an appointment. Your request needs provider confirmation.</p></Link>
+        <Link to={withBookingAnimal("/provider-marketplace",`pet:${saved.id}`)} className="care-path"><h2 className="text-lg">Find care services</h2><p className="mt-2 text-sm text-muted-foreground">Explore providers and request an appointment. Your request needs provider confirmation.</p></Link>
         <Link to="/marketplace" className="care-path"><h2 className="text-lg">Browse the marketplace</h2><p className="mt-2 text-sm text-muted-foreground">Explore food, supplies and everyday animal care products.</p></Link>
         <Link to="/dashboard" className="care-path"><h2 className="text-lg">Return to your dashboard</h2><p className="mt-2 text-sm text-muted-foreground">See your setup progress, animal records and care activity.</p></Link>
       </div>
