@@ -17,15 +17,33 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
   const location=useLocation();
   const returnTo=bookingReturnPath(location.state?.bookingReturnTo || location.pathname+location.search);
   const actionLock=useRef(false);
+  const reviewLock=useRef(false);
+  const [needsReview,setNeedsReview]=useState(false);
+  const [reviewRefreshing,setReviewRefreshing]=useState(false);
+  const [responseFeedback,setResponseFeedback]=useState('');
   const [rescheduling, setRescheduling] = useState(false);
   const [note, setNote] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [showHistory, setShowHistory] = useState(false);
   const events = useQuery({ queryKey: ['booking-history', user?.id, booking.id, booking.version], queryFn: () => service.history(booking.id), enabled: showHistory });
+  async function refreshForReview(){
+    if(actionLock.current)return;
+    actionLock.current=true;setReviewRefreshing(true);
+    try{await refresh();reviewLock.current=false;setNeedsReview(false);setError('');setResponseFeedback('Details refreshed. Review the recorded status and your explanation before responding.');}
+    catch{setError('Could not refresh this request. Your explanation is retained. Try refreshing again.');}
+    finally{actionLock.current=false;setReviewRefreshing(false);}
+  }
   async function respond(decision: BookingDecision) {
-    if (actionLock.current) return; actionLock.current=true; setBusy(true); setError('');
-    try { await service.respond(booking, decision, note); setNote(''); await refresh(); }
-    catch (cause) { setError(appointmentError(cause)); }
+    if (actionLock.current || reviewLock.current) return; actionLock.current=true; setBusy(true); setError('');setResponseFeedback('');
+    try {
+      await service.respond(booking, decision, note); setNote('');setResponseFeedback('Your response was saved.');
+      try{await refresh();}catch{reviewLock.current=true;setNeedsReview(true);setResponseFeedback('Your response was saved. Refresh request details to see the latest status; do not send the same response again.');}
+    }
+    catch (cause) {
+      setError(appointmentError(cause));
+      if(typeof cause==='object'&&cause&&'code' in cause&&['40001','23P01','42501'].includes(String(cause.code))){reviewLock.current=true;setNeedsReview(true);}
+    }
     finally { actionLock.current=false; setBusy(false); }
   }
+  const decisionBlocked=busy || needsReview || reviewRefreshing;
   const statusInfo=bookingStatus(booking.status,booking.start_at,booking.end_at);
   const preparation=bookingPreparation({status:booking.status,start:booking.start_at,end:booking.end_at,delivery:snapshotText(booking.service_snapshot,'delivery_mode'),eligibility:booking.provider_eligibility});
   const actingProvider=provider && booking.provider_access===true && booking.customer_id!==user?.id;
@@ -56,16 +74,18 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">{preparation.steps.map(step=><li key={step}>{step}</li>)}</ul>
       {booking.provider_eligibility!=='eligible' && <Link className="mt-3 inline-block text-sm text-primary underline" to="/contact">Contact support</Link>}
     </section>}
-    {open && canAct && <><Label htmlFor={`response-${booking.id}`}>Response / explanation (required for cancellation or decline)</Label><Textarea id={`response-${booking.id}`} disabled={busy} maxLength={2000} value={note} onChange={event => setNote(event.target.value)} />
+    {open && canAct && <><Label htmlFor={`response-${booking.id}`}>Response / explanation (required for cancellation or decline)</Label><Textarea id={`response-${booking.id}`} disabled={busy} maxLength={2000} value={note} onChange={event => {setNote(event.target.value);setResponseFeedback('');}} />
       {actingProvider && booking.status==='pending' && <p className="text-sm text-muted-foreground">Confirm only if you can provide this service at the recorded fee. Confirming a provider-location visit shares your primary location address with this customer.</p>}
       <div className="flex flex-wrap gap-3">
-        {actingProvider && booking.status==='pending' && <><Button disabled={busy || !withinConfirmationWindow || booking.provider_eligibility==='unavailable' || booking.provider_eligibility==='unknown'} onClick={() => void respond('confirmed')}>Confirm request</Button><Button variant="outline" disabled={busy || note.trim().length<5} onClick={() => void respond('declined')}>Decline request</Button></>}
-        <Button variant="outline" disabled={busy || note.trim().length<5} onClick={() => void respond('cancelled')}>Cancel request</Button>
-        {actingProvider && booking.status==='confirmed' && new Date(booking.end_at)<=new Date() && <Button disabled={busy} onClick={() => void respond('completed')}>Mark completed</Button>}
+        {actingProvider && booking.status==='pending' && <><Button disabled={decisionBlocked || !withinConfirmationWindow || booking.provider_eligibility==='unavailable' || booking.provider_eligibility==='unknown'} onClick={() => void respond('confirmed')}>Confirm request</Button><Button variant="outline" disabled={decisionBlocked || note.trim().length<5} onClick={() => void respond('declined')}>Decline request</Button></>}
+        <Button variant="outline" disabled={decisionBlocked || note.trim().length<5} onClick={() => void respond('cancelled')}>Cancel request</Button>
+        {actingProvider && booking.status==='confirmed' && new Date(booking.end_at)<=new Date() && <Button disabled={decisionBlocked} onClick={() => void respond('completed')}>Mark completed</Button>}
       </div></>}
-    {!readOnly && !actingProvider && booking.customer_id===user?.id && booking.status==='confirmed' && new Date(booking.start_at)>new Date() && <><Button variant="outline" disabled={busy} onClick={()=>setRescheduling(previous=>!previous)}>{rescheduling?'Close reschedule form':'Request reschedule'}</Button>{rescheduling && <BookingRescheduleForm key={`${booking.id}-${booking.version}`} booking={booking} onSubmitted={refresh}/>}</>}
+    {!readOnly && !actingProvider && booking.customer_id===user?.id && booking.status==='confirmed' && new Date(booking.start_at)>new Date() && <><Button variant="outline" disabled={decisionBlocked} onClick={()=>setRescheduling(previous=>!previous)}>{rescheduling?'Close reschedule form':'Request reschedule'}</Button>{rescheduling && !needsReview && <BookingRescheduleForm key={`${booking.id}-${booking.version}`} booking={booking} onSubmitted={refresh}/>}</>}
     {!readOnly && booking.status==='confirmed' && new Date(booking.end_at)>new Date() && (booking.customer_id===user?.id||booking.provider_owner_id===user?.id) && <AppointmentCalendarDownload key={`${user?.id}-${booking.id}`} bookingId={booking.id}/>}
+    {needsReview&&<section className="rounded-xl border bg-muted/20 p-4 space-y-3" aria-label="Review changed request"><p className="text-sm text-muted-foreground">Refresh the latest request and review its recorded status before another response.{note.trim() ? ' Your entered explanation is retained.' : ''}</p><Button variant="outline" disabled={reviewRefreshing} onClick={()=>void refreshForReview()}>{reviewRefreshing?'Refreshing request details…':'Refresh request details'}</Button></section>}
     {error && <p role="alert" className="text-destructive">{error}</p>}
+    {responseFeedback&&<p role="status" className="text-sm text-muted-foreground">{responseFeedback}</p>}
     <Button variant="link" onClick={() => setShowHistory(previous => !previous)}>{showHistory ? 'Hide history' : 'Show history'}</Button>
     {showHistory && (events.isPending ? <p role="status">Loading history…</p> : events.isError ? <><p role="alert">Could not load history.</p><Button variant="outline" onClick={() => void events.refetch()}>Retry history</Button></> : <ol className="space-y-2">{events.data?.map(event => <li key={event.id} className="border-l-2 pl-3 text-sm">{event.status} · {bookingTime(event.created_at)}{event.note && <p className="whitespace-pre-wrap">{event.note}</p>}</li>)}</ol>)}
   </article>;
