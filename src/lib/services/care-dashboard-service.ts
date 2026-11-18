@@ -10,10 +10,19 @@ function preview<T>(rows:T[]){return{rows:rows.slice(0,4),hasMore:rows.length>4}
 export const careDashboardService={
  async appointments(userId:string){
   const {data,error}=await supabase.from('provider_booking_requests')
-   .select('id,status,start_at,end_at,service_snapshot')
+   .select('id,provider_id,status,start_at,end_at,service_snapshot')
    .eq('customer_id',userId).in('status',['pending','confirmed'])
    .gte('end_at',careDashboardWindow().now).order('start_at').order('id').limit(5);
-  if(error)throw error;return preview(data);
+  if(error)throw error;
+  const result=preview(data);
+  const eligibility=new Map<string,'eligible'|'unavailable'|'unknown'>();
+  await Promise.all([...new Set(result.rows.map(row=>row.provider_id).filter(Boolean))].map(async providerId=>{
+   try{
+    const check=await supabase.rpc('provider_publication_eligible',{provider_uuid:providerId});
+    eligibility.set(providerId,check.error?'unknown':check.data===true?'eligible':check.data===false?'unavailable':'unknown');
+   }catch{eligibility.set(providerId,'unknown');}
+  }));
+  return {...result,rows:result.rows.map(row=>({...row,provider_eligibility:eligibility.get(row.provider_id)??'unknown'}))};
  },
  async vaccinationDates(ownerId:string){
   const {data,error}=await supabase.from('pet_owner_health_entries')

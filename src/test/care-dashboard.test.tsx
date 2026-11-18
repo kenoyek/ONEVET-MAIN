@@ -21,4 +21,18 @@ describe('Care dashboard panels',()=>{
  it('ignores delayed private data after an account switch',async()=>{let release!:(value:unknown)=>void;mock.observations.mockImplementation((owner:string)=>owner==='profile-a'?new Promise(resolve=>{release=resolve;}):Promise.resolve({rows:[],hasMore:false}));const view=mount();await waitFor(()=>expect(mock.observations).toHaveBeenCalledWith('profile-a'));mock.user='user-b';mock.profile={id:'profile-b',user_id:'user-b',is_active:true};view.rerender(<CareDashboard/>);await screen.findByText(/No owner observations/);await act(async()=>release({rows:[{...entry,title:'PRIVATE OLD JOURNAL'}],hasMore:false}));expect(screen.queryByText(/PRIVATE OLD JOURNAL/)).not.toBeInTheDocument();});
  it('hides cached data when a background access check fails',async()=>{const view=mount();await screen.findByRole('link',{name:'Bello · Weight observation'});mock.observations.mockRejectedValue({code:'42501'});await act(async()=>{await view.cache.invalidateQueries({queryKey:['care-dashboard','user-a','profile-a','observations']});});await screen.findByText(/Could not load latest journal observations/);expect(screen.queryByRole('link',{name:'Bello · Weight observation'})).not.toBeInTheDocument();});
  it('renders stored titles as text',async()=>{mock.observations.mockResolvedValue({rows:[{...entry,title:'<img src=x onerror=alert(1)>'}],hasMore:false});mount();await screen.findByText('Bello · <img src=x onerror=alert(1)>');expect(document.querySelector('img[src=x]')).toBeNull();});
+ it('warns about unavailable provider approval without rewriting the recorded appointment',async()=>{
+  mock.appointments.mockResolvedValue({rows:[{...booking,status:'confirmed',start_at:new Date(Date.now()+86400000).toISOString(),end_at:new Date(Date.now()+90000000).toISOString(),provider_eligibility:'unavailable'}],hasMore:false});mount();
+  await screen.findByRole('link',{name:'Contact support before attending'});expect(screen.getByText('Confirmed')).toBeInTheDocument();
+  expect(screen.getByRole('alert')).toHaveTextContent('has not been cancelled automatically');expect(screen.getByRole('link',{name:'Grooming appointment'})).toHaveAttribute('href','/appointments/booking-a');
+ });
+ it('keeps appointment and journal previews visible when approval rechecking fails',async()=>{
+  mock.appointments.mockResolvedValue({rows:[{...booking,provider_eligibility:'unknown'}],hasMore:false});mount();
+  await screen.findByText(/Provider approval could not be rechecked/);expect(screen.getByRole('link',{name:'Grooming appointment'})).toBeInTheDocument();expect(await screen.findByRole('link',{name:'Bello · Weight observation'})).toBeInTheDocument();
+ });
+ it('does not show an approval warning for an eligible provider',async()=>{
+  mock.appointments.mockResolvedValue({rows:[{...booking,provider_eligibility:'eligible'}],hasMore:false});mount();await screen.findByRole('link',{name:'Grooming appointment'});
+  expect(screen.queryByText(/Provider approval could not/)).not.toBeInTheDocument();expect(screen.queryByRole('link',{name:'Contact support before attending'})).not.toBeInTheDocument();
+ });
+
 });
