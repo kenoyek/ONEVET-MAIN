@@ -1,4 +1,5 @@
-import {authErrorMessage} from '@/lib/auth-feedback';
+import { Link, useLocation } from 'react-router-dom';
+import {authErrorMessage,emailConfirmationRequired} from '@/lib/auth-feedback';
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +24,9 @@ interface SignInFormProps {
 
 export function SignInForm({ onForgotPassword }: SignInFormProps) {
   const { signIn } = useAuth();
+  const location=useLocation();
+  const [confirmationEmail,setConfirmationEmail]=useState('');
+  const confirmationParams=new URLSearchParams(location.search);confirmationParams.set('mode','confirm');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const busy=useRef(false);
@@ -37,11 +41,11 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
   });
 
   const onSubmit = async (values: SignInValues) => {
-    if(busy.current)return;busy.current=true;setSubmitError('');
+    if(busy.current)return;busy.current=true;setSubmitError('');setConfirmationEmail('');
     setIsLoading(true);
     try {
       const { error } = await signIn(values.email, values.password);
-      if(error){setSubmitError(authErrorMessage(error,'signin'));}else{toast.success('Welcome back!');}
+      if(error){setSubmitError(authErrorMessage(error,'signin'));if(emailConfirmationRequired(error))setConfirmationEmail(values.email.trim());}else{toast.success('Welcome back!');}
     } catch {
       setSubmitError(authErrorMessage(null,'signin'));
     } finally {
@@ -65,6 +69,7 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
                   autoComplete="email"
                   className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                   {...field}
+                  onChange={event=>{field.onChange(event);setConfirmationEmail('');setSubmitError('');}}
                 />
               </FormControl>
               <FormMessage className="font-bold text-xs" />
@@ -128,6 +133,10 @@ export function SignInForm({ onForgotPassword }: SignInFormProps) {
           )}
         </Button>
         </fieldset>{submitError&&<p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 p-3 text-sm text-destructive">{submitError}</p>}
+        {confirmationEmail&&<section className="rounded-xl border bg-muted/20 p-4 space-y-3">
+          <p className="text-sm text-muted-foreground">Need a fresh confirmation link? Review your email address before requesting another.</p>
+          <Button asChild variant="outline" className="w-full"><Link to={`/auth?${confirmationParams}`} state={{...(location.state&&typeof location.state==='object'?location.state:{}),confirmationEmail}}>Request a confirmation link</Link></Button>
+        </section>}
       </form>
     </Form>
   );

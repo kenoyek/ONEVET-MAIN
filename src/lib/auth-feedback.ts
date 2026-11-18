@@ -1,7 +1,11 @@
+export function emailConfirmationRequired(error:unknown){
+ const value=error&&typeof error==='object'?error as {code?:string;message?:string}:{};
+ return value.code==='email_not_confirmed'||(typeof value.message==='string'&&value.message.toLowerCase().includes('email not confirmed'));
+}
 export function authErrorMessage(error:unknown,action:'signin'|'signup'|'reset'|'password'){
  const value=error&&typeof error==='object'?error as {code?:string;message?:string}:{};
  const message=value.message?.toLowerCase()||'';
- if(value.code==='email_not_confirmed'||message.includes('email not confirmed'))return 'Please confirm your email before signing in. Check your inbox and spam folder for the confirmation link.';
+ if(emailConfirmationRequired(error))return 'Please confirm your email before signing in. Check your inbox and spam folder for the confirmation link.';
  if(value.code==='invalid_credentials'||message.includes('invalid login credentials'))return 'The email or password is incorrect. Check your details and try again.';
  if(value.code?.includes('rate_limit')||message.includes('rate limit')||message.includes('too many'))return 'Too many attempts. Please wait a little before trying again.';
  if(value.code==='user_already_exists'||message.includes('already registered')||message.includes('already exists'))return 'This email may already have an account. Try signing in or resetting your password.';
