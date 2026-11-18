@@ -1,3 +1,5 @@
+import { VetReviewDialog } from '@/components/onboarding/VetReviewDialog';
+import { reviewVeterinarian } from '@/lib/services/vet-review-service';
 import {adminVetSummaryService,type PendingVet,type IncompleteVet} from '@/lib/services/admin-vet-summary-service';
 import { licenseBelongsToApplicant } from '@/lib/services/license-service';
 import { LicenseDocumentLink } from '@/components/onboarding/LicenseDocumentLink';
@@ -107,30 +109,14 @@ const AdminDashboard = () => {
 
   const verificationBusy = useRef(false);
   const [verifying, setVerifying] = useState(false);
+  const [review, setReview] = useState<{ application: PendingVet; approve: boolean } | null>(null);
   const verifyVet = async (vetId: string, approve: boolean) => {
     if (verificationBusy.current) return;
     const application = pendingVets.find(vet => vet.id === vetId);
-    if (!application || (approve && (!application.license_number || !licenseBelongsToApplicant(application.license_url, application.user_id)))) { toast.error('Review a complete license application before approving.'); return; }
+    if (!application) throw new Error('Refresh the dashboard and review this application again.');
     verificationBusy.current = true; setVerifying(true);
     try {
-      const newStatus = approve ? 'approved' : 'rejected';
-
-      // 1. Update profiles table
-      let update = supabase
-        .from('profiles')
-        .update({
-          verification_status: newStatus,
-          license_verified: approve
-        })
-        .eq('id', vetId).eq('verification_status', 'pending');
-      if (approve) update = update.eq('license_url', application.license_url!).eq('license_number', application.license_number!);
-      const { data: updatedProfiles, error: profileErr } = await update.select('id, user_id');
-
-      if (profileErr) throw profileErr;
-
-      if (!updatedProfiles || updatedProfiles.length === 0) {
-        throw new Error('This action could not be completed. The application or your access may have changed; refresh and review it again.');
-      }
+      await reviewVeterinarian(application, approve);
 
       // Verification changes are audited atomically by the trusted database trigger.
       // Organization verification has a separate reviewed workflow.
@@ -139,7 +125,7 @@ const AdminDashboard = () => {
       fetchDashboardData();
     } catch (error: unknown) {
       console.error('Error verifying vendor:', error);
-      toast.error((error as Error).message || 'Failed to update verification status');
+      throw error;
     } finally { verificationBusy.current = false; setVerifying(false); }
   };
 
@@ -184,6 +170,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      {review && <VetReviewDialog key={review.application.id + String(review.approve)} application={review.application} approve={review.approve} onClose={() => setReview(null)} onConfirm={() => verifyVet(review.application.id, review.approve)} />}
       
       <main id="main-content" tabIndex={-1} className="container-wide py-12 pt-28 md:pt-32">
         <motion.div
@@ -360,7 +347,7 @@ const AdminDashboard = () => {
                             <Button
                               size="sm"
                               disabled={verifying || !vet.license_number || !licenseBelongsToApplicant(vet.license_url, vet.user_id)}
-                              onClick={() => verifyVet(vet.id, true)}
+                              onClick={() => setReview({ application: vet, approve: true })}
                               className="gap-1"
                             >
                               <CheckCircle className="h-4 w-4" />
@@ -369,7 +356,7 @@ const AdminDashboard = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              disabled={verifying} onClick={() => verifyVet(vet.id, false)}
+                              disabled={verifying} onClick={() => setReview({ application: vet, approve: false })}
                               className="gap-1"
                             >
                               <XCircle className="h-4 w-4" />
