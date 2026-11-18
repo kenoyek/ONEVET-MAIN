@@ -1,10 +1,10 @@
+import { CartQuantityControl } from '@/components/marketplace/CartQuantityControl';
 import {CartStorageNotice} from '@/components/marketplace/CartStorageNotice';
 import { ProductImage } from '@/components/marketplace/ProductImage';
 import { cartChanges } from '@/lib/cart-changes';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { shopService } from '@/lib/services/shop-service';
-import { cartQuantityLimit } from '@/lib/cart-rules';
 import { useAuth } from '@/lib/auth-context';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Navbar } from "@/components/layout/Navbar";
@@ -14,8 +14,6 @@ import { useCart } from "@/hooks/use-cart";
 import { Link } from "react-router-dom";
 import {
   Trash2,
-  Minus,
-  Plus,
   ArrowLeft,
   ShoppingCart,
   ArrowRight,
@@ -129,27 +127,7 @@ const Cart = () => {
                           </Button>
                         </div>
                         <div className="flex flex-wrap justify-between items-end gap-4 pt-4 border-t border-border/40">
-                          <div className="flex items-center bg-muted/50 rounded-full p-1 border border-border/40 shadow-inner">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
-                              aria-label={`Decrease quantity of ${item.title}`} disabled={item.available === false} onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            >
-                              <Minus className="w-3.5 h-3.5" />
-                            </Button>
-                            <span className="w-12 text-center text-sm font-semibold">
-                              {item.quantity}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 rounded-full hover:bg-background shadow-soft transition-all"
-                              aria-label={`Increase quantity of ${item.title}`} disabled={catalogue.isFetching || catalogue.isError || item.available === false || item.quantity >= cartQuantityLimit(item.stock_quantity)} onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
+                          <CartQuantityControl item={item} checking={catalogue.isFetching} failed={catalogue.isError} onChange={quantity => updateQuantity(item.id, quantity)} />
                           <div className="text-2xl font-semibold text-primary tracking-tight">
                             {item.available === false ? 'Unavailable' : `₦${money(Math.round(item.price * 100) * item.quantity / 100)}`}
                           </div>
