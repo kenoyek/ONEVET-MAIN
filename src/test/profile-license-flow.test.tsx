@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Profile from '@/pages/Profile';
 const mocks=vi.hoisted(()=>({profile:{id:'profile-a',user_id:'user-a',first_name:'Test',last_name:'Vet',phone:'',email:'vet@example.invalid',location:'',license_number:'',license_url:null as string|null,license_verified:false,verification_status:'pending'},upload:vi.fn(),refresh:vi.fn()}));
 vi.mock('@/lib/auth-context',()=>({useAuth:()=>({user:{id:'user-a'},profile:mocks.profile,role:'veterinarian',refreshProfile:mocks.refresh})}));
-vi.mock('@/lib/services/license-service',()=>({uploadVeterinaryLicense:mocks.upload}));
+vi.mock('@/lib/services/license-service',async importOriginal=>({...await importOriginal<typeof import('@/lib/services/license-service')>(),uploadVeterinaryLicense:mocks.upload}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{}}));
 vi.mock('@/components/layout/Navbar',()=>({Navbar:()=>null}));
 beforeEach(()=>{vi.clearAllMocks();mocks.profile={...mocks.profile,id:'profile-a',first_name:'Test',last_name:'Vet',phone:'',license_number:'',license_url:null};mocks.upload.mockResolvedValue(undefined);mocks.refresh.mockResolvedValue(undefined);});

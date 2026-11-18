@@ -1,3 +1,4 @@
+import { vetOnboardingStatus } from '@/lib/vet-onboarding';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -39,6 +40,7 @@ interface Stats {
 
 const VetDashboard = () => {
   const { profile, refreshProfile } = useAuth();
+  const professionalStatus = vetOnboardingStatus(profile);
   const navigate = useNavigate();
   const [pendingConsultations, setPendingConsultations] = useState<Consultation[]>([]);
   const [activeConsultations, setActiveConsultations] = useState<Consultation[]>([]);
@@ -222,7 +224,7 @@ const VetDashboard = () => {
               size="lg" 
               variant={isAvailable ? 'default' : 'outline'}
               onClick={toggleAvailability}
-              disabled={isTogglingAvailability || !profile?.license_verified || profile?.verification_status !== 'approved' || profile?.is_active === false}
+              disabled={isTogglingAvailability || !professionalStatus.approved}
               className="gap-3 font-bold rounded-full shadow-soft px-8 min-w-[160px]"
             >
               {isAvailable ? (
@@ -240,7 +242,7 @@ const VetDashboard = () => {
           </div>
 
           {/* Verification Status */}
-          {(!profile?.license_verified || profile?.verification_status !== 'approved' || profile?.is_active === false) && (
+          {!professionalStatus.approved && (
             <Card className="mb-10 border-warning/50 bg-warning/5 card-elevated">
               <CardContent className="flex flex-col sm:flex-row items-center justify-between py-6 px-8 gap-4 text-center sm:text-left">
                 <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -248,14 +250,14 @@ const VetDashboard = () => {
                     <Stethoscope className="h-8 w-8" />
                   </div>
                   <div>
-                    <p className="font-bold text-lg">Professional approval required</p>
+                    <p className="font-bold text-lg">{professionalStatus.label}</p>
                     <p className="text-sm text-muted-foreground font-medium">
-                      {profile?.is_active === false ? 'Your account is inactive. Contact support before accepting work.' : profile?.license_url && profile?.license_number ? (profile?.verification_status === 'rejected' ? 'Your application needs attention. Review your profile and submit updated professional details.' : 'Your professional details are awaiting review. Approval is required before you can accept consultations.') : 'Add your license number and upload your veterinary license in your profile, then wait for professional review.'}
+                      {professionalStatus.description}
                     </p>
                   </div>
                 </div>
                 <Button variant="default" className="rounded-full font-bold px-8" asChild>
-                  <Link to="/profile">Complete Profile</Link>
+                  <Link to={professionalStatus.href}>{professionalStatus.action}</Link>
                 </Button>
               </CardContent>
             </Card>

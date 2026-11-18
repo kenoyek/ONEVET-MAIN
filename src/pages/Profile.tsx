@@ -1,6 +1,8 @@
+import { vetOnboardingStatus } from '@/lib/vet-onboarding';
 import { uploadVeterinaryLicense } from '@/lib/services/license-service';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   User, Camera, Upload, Loader2, CheckCircle, XCircle, Clock,
@@ -227,18 +229,13 @@ function ProfileEditor() {
     return user?.email?.[0]?.toUpperCase() || 'U';
   };
 
-  const getVerificationStatus = () => {
-    if (!profile?.license_number && !profile?.license_url) {
-      return { status: 'none', label: 'Not Submitted', color: 'secondary' as const, icon: Clock };
-    }
-    if (profile?.license_verified) {
-      return { status: 'verified', label: 'Verified', color: 'default' as const, icon: CheckCircle };
-    }
-    return { status: 'pending', label: 'Pending Review', color: 'outline' as const, icon: Clock };
-  };
-
-  const verificationStatus = getVerificationStatus();
-  const VerificationIcon = verificationStatus.icon;
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (ownerReady && hash === '#credentials') document.getElementById('credentials')?.scrollIntoView({ block: 'start' });
+  }, [ownerReady, hash]);
+  const professionalStatus = vetOnboardingStatus(profile);
+  const verificationStatus = { label: professionalStatus.label, color: professionalStatus.approved ? 'default' as const : 'outline' as const };
+  const VerificationIcon = professionalStatus.approved ? CheckCircle : Clock;
 
   if(!ownerReady)return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" className="container-wide pt-32"><p role="status">Checking your account profile…</p></main></div>;
   return (
@@ -390,7 +387,7 @@ function ProfileEditor() {
                 <CardHeader className="bg-primary/5 pb-6">
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-center sm:text-left">
-                      <CardTitle className="flex items-center justify-center sm:justify-start gap-2 font-bold tracking-tight">
+                      <CardTitle id="credentials" className="scroll-mt-28 flex items-center justify-center sm:justify-start gap-2 font-bold tracking-tight">
                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
                           <Shield className="h-5 w-5" />
                         </div>
@@ -407,6 +404,17 @@ function ProfileEditor() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-8 pt-8">
+                  <div className="rounded-2xl border bg-muted/20 p-5" aria-label="Professional onboarding progress">
+                    <p className="font-semibold">{professionalStatus.label}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{professionalStatus.description}</p>
+                    <ul className="mt-4 space-y-2 text-sm">
+                      {professionalStatus.checklist.map(item => <li key={item.label} className="flex items-start gap-2">
+                        {item.complete ? <CheckCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-primary" /> : <Clock aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />}
+                        <span>{item.label}: <strong>{item.complete ? 'Complete' : 'Still needed'}</strong></span>
+                      </li>)}
+                    </ul>
+                    {professionalStatus.href === '/contact' && <Button variant="link" className="mt-3 h-auto p-0" asChild><Link to="/contact">Contact support</Link></Button>}
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="specialty" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Medical Specialty</Label>
@@ -442,9 +450,9 @@ function ProfileEditor() {
                               <FileText className="h-8 w-8" />
                             </div>
                             <div>
-                              <p className="font-bold text-foreground">Active File Uploaded</p>
+                              <p className="font-bold text-foreground">Saved licence document</p>
                               <p className="text-sm text-muted-foreground font-medium">
-                                Your current license is being processed.
+                                {professionalStatus.checklist[1]?.complete ? 'A document is attached to your account.' : 'Upload a valid document belonging to your account.'}
                               </p>
                             </div>
                           </div>
