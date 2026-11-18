@@ -71,4 +71,25 @@ describe('Booking management',()=>{
   await screen.findByRole('heading',{name:'No past requests still open'});expect(list).toHaveBeenLastCalledWith({customerId:'customer-id'},0,'past_open');
  });
 
+ it('shows preparation guidance to the booking customer without offering it to a provider viewer',async()=>{
+  identity.userId='provider-id';mount(<BookingRequestList providerId="org-id"/>);await screen.findByText('Grooming');
+  expect(screen.queryByRole('region',{name:'Appointment next steps'})).not.toBeInTheDocument();
+ });
+ it('explains that a pending client request needs confirmation before making visit arrangements',async()=>{
+  mount(<BookingRequestList/>);await screen.findByRole('heading',{name:'While you wait for confirmation'});
+  expect(screen.getByText(/Wait for the provider to confirm before travelling/)).toBeInTheDocument();
+ });
+ it('does not label an appointment with missing delivery metadata as a provider-location visit',async()=>{
+  list.mockResolvedValue({rows:[{...booking,status:'confirmed',service_snapshot:{...booking.service_snapshot,delivery_mode:''}}],hasNext:false});
+  mount(<BookingRequestList/>);await screen.findByRole('heading',{name:'Prepare for your confirmed appointment'});
+  expect(screen.getByText(/Confirm delivery with provider/)).toBeInTheDocument();
+  expect(screen.getByText(/Confirm how and where care will take place/)).toBeInTheDocument();
+ });
+ it('shows support guidance instead of travel instructions when provider approval cannot be verified',async()=>{
+  list.mockResolvedValue({rows:[{...booking,status:'confirmed',provider_eligibility:'unknown'}],hasNext:false});
+  mount(<BookingRequestList/>);await screen.findByRole('heading',{name:'Check provider approval before making plans'});
+  expect(screen.getByRole('link',{name:'Contact support'})).toHaveAttribute('href','/contact');
+  expect(screen.queryByRole('heading',{name:'Prepare for your confirmed appointment'})).not.toBeInTheDocument();
+ });
+
 });

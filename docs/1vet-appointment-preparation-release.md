@@ -1,0 +1,11 @@
+# Client appointment next steps — 18 November 2026
+
+Client-owned open requests now include a next-steps section on the booking list and request details, using the same shared request card. Pending requests explain that provider confirmation is needed before travel or home-visit arrangements. Confirmed home visits direct clients to check their recorded address and phone; confirmed clinic visits direct them to check the provider location and directions. Both advise reviewing relevant animal records and agreeing additional costs before care.
+
+The guidance follows the recorded state. Expired pending confirmation windows prompt a new time without claiming automatic cancellation. Past open requests prompt follow-up rather than attendance preparation. Missing, unknown or unavailable provider eligibility takes priority over routine preparation and offers support. Closed requests do not show preparation steps. Provider viewers do not receive the customer-only section.
+
+Missing or unrecognized delivery metadata no longer appears as an At provider location visit on recorded cards. The existing conservative delivery formatter is used instead, and booking review text likewise asks the client to confirm arrangements when delivery is unknown. Supported service types and approval rules are unchanged; this does not introduce video booking.
+
+No status changes, cancellations, confirmations, communications, payments or extra backend queries are performed by this guidance. Existing record permissions, response controls, calendar downloads and messaging remain unchanged. No migration, backend deployment or cloud environment publication is included.
+
+All 526 tests across 126 files pass. Type checking and production build pass; lint has zero errors and nine existing warnings. Validation covers home/clinic guidance, unknown delivery, pending windows, past records, closed statuses, uncertain approval priority and customer/provider visibility. Local Chromium verifies pending guidance, home preparation, approval overrides, unknown delivery and past follow-up at widths 1440, 390 and 320 without runtime exceptions. Browser scenarios use intercepted synthetic records, with no production writes or live Supabase account inspection.

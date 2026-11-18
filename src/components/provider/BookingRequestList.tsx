@@ -1,3 +1,5 @@
+import { bookingPreparation } from '@/lib/booking-preparation';
+import { serviceDelivery } from '@/lib/service-display';
 import { bookingListFilters, bookingReturnPath, bookingViewHelp } from '@/lib/booking-list-navigation';
 import { bookingStatus } from '@/lib/booking-status';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
@@ -25,6 +27,7 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
     finally { actionLock.current=false; setBusy(false); }
   }
   const statusInfo=bookingStatus(booking.status,booking.start_at,booking.end_at);
+  const preparation=bookingPreparation({status:booking.status,start:booking.start_at,end:booking.end_at,delivery:snapshotText(booking.service_snapshot,'delivery_mode'),eligibility:booking.provider_eligibility});
   const actingProvider=provider && booking.provider_access===true && booking.customer_id!==user?.id;
   const canAct=!readOnly && (actingProvider || booking.customer_id===user?.id);
   const open = ['pending','confirmed'].includes(booking.status);
@@ -41,13 +44,18 @@ export function BookingRequestCard({ booking, provider, refresh, readOnly = fals
     {booking.replacement_for && <p className="text-sm">Reschedule of <Link className="text-primary underline" state={{bookingReturnTo:returnTo}} to={`/appointments/${booking.replacement_for}`}>the original appointment</Link>. {booking.status==='pending'?'The original remains confirmed until this alternative is accepted.':''}</p>}
     {booking.reschedule_reason && <p className="text-sm whitespace-pre-wrap">Reschedule reason: {booking.reschedule_reason}</p>}
     <p>{bookingTime(booking.start_at)} – {new Date(booking.end_at).toLocaleTimeString('en-NG', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit' })} WAT</p>
-    <p className="text-sm">{snapshotText(booking.animal_snapshot,'name')} · {snapshotText(booking.animal_snapshot,'species')} · {snapshotText(booking.service_snapshot,'delivery_mode')==='home_visit' ? 'Home visit' : 'At provider location'}</p>
+    <p className="text-sm">{snapshotText(booking.animal_snapshot,'name')} · {snapshotText(booking.animal_snapshot,'species')} · {serviceDelivery(snapshotText(booking.service_snapshot,'delivery_mode'))}</p>
     <p>Recorded base fee: {booking.currency} {Number(booking.base_fee).toLocaleString('en-NG', { minimumFractionDigits: 2 })}. No online payment collected.</p>
     <p className="text-sm">Contact phone: {booking.contact_phone}</p>
     {booking.visit_address && <p className="text-sm whitespace-pre-wrap">Visit address: {booking.visit_address}</p>}
     {booking.provider_address && <p className="text-sm whitespace-pre-wrap">Provider location: {booking.provider_address}</p>}
     {booking.customer_notes && <p className="text-sm whitespace-pre-wrap">Customer notes: {booking.customer_notes}</p>}
     {booking.response_note && <p className="text-sm whitespace-pre-wrap">Latest response: {booking.response_note}</p>}
+    {booking.customer_id===user?.id && preparation && <section aria-label="Appointment next steps" className="rounded-xl border bg-muted/20 p-4 sm:p-5">
+      <h4 className="font-semibold">{preparation.title}</h4>
+      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted-foreground">{preparation.steps.map(step=><li key={step}>{step}</li>)}</ul>
+      {booking.provider_eligibility!=='eligible' && <Link className="mt-3 inline-block text-sm text-primary underline" to="/contact">Contact support</Link>}
+    </section>}
     {open && canAct && <><Label htmlFor={`response-${booking.id}`}>Response / explanation (required for cancellation or decline)</Label><Textarea id={`response-${booking.id}`} disabled={busy} maxLength={2000} value={note} onChange={event => setNote(event.target.value)} />
       {actingProvider && booking.status==='pending' && <p className="text-sm text-muted-foreground">Confirm only if you can provide this service at the recorded fee. Confirming a provider-location visit shares your primary location address with this customer.</p>}
       <div className="flex flex-wrap gap-3">
