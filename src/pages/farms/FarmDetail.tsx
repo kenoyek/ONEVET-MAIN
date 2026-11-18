@@ -35,6 +35,7 @@ function FarmDetailContent() {
   const client = useQueryClient();
   const actionLock=useRef(false);
   const draftId=useRef<string>();
+  const [createdGroup,setCreatedGroup]=useState<{id:string;name:string;species:string;count:number}|null>(null);
   const [dialog, setDialog] = useState<'batch' | 'observation' | null>(null);
   const save = useMutation({
     mutationFn: async (
@@ -63,16 +64,22 @@ function FarmDetailContent() {
       if(returnTo&&input.kind==='batch'&&saved?.id&&active.current)navigate(bookingPath(saved.id));
     },
   });
-  const done = () => {
-    setDialog(null);
-    toast.success('Record saved');
-  };
-  function submit(input:{kind:'batch';values:BatchValues}|{kind:'observation';values:ObservationValues}){if(actionLock.current)return;actionLock.current=true;draftId.current??=crypto.randomUUID();save.mutate(input,{onSuccess:done});}
+  function submit(input:{kind:'batch';values:BatchValues}|{kind:'observation';values:ObservationValues}){
+    if(actionLock.current)return;
+    actionLock.current=true;draftId.current??=crypto.randomUUID();
+    save.mutate(input,{onSuccess:(saved,completed)=>{
+      if(!active.current)return;
+      setDialog(null);toast.success('Record saved');
+      if(completed.kind==='batch'&&saved?.id&&!returnTo){
+        setCreatedGroup({id:saved.id,name:completed.values.housing_unit||'Your animal group',species:completed.values.species,count:completed.values.head_count});
+      }
+    }});
+  }
   const data = query.data;
-  const activeGroups =
-    data?.batches.filter(
-      (b) => b.status === 'active' || b.status === 'quarantined',
-    ) ?? [];
+  const activeGroups = data?.batches.filter(
+    (b) => b.status === 'active' || b.status === 'quarantined',
+  ) ?? [];
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -125,6 +132,13 @@ function FarmDetailContent() {
               </Button>
             </header>
             {returnTo&&<section className="mb-6 rounded-xl border bg-card p-5"><h2 className="font-semibold">Choose a group for your appointment</h2><p className="mt-2 text-sm text-muted-foreground">Use an active or quarantined animal group below, or create one. The provider must confirm the request; adding a group does not reserve a time.</p><Link className="inline-block mt-3 text-primary underline text-sm" to={returnTo}>Return without selecting a group</Link></section>}
+            {createdGroup&&<section aria-label="Animal group saved" className="mb-6 rounded-2xl border border-primary/20 bg-card p-6 sm:p-8">
+              <p role="status" className="eyebrow mb-3">Animal group saved</p>
+              <h2 className="text-2xl break-words">{createdGroup.name} is in your farm workspace.</h2>
+              <p className="mt-3 text-sm text-muted-foreground">Registered count: {createdGroup.count.toLocaleString()} · <span className="capitalize">{createdGroup.species}</span>. Review the saved group below or explore care for this group.</p>
+              <div className="mt-5 flex flex-wrap gap-3"><Button asChild><Link to={withBookingAnimal('/find-a-vet',`farm_group:${createdGroup.id}`)}>Find care for your saved group</Link></Button><Button variant="outline" asChild><Link to="/marketplace?category=Livestock">Browse farm supplies</Link></Button><Button variant="ghost" onClick={()=>setCreatedGroup(null)}>Dismiss group confirmation</Button></div>
+              <p className="mt-4 text-xs text-muted-foreground">Saving a group does not request or confirm an appointment. Any care request needs provider confirmation.</p>
+            </section>}
             <section aria-labelledby="groups-title">
               <div className="flex flex-wrap gap-4 items-center justify-between mb-5">
                 <h2 id="groups-title" className="text-2xl">

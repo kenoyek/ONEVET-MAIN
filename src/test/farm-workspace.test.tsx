@@ -160,6 +160,12 @@ describe('Customer farm workspace', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Save animal group' }));
     await screen.findByText('50 animals registered');
+    expect(screen.getByRole('region',{name:'Animal group saved'})).toHaveTextContent('Pond 1 is in your farm workspace.');
+    expect(screen.getByRole('link',{name:'Find care for your saved group'})).toHaveAttribute('href','/find-a-vet?animal=farm_group%3A'+batchId);
+    expect(screen.getByRole('link',{name:'Browse farm supplies'})).toHaveAttribute('href','/marketplace?category=Livestock');
+    fireEvent.click(screen.getByRole('button',{name:'Dismiss group confirmation'}));
+    expect(screen.queryByRole('region',{name:'Animal group saved'})).not.toBeInTheDocument();
+    expect(screen.getByText('50 animals registered')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Add observation' }));
     fireEvent.change(screen.getByLabelText('What did you observe?'), {
       target: { value: 'Eating less today' },
@@ -231,6 +237,18 @@ describe('Customer farm workspace', () => {
     fireEvent.click(screen.getByRole('button',{name:'Show all farms'}));const link=screen.getByRole('link',{name:/Pond Farm/});
     expect(new URL(link.getAttribute('href')!,'https://1vet.store').searchParams.get('returnTo')).toBe('/booking/new?service_id=service-one&start=time-one');
     fireEvent.change(screen.getByLabelText('Filter production type'),{target:{value:'poultry'}});expect(screen.getByText('No farms match these filters')).toBeInTheDocument();
+  });
+
+  it('keeps failed group details and shows next actions only after a confirmed retry',async()=>{
+    await livestockService.registerFarm({owner_id:owner,farm_name:'Retry Group Farm',farm_type:'poultry',location_address:'Main road',city:'Ibadan',state:'Oyo'});
+    vi.mocked(livestockService.createHerdBatch).mockRejectedValueOnce(new Error('Offline'));
+    renderPage('/farms/'+farmId);await screen.findByRole('heading',{name:'Retry Group Farm'});
+    fireEvent.click(screen.getByRole('button',{name:'Add animal group'}));fireEvent.change(screen.getByLabelText('Group name'),{target:{value:'Layers'}});
+    fireEvent.click(screen.getByRole('button',{name:'Save animal group'}));await screen.findByRole('alert');
+    expect(screen.queryByRole('region',{name:'Animal group saved'})).not.toBeInTheDocument();expect(screen.getByLabelText('Group name')).toHaveValue('Layers');
+    fireEvent.click(screen.getByRole('button',{name:'Save animal group'}));
+    expect(await screen.findByRole('region',{name:'Animal group saved'})).toHaveTextContent('Layers is in your farm workspace.');
+    expect(vi.mocked(livestockService.createHerdBatch).mock.calls[0]?.[1]).toBe(vi.mocked(livestockService.createHerdBatch).mock.calls[1]?.[1]);
   });
 
 });

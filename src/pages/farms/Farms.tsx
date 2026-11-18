@@ -158,6 +158,7 @@ function FarmsContent() {
                 if(actionLock.current)return;actionLock.current=true;draftId.current??=crypto.randomUUID();
                 save.mutate(values, {
                   onSuccess: () => {
+                    if(!active.current)return;
                     setOpen(false);
                     toast.success('Farm saved');
                   },
