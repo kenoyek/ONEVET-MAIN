@@ -1,3 +1,4 @@
+import { withBookingAnimal } from '@/lib/booking-animal-context';
 import { farmSaveError } from '@/lib/confirmed-create';
 import { petBookingReturn } from '@/lib/pet-booking-return';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -173,6 +174,7 @@ function FarmDetailContent() {
                           {b.breed}
                         </p>
                       )}
+                      {!returnTo&&['active','quarantined'].includes(b.status)&&<Button asChild variant="outline" className="mt-4"><Link to={withBookingAnimal('/find-a-vet',`farm_group:${b.id}`)}>Find care for this group</Link></Button>}
                       {returnTo&&['active','quarantined'].includes(b.status)&&<Button asChild variant="outline" className="mt-4"><Link to={bookingPath(b.id)}>Use this group for appointment</Link></Button>}
                     </article>
                   ))}

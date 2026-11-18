@@ -1,3 +1,4 @@
+import { withBookingAnimal } from '@/lib/booking-animal-context';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -570,9 +571,10 @@ const PetDetailContent = () => {
                       </CardTitle>
                       <CardDescription>Tele-veterinary cases and clinic visits</CardDescription>
                     </div>
-                    <Link to="/consultations/new">
-                      <Button size="sm">New Consultation</Button>
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                      <Button asChild size="sm" variant="outline"><Link to={withBookingAnimal('/find-a-vet',`pet:${pet.id}`)}>Find care for {pet.name}</Link></Button>
+                      <Button asChild size="sm"><Link to="/consultations/new">New Consultation</Link></Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     {consultationsError?<><p role="alert">Could not load recent consultations.</p><Button variant="outline" onClick={()=>void fetchConsultations()}>Retry consultations</Button></>:consultations.length > 0 ? (

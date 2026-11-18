@@ -42,3 +42,11 @@ it('names availability controls for their service and associates the expanded pa
  expect(await screen.findByLabelText('Appointment date · WAT')).toBeInTheDocument();expect(document.getElementById(button.getAttribute('aria-controls')!)).toBeInTheDocument();
  expect(screen.getByRole('button',{name:'Hide available times for Coat care'})).toHaveAttribute('aria-expanded','true');
 });
+
+it.each(['pet','farm_group'])('preserves a selected %s in the protected appointment link',async kind=>{
+ const animal=kind+':f0000000-0000-4000-8000-000000000001';
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter><PublicServiceAvailability serviceId="service-one" version={3} animalContext={animal}/></MemoryRouter></QueryClientProvider>);
+ fireEvent.click(screen.getByRole('button',{name:'Check available times'}));fireEvent.click(await screen.findByRole('button',{name:'2026-11-11T10:00:00Z WAT'}));
+ const url=new URL(screen.getByRole('link',{name:'Sign in to request this time'}).getAttribute('href')!,'https://1vet.store');
+ expect(url.searchParams.get('animal')).toBe(animal);expect(url.searchParams.get('service_id')).toBe('service-one');expect(url.searchParams.get('start')).toBe('2026-11-11T10:00:00Z');
+});

@@ -1,3 +1,4 @@
+import { bookingAnimalContext } from '@/lib/booking-animal-context';
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { appointmentService, bookingTime } from '@/lib/services/appointment-service';
 import { bookingDateRange, initialBookingDate } from '@/lib/booking-date-range';
 
-export function PublicServiceAvailability({ serviceId, version,serviceName }: { serviceId: string; version: number;serviceName?:string }) {
+export function PublicServiceAvailability({ serviceId, version,serviceName,animalContext }: { animalContext?: string; serviceId: string; version: number;serviceName?:string }) {
   const panelId=useId();
   const { user } = useAuth();
   const { today, last } = bookingDateRange();
@@ -19,6 +20,8 @@ export function PublicServiceAvailability({ serviceId, version,serviceName }: { 
   const times = useQuery({ queryKey: ['appointment-slots', serviceId, date, version], queryFn: () => appointmentService.slots(serviceId, date), enabled: open && validDate, staleTime: 0, refetchInterval: open ? 60_000 : false });
   const current = !times.isError && !times.isFetching && times.data?.some(slot => slot.start_at === selected);
   const query = new URLSearchParams({service_id:serviceId,date,start:selected});
+  const animal=bookingAnimalContext(animalContext);
+  if(animal)query.set('animal',animal);
   return <div className="mt-5 border-t pt-4">
     <Button type="button" variant="outline" aria-expanded={open} aria-controls={panelId} aria-label={serviceName?`${open?'Hide':'Check'} available times for ${serviceName}`:undefined} onClick={() => setOpen(value => !value)}>{open ? 'Hide available times' : 'Check available times'}</Button>
     {open && <div id={panelId} className="mt-4 space-y-4">

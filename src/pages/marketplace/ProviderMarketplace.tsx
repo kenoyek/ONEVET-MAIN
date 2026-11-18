@@ -1,3 +1,4 @@
+import {bookingAnimalContext,withBookingAnimal} from '@/lib/booking-animal-context';
 import {directoryFilters,directorySearchParams} from '@/lib/directory-search';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
@@ -55,6 +56,7 @@ export default function ProviderMarketplace() {
 function ProviderMarketplaceContent() {
   const location=useLocation();
   const [,setParams]=useSearchParams();
+  const animalContext=bookingAnimalContext(new URLSearchParams(location.search).get('animal'));
   const initial=directoryFilters(new URLSearchParams(location.search));
   const veterinaryOnly = location.pathname === '/find-a-vet';
   const [searchQuery, setSearchQuery] = useState(initial.query);
@@ -64,7 +66,7 @@ function ProviderMarketplaceContent() {
   const emergencyOnly=initial.urgent;
   const hasFilters=!!(initial.query||initial.city||initial.delivery!=='all'||initial.urgent||(!veterinaryOnly&&initial.category!=='all'));
   function applySearch(change:Partial<ReturnType<typeof directoryFilters>>={}){
-    setParams(directorySearchParams({...initial,query:searchQuery,city:cityQuery,...change},veterinaryOnly));
+    setParams(directorySearchParams({...initial,query:searchQuery,city:cityQuery,...change},veterinaryOnly,animalContext));
   }
 
   const filter: SearchProvidersFilter = {
@@ -228,7 +230,7 @@ function ProviderMarketplaceContent() {
             </p>
           </div>
 
-          {hasFilters&&<section aria-label="Current care search" className="mb-6 rounded-xl border bg-card p-4"><p className="text-sm leading-relaxed break-words">Searching {veterinaryOnly?'veterinary care':CATEGORIES.find(category=>category.value===initial.category)?.label.toLowerCase()||'all services'}{initial.city?` in ${initial.city}`:''}{initial.query?` matching “${initial.query}”`:''}{initial.delivery!=='all'?` · ${initial.delivery.replaceAll('_',' ')}`:''}{initial.urgent?' · listed urgent-care services':''}</p><Button variant="link" className="mt-2 px-0" onClick={()=>setParams(new URLSearchParams())}>Clear search filters</Button></section>}
+          {hasFilters&&<section aria-label="Current care search" className="mb-6 rounded-xl border bg-card p-4"><p className="text-sm leading-relaxed break-words">Searching {veterinaryOnly?'veterinary care':CATEGORIES.find(category=>category.value===initial.category)?.label.toLowerCase()||'all services'}{initial.city?` in ${initial.city}`:''}{initial.query?` matching “${initial.query}”`:''}{initial.delivery!=='all'?` · ${initial.delivery.replaceAll('_',' ')}`:''}{initial.urgent?' · listed urgent-care services':''}</p><Button variant="link" className="mt-2 px-0" onClick={()=>setParams(new URLSearchParams(animalContext?{animal:animalContext}:{}))}>Clear search filters</Button></section>}
           {emergencyOnly&&<p className="mb-6 text-sm text-muted-foreground">An urgent-service listing does not confirm current emergency capacity. If your animal is in immediate distress, <Link className="underline" to="/urgent-care">seek in-person care now</Link>.</p>}
           {/* Services Grid */}
           {isError ? (
@@ -304,7 +306,7 @@ function ProviderMarketplaceContent() {
                             </span>
                           ) : (
                             <Link
-                              to={`/provider/public/${item.organization?.slug}`}
+                              to={withBookingAnimal(`/provider/public/${item.organization?.slug}`,animalContext)}
                               className="font-semibold text-sm hover:underline"
                             >
                               {String(item.organization?.name ?? 'Provider')}
@@ -360,7 +362,7 @@ function ProviderMarketplaceContent() {
                           ? item.category === 'vet_clinic'
                             ? '/consultations/new'
                             : '/contact'
-                          : `/provider/public/${item.organization?.slug}`
+                          : withBookingAnimal(`/provider/public/${item.organization?.slug}`,animalContext)
                       }
                       className="w-full"
                     >

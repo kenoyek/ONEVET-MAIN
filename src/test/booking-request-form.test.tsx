@@ -9,7 +9,7 @@ vi.mock('@/components/layout/Navbar',()=>({Navbar:()=> <nav>Navigation</nav>}));
 vi.mock('@/lib/services/appointment-service',()=>({appointmentService:{service,animals,slots,request},watDate:()=> '2026-11-11',bookingTime:()=> '11 November · 11:00 WAT',appointmentError:(error:{code?:string})=>error.code==='23P01'?'That time is no longer available.':'The request could not be sent. Try again.'}));
 import NewBooking from '@/pages/booking/NewBooking';
 const start='2026-11-11T10:00:00Z';
-function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/booking/new?service_id=service-one&date=2026-11-11&start='+encodeURIComponent(start)]}><Routes><Route path="/booking/new" element={<NewBooking/>}/><Route path="/appointments/:id" element={<p>Request received</p>}/></Routes></MemoryRouter></QueryClientProvider>);}
+function mount(animal=''){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/booking/new?service_id=service-one&date=2026-11-11&start='+encodeURIComponent(start)+(animal?'&'+new URLSearchParams({animal}):'')]}><Routes><Route path="/booking/new" element={<NewBooking/>}/><Route path="/appointments/:id" element={<p>Request received</p>}/></Routes></MemoryRouter></QueryClientProvider>);}
 async function fill(expectReady=true){await screen.findByLabelText('Animal or farm group');fireEvent.change(screen.getByLabelText('Animal or farm group'),{target:{value:'pet:pet-one'}});fireEvent.change(screen.getByLabelText(/Contact phone/),{target:{value:'08012345678'}});fireEvent.click(screen.getByRole('checkbox'));if(expectReady)await waitFor(()=>expect(screen.getByRole('button',{name:'Submit booking request'})).toBeEnabled());}
 beforeEach(()=>{contact.phone='';vi.clearAllMocks();service.mockResolvedValue({id:'service-one',service_version:3,name:'Wellness visit',organization_name:'Care clinic',city:'Lagos',state:'Lagos',base_price:5000,currency:'NGN',duration_minutes:30,booking_enabled:true,category:'veterinary',delivery_mode:'clinic_visit'});animals.mockResolvedValue([{id:'pet-one',kind:'pet',name:'Bello',species:'dog'}]);slots.mockResolvedValue([{start_at:start,end_at:'2026-11-11T10:30:00Z'}]);});
 afterEach(cleanup);
@@ -57,4 +57,19 @@ describe('booking request safety and review',()=>{
  it('blocks an expired shared time that is absent from current availability',async()=>{
   slots.mockResolvedValue([]);mount();await screen.findByText('Your selected time is no longer available. Choose another time.');expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();expect(request).not.toHaveBeenCalled();
  });
+});
+
+it('preselects a carried animal only when it appears in the owned booking choices',async()=>{
+ const id='f0000000-0000-4000-8000-000000000001';animals.mockResolvedValue([{id,kind:'pet',name:'Bello',species:'dog'}]);mount('pet:'+id);
+ await waitFor(()=>expect(screen.getByLabelText('Animal or farm group')).toHaveValue('pet:'+id));
+});
+it('does not accept an animal hint absent from owned records',async()=>{
+ mount('pet:f0000000-0000-4000-8000-000000000001');
+ await screen.findByLabelText('Animal or farm group');expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();
+ expect(screen.getByText('Choose your animal or farm group.')).toBeInTheDocument();expect(request).not.toHaveBeenCalled();
+});
+it('does not preselect farm groups for services that do not support them',async()=>{
+ const id='f0000000-0000-4000-8000-000000000001';animals.mockResolvedValue([{id,kind:'farm_group',name:'Flock A',species:'poultry'},{id:'pet-one',kind:'pet',name:'Bello',species:'dog'}]);
+ service.mockResolvedValue({id:'service-one',service_version:3,name:'Grooming',booking_enabled:true,category:'grooming',delivery_mode:'clinic_visit'});mount('farm_group:'+id);
+ await screen.findByLabelText('Animal or farm group');expect(screen.queryByRole('option',{name:/Flock A/})).not.toBeInTheDocument();expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();
 });

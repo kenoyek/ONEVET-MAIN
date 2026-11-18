@@ -1,3 +1,4 @@
+import { bookingAnimalContext } from '@/lib/booking-animal-context';
 import { bookingDateRange, initialBookingDate } from '@/lib/booking-date-range';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useEffect, useRef, useState } from 'react';
@@ -13,12 +14,12 @@ import { appointmentService as service, appointmentError, bookingTime, watDate }
 export default function NewBooking() {
   const [params] = useSearchParams();
   const { user } = useAuth();
-  return <BookingRequestForm key={`${user?.id || 'guest'}:${params.get('service_id') || ''}`} />;
+  return <BookingRequestForm key={`${user?.id || 'guest'}:${params.get('service_id') || ''}:${bookingAnimalContext(params.get('animal'))}`} />;
 }
 function BookingRequestForm() {
   const [params]=useSearchParams();const id=params.get('service_id') ?? '';const {user,profile}=useAuth();const navigate=useNavigate();
   const range=bookingDateRange();
-  const [date,setDate]=useState(()=>initialBookingDate(params.get('date'),range.today,range.last));const [start,setStart]=useState(()=>params.get('start') || '');const [animal,setAnimal]=useState(()=>params.get('animal') || '');const [phone,setPhone]=useState('');const [address,setAddress]=useState('');const [notes,setNotes]=useState('');const [acceptedVersion,setAcceptedVersion]=useState<number|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+  const [date,setDate]=useState(()=>initialBookingDate(params.get('date'),range.today,range.last));const [start,setStart]=useState(()=>params.get('start') || '');const [animal,setAnimal]=useState(()=>bookingAnimalContext(params.get('animal')));const [phone,setPhone]=useState('');const [address,setAddress]=useState('');const [notes,setNotes]=useState('');const [acceptedVersion,setAcceptedVersion]=useState<number|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
   const phoneEdited=useRef(false);
   useEffect(()=>{if(!phoneEdited.current&&profile?.user_id===user?.id&&profile?.phone){const digits=profile.phone.replace(/\D/g,'');if(digits.length>=7&&digits.length<=15)setPhone(profile.phone);}},[profile?.phone,profile?.user_id,user?.id]);
   const retry=useRef({payload:'',key:''});
