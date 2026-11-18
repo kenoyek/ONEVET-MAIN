@@ -59,6 +59,9 @@ function ProfileEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingLicense, setIsUploadingLicense] = useState(false);
+  const licenseUploadLock = useRef(false);
+  const [licenseUploadError, setLicenseUploadError] = useState('');
+  const [licenseUploadNotice, setLicenseUploadNotice] = useState('');
   const profileDirty = useRef(false);
   const profileRevision = useRef(0);
   const loadedProfileId = useRef<string | null>(null);
@@ -94,7 +97,7 @@ function ProfileEditor() {
   };
 
   const handleSaveProfile = async () => {
-    if (!ownerReady||!profile?.id||saveLock.current) return;
+    if (!ownerReady||!profile?.id||saveLock.current||licenseUploadLock.current) return;
     setSaveError('');setSaveNotice('');
     if (!formData.first_name.trim() || !formData.last_name.trim()) { setSaveError('Enter your first and last names.');document.getElementById(!formData.first_name.trim()?'first_name':'last_name')?.focus(); return; }
     const digits = formData.phone.replace(/\D/g, '');
@@ -191,33 +194,31 @@ function ProfileEditor() {
 
   const handleLicenseUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !user?.id || !profile?.id || !ownerReady || isUploadingLicense) return;
-
-    if (!formData.license_number.trim() || formData.license_number.trim().length > 100) { toast.error('Enter your license number before uploading a document.'); e.target.value = ''; return; }
-
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Please upload a PDF or image file');
-      return;
+    if (!file || !user?.id || !profile?.id || !ownerReady || licenseUploadLock.current || saveLock.current) return;
+    setLicenseUploadError(''); setLicenseUploadNotice('');
+    const number = formData.license_number.trim();
+    const rejectFile = (message: string) => { setLicenseUploadError(message); e.target.value = ''; };
+    if (!number || number.length > 100) { rejectFile('Enter a licence number of up to 100 characters before uploading.'); return; }
+    if (!['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'].includes(file.type) || file.size === 0 || file.size > 10 * 1024 * 1024) {
+      rejectFile('Choose a non-empty PDF, JPG or PNG file up to 10 MB.'); return;
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File must be less than 10MB');
-      return;
-    }
-
-    setIsUploadingLicense(true);
+    licenseUploadLock.current = true; setIsUploadingLicense(true);
     try {
-      await uploadVeterinaryLicense(user.id, profile.id, file, formData.license_number);
-      if(!active.current)return;
-
-      await refreshProfile();
-      if(active.current)toast.success('License uploaded! Pending verification.');
+      await uploadVeterinaryLicense(user.id, profile.id, file, number);
+      if (!active.current) return;
+      setFormData(previous => ({ ...previous, license_number: number }));
+      setLicenseUploadNotice(`Licence document saved: ${file.name}. Licence number: ${number}. Your saved professional details determine the review status shown on this page.`);
+      toast.success('Licence document saved.');
+      try { await refreshProfile(); }
+      catch {
+        if (active.current) setLicenseUploadNotice(`Licence document saved: ${file.name}. The account status could not be refreshed. Refresh your account to check the review status; you do not need to upload this file again.`);
+      }
     } catch (error) {
       console.error('Error uploading license:', error);
-      if(active.current)toast.error('Failed to upload license');
+      if (active.current) setLicenseUploadError('The licence document could not be saved. Check your connection and try again. Your other profile edits are preserved.');
     } finally {
-      setIsUploadingLicense(false);
+      licenseUploadLock.current = false;
+      if (active.current) setIsUploadingLicense(false);
       if (licenseInputRef.current) licenseInputRef.current.value = '';
     }
   };
@@ -431,6 +432,7 @@ function ProfileEditor() {
                       <Label htmlFor="license_number" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">License ID (VCN)</Label>
                       <Input
                         id="license_number"
+                        disabled={isUploadingLicense || isSaving}
                         name="license_number"
                         value={formData.license_number}
                         onChange={handleInputChange}
@@ -460,7 +462,7 @@ function ProfileEditor() {
                             variant="outline"
                             size="lg"
                             onClick={() => licenseInputRef.current?.click()}
-                            disabled={isUploadingLicense}
+                            disabled={isUploadingLicense || isSaving}
                             className="rounded-full font-bold px-8 border-2"
                           >
                             {isUploadingLicense ? (
@@ -472,7 +474,7 @@ function ProfileEditor() {
                         </div>
                       </div>
                     ) : (
-                      <button type="button" disabled={isUploadingLicense} aria-label="Upload veterinary license"
+                      <button type="button" disabled={isUploadingLicense || isSaving} aria-label="Upload veterinary license"
                         onClick={() => licenseInputRef.current?.click()}
                         className="p-12 rounded-[2rem] border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer text-center group"
                       >
@@ -489,13 +491,16 @@ function ProfileEditor() {
                             <div>
                               <p className="font-semibold text-lg tracking-tight">Upload Digital License</p>
                               <p className="text-sm text-muted-foreground font-medium">
-                                High-quality PDF or JPG recommended (Max 10MB)
+                                PDF, JPG or PNG · up to 10 MB
                               </p>
                             </div>
                           </div>
                         )}
                       </button>
                     )}
+                    {isUploadingLicense && <p role="status" className="text-sm text-muted-foreground">Saving your licence document. Please keep this page open.</p>}
+                    {licenseUploadNotice && <p role="status" className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed break-words">{licenseUploadNotice}</p>}
+                    {licenseUploadError && <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">{licenseUploadError}</p>}
                     <input
                       ref={licenseInputRef}
                       type="file"
@@ -547,7 +552,7 @@ function ProfileEditor() {
             {saveNotice?<p role="status" className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{saveNotice}</p>:profileDirty.current&&!isSaving?<p role="status" className="text-sm text-muted-foreground">You have unsaved profile changes.</p>:null}
             {/* Save Button */}
             <div className="flex justify-center sm:justify-end pt-4">
-              <Button onClick={handleSaveProfile} disabled={isSaving} size="xl" className="rounded-full font-semibold px-12 shadow-sm hover:scale-105 transition-all">
+              <Button onClick={handleSaveProfile} disabled={isSaving || isUploadingLicense} size="xl" className="rounded-full font-semibold px-12 shadow-sm hover:scale-105 transition-all">
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />

@@ -31,6 +31,7 @@ export async function uploadVeterinaryLicense(userId: string, profileId: string,
   try {
     const result = await supabase.from('profiles').update({ license_url: path, license_number: licenseNumber.trim() }).eq('id', profileId).eq('user_id', userId).select('id').single();
     if (result.error) throw result.error;
+    if (!result.data?.id) throw new Error('The licence could not be attached to your profile.');
   } catch (cause) {
     await bucket.remove([path]).catch(() => undefined);
     throw cause;

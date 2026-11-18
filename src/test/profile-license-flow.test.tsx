@@ -28,4 +28,45 @@ describe('profile license completion',()=>{
   fireEvent.change(view.container.querySelector('input[type=file][accept*=pdf]')!,{target:{files:[new File(['fixture'],'license.pdf',{type:'application/pdf'})]}});
   expect(mocks.upload).not.toHaveBeenCalled();
  });
+ it('shows a saved receipt when refreshing fails and does not repeat the upload',async()=>{
+  mocks.refresh.mockRejectedValueOnce(new Error('Offline refresh'));
+  const view=render(<MemoryRouter><Profile/></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('License ID (VCN)'),{target:{value:'VCN-new'}});
+  fireEvent.change(view.container.querySelector('input[type=file][accept*=pdf]')!,{target:{files:[new File(['fixture'],'corrected.pdf',{type:'application/pdf'})]}});
+  await waitFor(()=>expect(screen.getByText(/you do not need to upload this file again/i)).toBeVisible());
+  expect(mocks.upload).toHaveBeenCalledOnce();expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+ });
+ it('locks licence editing and profile saving while a submission is in flight',async()=>{
+  let finish!:()=>void;mocks.upload.mockImplementationOnce(()=>new Promise<void>(resolve=>{finish=resolve;}));
+  const view=render(<MemoryRouter><Profile/></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('Phone Number'),{target:{value:'+2347052398371'}});
+  fireEvent.change(screen.getByLabelText('License ID (VCN)'),{target:{value:' VCN-new '}});
+  const input=view.container.querySelector('input[type=file][accept*=pdf]')!;
+  fireEvent.change(input,{target:{files:[new File(['fixture'],'corrected.pdf',{type:'application/pdf'})]}});
+  expect(screen.getByLabelText('License ID (VCN)')).toBeDisabled();expect(screen.getByRole('button',{name:'Save profile'})).toBeDisabled();
+  fireEvent.change(input,{target:{files:[new File(['fixture'],'duplicate.pdf',{type:'application/pdf'})]}});
+  expect(mocks.upload).toHaveBeenCalledOnce();finish();
+  await waitFor(()=>expect(screen.getByText(/Licence document saved: corrected.pdf/)).toBeVisible());
+  expect(screen.getByLabelText('License ID (VCN)')).toHaveValue('VCN-new');expect(screen.getByLabelText('Phone Number')).toHaveValue('+2347052398371');
+  expect(screen.getByRole('button',{name:'Save profile'})).toBeEnabled();
+ });
+ it('keeps edited contact details and offers inline recovery after an upload failure',async()=>{
+  mocks.upload.mockRejectedValueOnce(new Error('Upload unavailable'));
+  const view=render(<MemoryRouter><Profile/></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('Phone Number'),{target:{value:'+2347052398371'}});
+  fireEvent.change(screen.getByLabelText('License ID (VCN)'),{target:{value:'VCN-new'}});
+  const input=view.container.querySelector('input[type=file][accept*=pdf]')!;
+  fireEvent.change(input,{target:{files:[new File(['fixture'],'corrected.pdf',{type:'application/pdf'})]}});
+  expect(await screen.findByRole('alert')).toHaveTextContent('could not be saved');
+  expect(mocks.refresh).not.toHaveBeenCalled();expect(screen.getByLabelText('Phone Number')).toHaveValue('+2347052398371');
+  fireEvent.change(input,{target:{files:[new File(['fixture'],'corrected.pdf',{type:'application/pdf'})]}});
+  await waitFor(()=>expect(screen.getByText(/Licence document saved: corrected.pdf/)).toBeVisible());expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+ });
+ it('rejects an empty document inline without uploading',()=>{
+  const view=render(<MemoryRouter><Profile/></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('License ID (VCN)'),{target:{value:'VCN-new'}});
+  fireEvent.change(view.container.querySelector('input[type=file][accept*=pdf]')!,{target:{files:[new File([],'empty.pdf',{type:'application/pdf'})]}});
+  expect(screen.getByRole('alert')).toHaveTextContent('non-empty');expect(mocks.upload).not.toHaveBeenCalled();
+ });
+
 });

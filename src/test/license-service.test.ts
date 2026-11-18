@@ -20,6 +20,11 @@ describe('veterinary license submission',()=>{
   await expect(uploadVeterinaryLicense(uid,'profile',new File(['pdf'],'x.pdf',{type:'application/pdf'}),'VCN-123')).rejects.toThrow('denied');
   expect(mocks.remove).toHaveBeenCalledOnce();
  });
+ it('does not report success without an attached profile row',async()=>{
+  mocks.single.mockResolvedValue({data:null,error:null});
+  await expect(uploadVeterinaryLicense(uid,'profile',new File(['pdf'],'x.pdf',{type:'application/pdf'}),'VCN-123')).rejects.toThrow('could not be attached');
+  expect(mocks.remove).toHaveBeenCalledOnce();
+ });
  it('resolves old signed URLs to a path while refusing other hosts and path traversal',()=>{
   expect(licenseStoragePath(`https://fxvctkfhitpgfyaztqor.supabase.co/storage/v1/object/sign/licenses/${uid}/license.pdf?token=expired`)).toBe(`${uid}/license.pdf`);
   expect(()=>licenseStoragePath(`https://evil.invalid/storage/v1/object/sign/licenses/${uid}/license.pdf`)).toThrow();
