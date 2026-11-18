@@ -73,3 +73,43 @@ it('does not preselect farm groups for services that do not support them',async(
  service.mockResolvedValue({id:'service-one',service_version:3,name:'Grooming',booking_enabled:true,category:'grooming',delivery_mode:'clinic_visit'});mount('farm_group:'+id);
  await screen.findByLabelText('Animal or farm group');expect(screen.queryByRole('option',{name:/Flock A/})).not.toBeInTheDocument();expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();
 });
+
+it('explains a missing carried animal and offers a private-data-free alternative service link',async()=>{
+ const animal='pet:f0000000-0000-4000-8000-000000000001';mount(animal);
+ await screen.findByRole('heading',{name:'Check your selected animal'});
+ const links=screen.getAllByRole('link',{name:'Browse other care services'});
+ const target=new URL(links[0]!.getAttribute('href')!,'https://1vet.store');
+ expect(target.pathname).toBe('/provider-marketplace');expect([...target.searchParams.keys()]).toEqual(['animal']);expect(target.searchParams.get('animal')).toBe(animal);
+ expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();expect(request).not.toHaveBeenCalled();
+});
+it('blocks submission while animal eligibility is being rechecked',async()=>{
+ const {container}=mount();await fill();
+ let finish!:(value:unknown)=>void;animals.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ fireEvent.click(screen.getByRole('button',{name:'Refresh saved animals'}));
+ expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();
+ expect(screen.getByText('Wait for your animal records to finish checking.')).toBeInTheDocument();
+ fireEvent.submit(container.querySelector('form')!);expect(request).not.toHaveBeenCalled();
+ finish([{id:'pet-one',kind:'pet',name:'Bello',species:'dog'}]);
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Submit booking request'})).toBeEnabled());
+});
+it('preserves entered contact details and notes when animal records disappear and recover',async()=>{
+ mount();await fill();fireEvent.change(screen.getByLabelText('Notes for the provider (optional)'),{target:{value:'Please discuss feeding.'}});
+ animals.mockResolvedValueOnce([]);fireEvent.click(screen.getByRole('button',{name:'Refresh saved animals'}));
+ await screen.findByRole('heading',{name:'Check your selected animal'});
+ expect(screen.queryByRole('button',{name:'Submit booking request'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Refresh animal records'}));
+ await waitFor(()=>expect(screen.getByLabelText(/Contact phone/)).toHaveValue('08012345678'));
+ expect(screen.getByLabelText('Notes for the provider (optional)')).toHaveValue('Please discuss feeding.');
+ expect(screen.getByLabelText('Animal or farm group')).toHaveValue('pet:pet-one');expect(request).not.toHaveBeenCalled();
+});
+it('offers another service if the selected service cannot be loaded',async()=>{
+ service.mockRejectedValueOnce(new Error('Unavailable'));mount('pet:f0000000-0000-4000-8000-000000000001');
+ await screen.findByText('This service is unavailable or could not be loaded.');
+ expect(screen.getByRole('link',{name:'Browse other care services'})).toHaveAttribute('href','/provider-marketplace?animal=pet%3Af0000000-0000-4000-8000-000000000001');
+ expect(request).not.toHaveBeenCalled();
+});
+it('offers another service when no times remain on a date',async()=>{
+ slots.mockResolvedValue([]);mount();await screen.findByText('No times are available on this date. Choose another date.');
+ expect(screen.getByRole('link',{name:'Browse other care services'})).toHaveAttribute('href','/provider-marketplace');
+ expect(screen.getByRole('button',{name:'Submit booking request'})).toBeDisabled();
+});
