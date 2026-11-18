@@ -28,10 +28,12 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   useEffect(() => { setSelectedImage(0); }, [id]);
 
-  const { data: product, isLoading, isError, refetch } = useQuery({
+  const { data: product, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ['product', id],
     queryFn: () => shopService.product(id || ''),
-    enabled: !!id
+    enabled: !!id,
+    refetchInterval: 30_000,
+    staleTime: 0
   });
 
   useEffect(() => {
@@ -46,9 +48,7 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
+      <div className="min-h-screen bg-background"><Navbar /><main id="main-content" className="container-tight pt-32 pb-20"><p role="status" className="flex items-center gap-3"><Loader2 aria-hidden="true" className="h-5 w-5 animate-spin text-primary" />Checking product details and stock…</p><Link className="mt-6 inline-block text-primary underline" to={shopPath}>Back to shop</Link></main><Footer /></div>
     );
   }
 
@@ -56,10 +56,12 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <h1 className="text-2xl font-bold">Product not found</h1>
-        <Button onClick={() => navigate(shopPath)}>Back to Marketplace</Button>
-      </div>
+      <div className="min-h-screen bg-background"><Navbar /><main id="main-content" className="container-tight pt-32 pb-20"><section className="rounded-3xl border bg-card p-6 sm:p-10">
+        <Package aria-hidden="true" className="mb-5 h-9 w-9 text-primary" />
+        <PageHeading title="This product is no longer available" />
+        <p className="my-5 leading-relaxed text-muted-foreground">The listing may have been removed or is no longer published. Browse current products or review the items already in your cart.</p>
+        <div className="flex flex-wrap gap-3"><Button asChild><Link to={shopPath}>Back to shop</Link></Button><Button asChild variant="outline"><Link to="/cart">View cart</Link></Button><Button variant="ghost" disabled={isFetching} onClick={()=>void refetch()}>Check again</Button></div>
+      </section></main><Footer /></div>
     );
   }
 
@@ -156,7 +158,11 @@ const ProductDetail = () => {
               </div>
 
               <div className="mt-12 space-y-4">
-                <ProductCartAction product={product} />
+                <ProductCartAction product={product} checking={isFetching} />
+                <div className="rounded-xl border bg-muted/20 p-4">
+                  <p role="status" className="text-sm text-muted-foreground">{isFetching ? 'Checking the latest price and stock. Additions are paused until the check finishes.' : (product.stock_quantity ?? 0) > 0 ? 'Price and stock reflect the latest successful check. Items are not reserved.' : 'This product is out of stock. Refresh to check again or browse current products.'}</p>
+                  <div className="mt-3 flex flex-wrap gap-3"><Button variant="outline" size="sm" disabled={isFetching} onClick={()=>void refetch()}>{isFetching ? 'Checking price and stock…' : 'Refresh price and stock'}</Button>{(product.stock_quantity ?? 0) <= 0 && <Button asChild variant="ghost" size="sm"><Link to={shopPath}>Browse other products</Link></Button>}</div>
+                </div>
                 <Button asChild variant="outline" className="w-full"><Link to="/cart">View cart</Link></Button>
                 <p className="text-sm text-muted-foreground">Items in your cart are not reserved. Prices and availability are checked again in your cart.</p>
               </div>
