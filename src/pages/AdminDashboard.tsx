@@ -1,4 +1,4 @@
-import {adminVetSummaryService,type PendingVet} from '@/lib/services/admin-vet-summary-service';
+import {adminVetSummaryService,type PendingVet,type IncompleteVet} from '@/lib/services/admin-vet-summary-service';
 import { licenseBelongsToApplicant } from '@/lib/services/license-service';
 import { LicenseDocumentLink } from '@/components/onboarding/LicenseDocumentLink';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -41,6 +41,7 @@ const AdminDashboard = () => {
     consultationsToday: 0,
   });
   const [pendingVets, setPendingVets] = useState<PendingVet[]>([]);
+  const [incompleteVets, setIncompleteVets] = useState<IncompleteVet[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -94,6 +95,7 @@ const AdminDashboard = () => {
       });
 
       setPendingVets(veterinarianSummary.pendingVets);
+      setIncompleteVets(veterinarianSummary.incompleteVets);
     } catch (err: unknown) {
       console.error('Error fetching admin dashboard data:', err);
       setError((err as Error).message || 'An unexpected error occurred');
@@ -334,9 +336,9 @@ const AdminDashboard = () => {
                       {pendingVets.map((vet) => (
                         <div
                           key={vet.id}
-                          className="p-4 rounded-lg border bg-card flex items-start justify-between gap-4"
+                          className="p-4 rounded-lg border bg-card flex flex-col sm:flex-row items-start justify-between gap-4"
                         >
-                          <div className="flex-1">
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                               <p className="font-medium">
                                 {vet.first_name} {vet.last_name}
@@ -345,7 +347,7 @@ const AdminDashboard = () => {
                                 {vet.vendor_type || 'provider'}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground">{vet.email}</p>
+                            <p className="break-all text-sm text-muted-foreground">{vet.email}</p>
                             <p className="text-sm mt-1">
                               License: {vet.license_number || 'Not provided'}
                             </p>
@@ -383,6 +385,35 @@ const AdminDashboard = () => {
                       <p className="text-muted-foreground">No pending verifications</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Incomplete vet registrations</CardTitle>
+                  <CardDescription>
+                    These applicants still need to complete their professional details. They are not counted as onboarded or awaiting verification.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? <Skeleton className="h-24 w-full" /> : incompleteVets.length ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">{incompleteVets.length} incomplete {incompleteVets.length === 1 ? 'registration' : 'registrations'}</p>
+                      {incompleteVets.map(vet => (
+                        <div key={vet.id} className="rounded-xl border bg-muted/20 p-4 sm:p-5">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold break-words">{[vet.first_name, vet.last_name].filter(Boolean).join(' ') || 'Unnamed applicant'}</p>
+                            <Badge variant="secondary">Incomplete</Badge>
+                          </div>
+                          {vet.email && <p className="mt-1 break-all text-sm text-muted-foreground">{vet.email}</p>}
+                          <p className="mt-3 text-sm font-medium">Still needed</p>
+                          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                            {vet.missingRequirements.map(requirement => <li key={requirement}>{requirement}</li>)}
+                          </ul>
+                          <p className="mt-3 text-xs text-muted-foreground">Registered: {new Date(vet.created_at).toLocaleDateString()}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : <p className="py-6 text-center text-sm text-muted-foreground">No incomplete vet registrations.</p>}
                 </CardContent>
               </Card>
             </TabsContent>
