@@ -7,7 +7,7 @@ vi.mock('@/lib/auth-context',()=>({useAuth:()=>({user:{id:mock.userId}})}));
 vi.mock('@/lib/services/appointment-conversation-service',async original=>({...await original<typeof import('@/lib/services/appointment-conversation-service')>(),appointmentConversationService:{state:mock.state,messages:mock.messages,send:mock.send,markRead:mock.markRead}}));
 import {AppointmentConversation} from '@/components/provider/AppointmentConversation';
 const message={id:'message-id',ordinal:7,sender_id:'provider-id',sender_name:'Coordinator',sender_role:'provider_team',body:'Arrival details',created_at:new Date().toISOString()};
-function mount(id='booking-a'){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});const wrapper=({children}:{children:React.ReactNode})=><QueryClientProvider client={cache}><MemoryRouter>{children}</MemoryRouter></QueryClientProvider>;return render(<AppointmentConversation bookingId={id}/>,{wrapper});}
+function mount(id='booking-a'){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});const wrapper=({children}:{children:React.ReactNode})=><QueryClientProvider client={cache}><MemoryRouter>{children}</MemoryRouter></QueryClientProvider>;return {...render(<AppointmentConversation bookingId={id}/>,{wrapper}),cache};}
 describe('Appointment conversation UI',()=>{
  beforeEach(()=>{vi.clearAllMocks();mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});mock.messages.mockResolvedValue({rows:[message],hasOlder:false});mock.markRead.mockResolvedValue(undefined);});
  it('retains the draft and nonce after a lost response, then clears only after confirmation',async()=>{
@@ -31,4 +31,40 @@ describe('Appointment conversation UI',()=>{
  it('does not display an old account response or draft after switching accounts',async()=>{
   let release!:(value:unknown)=>void;mock.messages.mockImplementation((id:string)=>id==='booking-a'&&mock.userId==='customer-a'?new Promise(resolve=>{release=resolve;}):Promise.resolve({rows:[],hasOlder:false}));const view=mount();await waitFor(()=>expect(mock.messages).toHaveBeenCalled());fireEvent.change(await screen.findByLabelText('Message to the appointment participants'),{target:{value:'Private account A draft'}});mock.userId='customer-b';view.rerender(<AppointmentConversation bookingId="booking-a"/>);await waitFor(()=>expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue(''));await act(async()=>release({rows:[{...message,body:'PRIVATE OLD ACCOUNT'}],hasOlder:false}));expect(screen.queryByText('PRIVATE OLD ACCOUNT')).not.toBeInTheDocument();
  });
+});
+
+describe('Conversation recovery',()=>{
+ beforeEach(()=>{vi.clearAllMocks();mock.send.mockReset();mock.markRead.mockResolvedValue(undefined);});
+ it('keeps the client draft copyable when a later access check fails without exposing old messages',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});mock.messages.mockResolvedValue({rows:[message],hasOlder:false});
+ mount();fireEvent.change(await screen.findByLabelText('Message to the appointment participants'),{target:{value:'Unsaved arrival question'}});await screen.findByText('Arrival details');
+ mock.state.mockRejectedValueOnce({code:'42501'});fireEvent.click(screen.getByRole('button',{name:'Refresh messages'}));
+ await screen.findByText('Could not load this conversation, or your access was removed.');
+ expect(screen.getByLabelText('Your retained draft')).toHaveValue('Unsaved arrival question');expect(screen.getByLabelText('Your retained draft')).toHaveAttribute('readonly');
+ expect(screen.queryByText('Arrival details')).not.toBeInTheDocument();expect(screen.queryByRole('button',{name:'Send message'})).not.toBeInTheDocument();
+ mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});fireEvent.click(screen.getByRole('button',{name:'Retry conversation'}));
+ expect(await screen.findByLabelText('Message to the appointment participants')).toHaveValue('Unsaved arrival question');
+});
+it('sends once for two immediate submit events and clears the draft only after confirmation',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:0,last_read_ordinal:0,last_ordinal:0});mock.messages.mockResolvedValue({rows:[],hasOlder:false});
+ let finish!:(id:string)=>void;mock.send.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ const view=mount();fireEvent.change(await screen.findByLabelText('Message to the appointment participants'),{target:{value:'Arrival question'}});
+ const form=view.container.querySelector('form')!;act(()=>{fireEvent.submit(form);fireEvent.submit(form);});
+ expect(mock.send).toHaveBeenCalledTimes(1);expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('Arrival question');
+ await act(async()=>finish('saved-message'));await screen.findByText('Message saved to the conversation.');expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('');
+});
+it('distinguishes a failed read receipt from a failed message send',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});mock.messages.mockResolvedValue({rows:[message],hasOlder:false});mock.markRead.mockRejectedValueOnce(new Error('Offline'));
+ mount();await screen.findByText('Arrival details');fireEvent.click(screen.getByRole('button',{name:'Mark messages through this page as read'}));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Could not confirm your read status');expect(screen.getByRole('alert')).toHaveTextContent('do not need to resend');
+});
+
+it('does not report a saved message as failed when refreshing its view fails',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:0,last_read_ordinal:0,last_ordinal:0});mock.messages.mockResolvedValue({rows:[],hasOlder:false});mock.send.mockResolvedValueOnce('saved-message');
+ const view=mount();fireEvent.change(await screen.findByLabelText('Message to the appointment participants'),{target:{value:'Arrival question'}});
+ vi.spyOn(view.cache,'invalidateQueries').mockRejectedValueOnce(new Error('Refresh failed'));fireEvent.click(screen.getByRole('button',{name:'Send message'}));
+ await screen.findByText('Message saved to the conversation. Refresh messages to load the latest view; do not send it again.');
+ expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('');expect(screen.queryByRole('alert')).not.toBeInTheDocument();expect(mock.send).toHaveBeenCalledOnce();
+});
+
 });

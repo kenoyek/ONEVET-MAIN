@@ -9,6 +9,10 @@ export function conversationError(error:unknown){
  }
  return 'Could not confirm the update. Your draft is retained; retrying the same message will not create a duplicate.';
 }
+export function conversationReadError(error:unknown){
+ if(typeof error==='object'&&error&&'code'in error&&error.code==='42501')return conversationError(error);
+ return 'Could not confirm your read status. Refresh messages and try marking this page as read again. You do not need to resend any message.';
+}
 export const appointmentConversationService={
  async state(bookingId:string){const{data,error}=await supabase.rpc('get_booking_thread_state',{booking_uuid:bookingId});if(error)throw error;if(!data?.[0])throw new Error('Conversation state unavailable');return data[0];},
  async messages(bookingId:string,before?:number){
