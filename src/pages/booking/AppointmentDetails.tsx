@@ -18,7 +18,7 @@ export default function AppointmentDetails() {
   const booking=details.isError?undefined:details.data?.booking;
   const replacements=useQuery({queryKey:['appointment-replacements',user?.id,id,booking?.version],enabled:!!user&&!!booking&&!details.isError,refetchInterval:60_000,queryFn:()=>service.replacements(id)});
   const location=useLocation();
-  useEffect(()=>{if(booking?.id&&location.hash==='#appointment-messages'){const target=document.getElementById('appointment-messages');target?.scrollIntoView?.({block:'start'});target?.focus({preventScroll:true});}},[booking?.id,location.hash]);
+  useEffect(()=>{if(booking?.id&&['#appointment-messages','#messages'].includes(location.hash)){const target=document.getElementById('appointment-messages');target?.scrollIntoView?.({block:'start'});target?.focus({preventScroll:true});}},[booking?.id,location.hash]);
   return <div className="min-h-screen bg-background"><Navbar/><main id="main-content" tabIndex={-1} className="container-wide max-w-4xl pt-32 pb-20"><Link className="text-primary underline" to={bookingReturnPath(location.state?.bookingReturnTo)}>Back to booking requests</Link><PageHeading size="workspace" className="my-6" title={<> Appointment details </>}/>
     {details.isPending?<p role="status">Loading appointment…</p>:details.isError||!booking?<><p role="alert">Appointment unavailable. Check your connection and that you are signed into a participating account.</p><Button onClick={()=>void details.refetch()}>Retry appointment</Button></>:<>
       {booking.provider_access===true&&<Link className="text-primary underline block mb-4" to={`/provider/organization/${snapshotText(booking.service_snapshot,'provider_slug')}`}>Organization workspace</Link>}

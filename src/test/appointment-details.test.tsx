@@ -9,7 +9,7 @@ vi.mock('@/lib/services/appointment-service',async original=>({...await original
 vi.mock('@/components/provider/BookingRequestList',()=>({BookingRequestCard:({booking,readOnly}:{booking:{id:string};readOnly:boolean})=><p>{booking.id} · {readOnly?'read only':'participant'}</p>}));
 vi.mock('@/components/provider/AppointmentConversation',()=>({AppointmentConversation:()=> <p>Appointment conversation</p>}));
 import AppointmentDetails from '@/pages/booking/AppointmentDetails';
-function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/appointments/booking-id']}><Routes><Route path="/appointments/:id" element={<AppointmentDetails/>}/></Routes></MemoryRouter></QueryClientProvider>);return cache;}
+function mount(hash=''){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/appointments/booking-id'+hash]}><Routes><Route path="/appointments/:id" element={<AppointmentDetails/>}/></Routes></MemoryRouter></QueryClientProvider>);return cache;}
 describe('Private appointment details',()=>{
  beforeEach(()=>{vi.clearAllMocks();replacements.mockResolvedValue([]);});
  it('renders an unavailable state for an unauthorized or missing appointment',async()=>{
@@ -47,6 +47,11 @@ describe('Private appointment details',()=>{
   details.mockResolvedValue({id:'booking-id',version:1,customer_id:'customer-id'});replacements.mockResolvedValue([{id:'alternative-id',status:'pending',start_at:new Date(Date.now()+86400000).toISOString()}]);const cache=mount();await screen.findByRole('link',{name:/WAT/});
   replacements.mockRejectedValueOnce({code:'42501'});await act(async()=>{await cache.invalidateQueries({queryKey:['appointment-replacements']});});await screen.findByRole('button',{name:'Retry alternative requests'});
   expect(screen.queryByRole('link',{name:/WAT/})).not.toBeInTheDocument();expect(screen.getByText('booking-id · participant')).toBeInTheDocument();expect(screen.getByText('Appointment conversation')).toBeInTheDocument();
+ });
+
+ it.each(['#appointment-messages','#messages'])('focuses the conversation after loading a message link (%s)',async hash=>{
+  details.mockResolvedValue({id:'booking-id',version:1,customer_id:'customer-id'});mount(hash);await screen.findByText('booking-id · participant');
+  expect(document.getElementById('appointment-messages')).toHaveFocus();expect(screen.getByText('Appointment conversation')).toBeInTheDocument();
  });
 
 });

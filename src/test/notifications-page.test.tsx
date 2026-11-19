@@ -18,4 +18,10 @@ describe('Notification inbox',()=>{
  it('shows a load error instead of an empty-success state',()=>{
   feed.mockReturnValue({notifications:[],unreadCount:0,error:true,loading:false,markAllAsRead:readAll,refetch:refresh});render(<MemoryRouter><Notifications/></MemoryRouter>);expect(screen.getByRole('alert')).toHaveTextContent('Could not load');expect(screen.queryByText('No notifications on this page.')).not.toBeInTheDocument();
  });
+ it('opens message notifications at the canonical conversation destination',()=>{
+  const value=feed();feed.mockReturnValue({...value,notifications:[{...value.notifications[0],booking_message_id:'f2222222-2222-4222-8222-222222222222',link:`/appointments/${id}#messages`}]});
+  render(<MemoryRouter><Notifications/></MemoryRouter>);const link=screen.getByRole('link',{name:'Open details'});
+  expect(link).toHaveAttribute('href',`/appointments/${id}#appointment-messages`);fireEvent.click(link);expect(read).toHaveBeenCalledWith('alert-id');
+ });
+
 });
