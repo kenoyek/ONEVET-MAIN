@@ -80,4 +80,14 @@ it('acknowledges once during repeated clicks and reports the saved visible bound
  await act(async()=>finish());expect(await screen.findByRole('status')).toHaveTextContent('Read status saved through the messages on this page.');await waitFor(()=>expect(button).toBeEnabled());
 });
 
+it('retraces older pages and retains the draft before returning to the latest messages',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:90});
+ mock.messages.mockImplementation((_id:string,before?:number)=>Promise.resolve({rows:[{...message,ordinal:before===undefined?61:before===61?31:1,body:before===undefined?'Latest page':before===61?'Middle page':'Oldest page'}],hasOlder:before!==31}));
+ mount();await screen.findByText('Latest page');fireEvent.change(screen.getByLabelText('Message to the appointment participants'),{target:{value:'Keep my arrival question'}});
+ const older=screen.getByRole('button',{name:'Load older messages'});act(()=>{fireEvent.click(older);fireEvent.click(older);});await screen.findByText('Middle page');fireEvent.click(screen.getByRole('button',{name:'Load older messages'}));await screen.findByText('Oldest page');expect(screen.queryByRole('button',{name:'Load older messages'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'View newer messages'}));await screen.findByText('Middle page');expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('Keep my arrival question');
+ fireEvent.click(screen.getByRole('button',{name:'View newer messages'}));await screen.findByText('Latest page');expect(screen.queryByRole('button',{name:'View newer messages'})).not.toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Load older messages'}));await screen.findByText('Middle page');fireEvent.click(screen.getByRole('button',{name:'View latest messages'}));await screen.findByText('Latest page');expect(screen.queryByRole('button',{name:'View newer messages'})).not.toBeInTheDocument();expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('Keep my arrival question');
+});
+
 });
