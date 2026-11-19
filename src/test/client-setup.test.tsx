@@ -1,4 +1,4 @@
-import {cleanup, fireEvent, render, screen, within} from '@testing-library/react';
+import {act, cleanup, fireEvent, render, screen, within} from '@testing-library/react';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import {MemoryRouter} from 'react-router-dom';
 import {afterEach, beforeEach, expect, it, vi} from 'vitest';
@@ -61,4 +61,21 @@ it('does not treat missing count metadata as a verified empty record list', asyn
 it('keeps contact setup incomplete for phone text with letters and otherwise sufficient digits',async()=>{
  fixture.type='pet_owner';fixture.phone='Call 07052398371';mount();await screen.findByText('1 of 2 setup steps complete');
  expect(screen.getByRole('link',{name:/Complete your contact details/})).toHaveAttribute('href','/profile');expect(screen.queryByText('Your care setup is ready')).not.toBeInTheDocument();
+});
+
+it('waits for fresh counts before offering creation from a cached empty setup', async () => {
+ fixture.type='pet_owner'; fixture.counts.pets=1;
+ const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ const key=['onboarding-record-count','user','profile',false,false,true];
+ cache.setQueryData(key,{animals:0,farms:0,businesses:0});
+ let release!:()=>void;
+ // Hold the actual record check so cached empty results remain in flight.
+ const {supabase}=await import('@/integrations/supabase/client');
+ const from=vi.spyOn(supabase,'from').mockImplementation(()=>({select:()=>({eq:()=>new Promise(resolve=>{release=()=>resolve({count:1,error:null});})})}) as never);
+ try{
+ render(<QueryClientProvider client={cache}><MemoryRouter><AccountNextSteps/></MemoryRouter></QueryClientProvider>);
+ expect(screen.getByText('Checking your setup progress…')).toBeInTheDocument();expect(screen.queryByRole('link',{name:/Add your first pet/})).not.toBeInTheDocument();expect(screen.getByRole('link',{name:/Check your pet records/})).toHaveAttribute('href','/pets');
+ await act(async()=>release());
+ expect(await screen.findByText('Your care setup is ready')).toBeInTheDocument();expect(screen.getByRole('link',{name:/Manage your pets/})).toHaveAttribute('href','/pets');
+ }finally{from.mockRestore();}
 });

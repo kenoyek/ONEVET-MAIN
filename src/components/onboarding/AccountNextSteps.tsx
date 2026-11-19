@@ -33,7 +33,7 @@ export function AccountNextSteps() {
   });
   if (!available) return null;
   const contactComplete = !!profile.first_name?.trim() && !!profile.last_name?.trim() && validContactPhone(profile.phone);
-  const loaded = records.isSuccess && !records.isError;
+  const loaded = records.isSuccess && !records.isError && !records.isFetching;
   const petsKnown = loaded && records.data?.animals != null;
   const farmsKnown = loaded && records.data?.farms != null;
   const businessKnown = loaded && records.data?.businesses != null;
