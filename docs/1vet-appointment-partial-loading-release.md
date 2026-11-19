@@ -1,0 +1,9 @@
+# Independent appointment detail sections — 19 November 2026
+
+Appointment details and alternative-request history now load independently. A slow or failed alternative lookup no longer blocks the main record or conversation. The alternatives section has explicit loading, empty and failed states with a targeted retry. Its existing latest-fifty limit and private record links remain unchanged.
+
+The alternative query starts only after the main appointment has loaded successfully, and is scoped by account, appointment and recorded version. Main access failures still hide the entire private record, conversation and alternatives, including cached data. A failed alternative access check hides cached alternatives while leaving the independently authorized main record available. No failure is presented as an empty history.
+
+Appointment refresh and shared response refresh invalidate both main and alternative caches. Targeted alternative retry does not reload the main record. Message deep links and booking-list return paths remain intact. No new permissions, RPCs, mutations, bookings or payments are introduced.
+
+All 617 tests across 133 files pass. Validation covers delayed and failed secondary reads, retry isolation, cached-content hiding after primary and secondary access failures, delegated/read-only modes and existing reschedule flows. Local Chromium confirms isolated alternative-history failure, visible conversation, targeted retry and cached-content hiding after main access failure at widths 1440, 390 and 320 without runtime exceptions. Browser scenarios use intercepted synthetic records rather than production account data. Type checking and production build pass; lint reports zero errors and nine existing warnings. No migration, backend deployment or cloud environment publication is included.
