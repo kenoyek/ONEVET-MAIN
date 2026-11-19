@@ -90,4 +90,19 @@ it('retraces older pages and retains the draft before returning to the latest me
  fireEvent.click(screen.getByRole('button',{name:'Load older messages'}));await screen.findByText('Middle page');fireEvent.click(screen.getByRole('button',{name:'View latest messages'}));await screen.findByText('Latest page');expect(screen.queryByRole('button',{name:'View newer messages'})).not.toBeInTheDocument();expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('Keep my arrival question');
 });
 
+it('contains manual refresh failure and retains the draft for retry',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});mock.messages.mockResolvedValue({rows:[message],hasOlder:false});
+ const view=mount();await screen.findByText('Arrival details');fireEvent.change(screen.getByLabelText('Message to the appointment participants'),{target:{value:'Keep this question'}});
+ const invalidate=vi.spyOn(view.cache,'invalidateQueries').mockRejectedValueOnce(new Error('Offline'));fireEvent.click(screen.getByRole('button',{name:'Refresh messages'}));
+ expect(await screen.findByRole('alert')).toHaveTextContent('Could not refresh the conversation or unread count');expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('Keep this question');
+ expect(invalidate).toHaveBeenCalledWith({queryKey:['appointment-thread','customer-a','booking-a']},{throwOnError:true});
+ fireEvent.click(screen.getByRole('button',{name:'Refresh messages'}));expect(await screen.findByRole('status')).toHaveTextContent('Conversation refreshed.');expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+it('allows only one manual refresh while its requests are pending',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});mock.messages.mockResolvedValue({rows:[message],hasOlder:false});
+ const view=mount();await screen.findByText('Arrival details');let finish!:()=>void;const invalidate=vi.spyOn(view.cache,'invalidateQueries').mockImplementationOnce(()=>new Promise<void>(resolve=>{finish=resolve;}));
+ const button=screen.getByRole('button',{name:'Refresh messages'});act(()=>{fireEvent.click(button);fireEvent.click(button);});expect(invalidate).toHaveBeenCalledTimes(2);expect(button).toBeDisabled();expect(button).toHaveTextContent('Refreshing messages');
+ await act(async()=>finish());expect(await screen.findByRole('status')).toHaveTextContent('Conversation refreshed.');expect(screen.getByRole('button',{name:'Refresh messages'})).toBeEnabled();
+});
+
 });
