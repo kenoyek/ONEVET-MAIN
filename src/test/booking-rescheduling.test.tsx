@@ -9,7 +9,7 @@ import { BookingRescheduleForm } from '@/components/provider/BookingRescheduleFo
 import type { Appointment } from '@/lib/services/appointment-service';
 const start=new Date(Date.now()+86400000).toISOString();const alternative=new Date(Date.parse(start)+15*60_000).toISOString();
 const booking={id:'original-id',version:2,service_id:'service-id',start_at:start,base_fee:15000,currency:'NGN'} as Appointment;
-function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter><Routes><Route path="/" element={<BookingRescheduleForm booking={booking} onSubmitted={vi.fn().mockResolvedValue(undefined)}/>}/><Route path="/appointments/:id" element={<h1>Replacement details</h1>}/></Routes></MemoryRouter></QueryClientProvider>);return cache;}
+function mount(onSubmitted=vi.fn().mockResolvedValue(undefined)){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});render(<QueryClientProvider client={cache}><MemoryRouter><Routes><Route path="/" element={<BookingRescheduleForm booking={booking} onSubmitted={onSubmitted}/>}/><Route path="/appointments/:id" element={<h1>Replacement details</h1>}/></Routes></MemoryRouter></QueryClientProvider>);return cache;}
 async function fill(){fireEvent.change(await screen.findByLabelText('New start time · WAT'),{target:{value:alternative}});fireEvent.change(screen.getByLabelText('Reason shared with the provider'),{target:{value:'A later start is needed.'}});fireEvent.click(screen.getByRole('checkbox'));}
 describe('Customer rescheduling',()=>{
  beforeEach(()=>{vi.clearAllMocks();current.mockResolvedValue({service_version:4,base_price:20000,currency:'NGN',duration_minutes:60,booking_enabled:true});slots.mockResolvedValue([{start_at:start},{start_at:alternative}]);});
@@ -25,4 +25,37 @@ describe('Customer rescheduling',()=>{
  it('reports unavailable service terms without exposing a submit action',async()=>{
   current.mockRejectedValue(new Error('Unavailable'));mount();expect(await screen.findByRole('alert')).toHaveTextContent('terms are unavailable');expect(screen.queryByRole('button',{name:'Submit reschedule request'})).not.toBeInTheDocument();
  });
+});
+
+describe('Reschedule submission recovery',()=>{
+ beforeEach(()=>{vi.clearAllMocks();reschedule.mockReset();current.mockResolvedValue({service_version:4,base_price:20000,currency:'NGN',duration_minutes:60,booking_enabled:true});slots.mockResolvedValue([{start_at:start},{start_at:alternative}]);});
+it('blocks programmatic submissions with a short reason or an expired selected alternative',async()=>{
+ const cache=mount();await fill();fireEvent.change(screen.getByLabelText('Reason shared with the provider'),{target:{value:'No'}});
+ fireEvent.submit(document.querySelector('form')!);expect(reschedule).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText('Reason shared with the provider'),{target:{value:'A later start is needed.'}});
+ slots.mockResolvedValue([]);await act(async()=>{await cache.invalidateQueries({queryKey:['reschedule-slots']});});
+ await screen.findByText('Your selected alternative is no longer available. Choose another time.');
+ fireEvent.submit(document.querySelector('form')!);expect(reschedule).not.toHaveBeenCalled();expect(screen.getByRole('button',{name:'Submit reschedule request'})).toBeDisabled();
+});
+it('does not query or submit dates outside the ninety-day booking window',async()=>{
+ mount();await fill();const calls=slots.mock.calls.length;fireEvent.change(screen.getByLabelText('New date · WAT'),{target:{value:'2099-01-01'}});
+ expect(screen.getAllByText('Choose a valid date within the next 90 days.').length).toBeGreaterThan(0);expect(screen.getByLabelText('New date · WAT')).toHaveAttribute('max');
+ fireEvent.submit(document.querySelector('form')!);expect(reschedule).not.toHaveBeenCalled();expect(slots).toHaveBeenCalledTimes(calls);
+});
+it('blocks submission while alternative times are being rechecked',async()=>{
+ const cache=mount();await fill();let finish!:(value:unknown)=>void;slots.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
+ let pending!:Promise<void>;act(()=>{pending=cache.invalidateQueries({queryKey:['reschedule-slots']});});
+ await waitFor(()=>expect(screen.getByRole('button',{name:'Submit reschedule request'})).toBeDisabled());fireEvent.submit(document.querySelector('form')!);expect(reschedule).not.toHaveBeenCalled();
+ await act(async()=>{finish([{start_at:alternative}]);await pending;});await waitFor(()=>expect(screen.getByRole('button',{name:'Submit reschedule request'})).toBeEnabled());
+});
+it('dispatches once for immediate repeated submissions',async()=>{
+ let finish!:(id:string)=>void;reschedule.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));mount();await fill();
+ act(()=>{fireEvent.submit(document.querySelector('form')!);fireEvent.submit(document.querySelector('form')!);});expect(reschedule).toHaveBeenCalledOnce();
+ await act(async()=>finish('alternative-id'));await screen.findByRole('heading',{name:'Replacement details'});
+});
+it('opens an acknowledged alternative even if refreshing the parent request fails',async()=>{
+ reschedule.mockResolvedValueOnce('alternative-id');const refresh=vi.fn().mockRejectedValueOnce(new Error('Offline'));mount(refresh);await fill();fireEvent.click(screen.getByRole('button',{name:'Submit reschedule request'}));
+ await screen.findByRole('heading',{name:'Replacement details'});expect(reschedule).toHaveBeenCalledOnce();expect(refresh).toHaveBeenCalledOnce();
+});
+
 });
