@@ -67,4 +67,17 @@ it('does not report a saved message as failed when refreshing its view fails',as
  expect(screen.getByLabelText('Message to the appointment participants')).toHaveValue('');expect(screen.queryByRole('alert')).not.toBeInTheDocument();expect(mock.send).toHaveBeenCalledOnce();
 });
 
+it('reports a saved read receipt accurately when the unread-count refresh fails',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});mock.messages.mockResolvedValue({rows:[message],hasOlder:false});
+ const view=mount();await screen.findByText('Arrival details');vi.spyOn(view.cache,'invalidateQueries').mockRejectedValueOnce(new Error('Refresh failed'));
+ fireEvent.click(screen.getByRole('button',{name:'Mark messages through this page as read'}));
+ expect(await screen.findByRole('status')).toHaveTextContent('Read status saved. Refresh messages to update the unread count.');expect(screen.queryByRole('alert')).not.toBeInTheDocument();expect(mock.markRead).toHaveBeenCalledWith('booking-a',7);
+});
+it('acknowledges once during repeated clicks and reports the saved visible boundary',async()=>{
+ mock.userId='customer-a';mock.state.mockResolvedValue({can_send:true,unread_count:1,last_read_ordinal:0,last_ordinal:8});mock.messages.mockResolvedValue({rows:[message],hasOlder:false});
+ let finish!:()=>void;mock.markRead.mockImplementationOnce(()=>new Promise<void>(resolve=>{finish=resolve;}));mount();await screen.findByText('Arrival details');const button=screen.getByRole('button',{name:'Mark messages through this page as read'});
+ act(()=>{fireEvent.click(button);fireEvent.click(button);});expect(mock.markRead).toHaveBeenCalledTimes(1);expect(button).toBeDisabled();
+ await act(async()=>finish());expect(await screen.findByRole('status')).toHaveTextContent('Read status saved through the messages on this page.');await waitFor(()=>expect(button).toBeEnabled());
+});
+
 });
