@@ -8,7 +8,7 @@ vi.mock('@/lib/services/article-engagement-service',()=>({articleEngagementServi
 import {ArticleDiscussion} from '@/components/articles/ArticleDiscussion';
 const comment={id:'comment-a',ordinal:8,author_name:'Ada',body:'Helpful article',mine:true,created_at:'2026-11-20T10:00:00Z'};
 const data={likes:3,liked:false,comment_count:1,has_older:false,comments:[comment]};
-function mount(){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/articles/animal-care']}><ArticleDiscussion articleId="article-a"/></MemoryRouter></QueryClientProvider>);}
+function mount(moderation = false){const cache=new QueryClient({defaultOptions:{queries:{retry:false}}});return render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/articles/animal-care']}><ArticleDiscussion articleId="article-a" moderation={moderation}/></MemoryRouter></QueryClientProvider>);}
 describe('Article discussion',()=>{
  beforeEach(()=>{vi.resetAllMocks();mock.user='reader-a';mock.role='pet_owner';mock.get.mockResolvedValue(data);mock.like.mockResolvedValue(undefined);mock.comment.mockResolvedValue(undefined);mock.remove.mockResolvedValue(undefined);});
  it('allows visitors to read while requiring sign-in to participate',async()=>{
@@ -22,6 +22,28 @@ describe('Article discussion',()=>{
  });
  it('confirms removal and exposes moderation only for owned comments or admins',async()=>{
   mock.get.mockResolvedValue({...data,comments:[{...comment,mine:false}]});const view=mount();await screen.findByText('Helpful article');expect(screen.queryByRole('button',{name:'Remove comment'})).not.toBeInTheDocument();mock.role='admin';view.rerender(<QueryClientProvider client={new QueryClient()}><MemoryRouter><ArticleDiscussion articleId="article-a"/></MemoryRouter></QueryClientProvider>);fireEvent.click(await screen.findByRole('button',{name:'Remove comment'}));expect(mock.remove).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'Confirm removal'}));await waitFor(()=>expect(mock.remove).toHaveBeenCalledWith('article-a','comment-a'));
+ });
+ it('restricts the moderation view to admins',()=>{
+  mount(true);
+  expect(screen.queryByRole('region',{name:'Comment moderation'})).not.toBeInTheDocument();
+  expect(mock.get).not.toHaveBeenCalled();
+ });
+ it('lets admins confirm and remove another reader’s comment from the moderation view',async()=>{
+  mock.role='admin';
+  mock.get.mockResolvedValue({...data,comments:[{...comment,mine:false}]});
+  mount(true);
+  await screen.findByText('Helpful article');
+  expect(screen.queryByLabelText('Your comment')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'3 likes'})).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Remove comment'}));
+  fireEvent.click(screen.getByRole('button',{name:'Keep comment'}));
+  expect(mock.remove).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'Remove comment'}));
+  mock.get.mockResolvedValue({...data,comment_count:0,comments:[]});
+  fireEvent.click(screen.getByRole('button',{name:'Confirm removal'}));
+  await screen.findByText('No comments on this page.');
+  expect(mock.remove).toHaveBeenCalledExactlyOnceWith('article-a','comment-a');
+  expect(screen.getByText('0 comments')).toBeInTheDocument();
  });
  it('keeps saved comments successful when refresh fails',async()=>{
   mount();fireEvent.change(await screen.findByLabelText('Your comment'),{target:{value:'Great read'}});mock.get.mockRejectedValue(Error('Reload failed'));fireEvent.click(screen.getByRole('button',{name:'Post comment'}));expect(await screen.findByText('Your comment has been posted. Refresh the discussion to update the counts.')).toBeInTheDocument();expect(mock.comment).toHaveBeenCalledOnce();

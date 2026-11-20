@@ -1,4 +1,6 @@
 import { articlePublicationState } from '@/lib/article-publication';
+import { ArticleDiscussion } from '@/components/articles/ArticleDiscussion';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -261,6 +263,22 @@ export default function AdminArticles() {
                             {format(new Date(article.created_at), 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell className="text-right">
+                            {article.is_published && (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" aria-label={`Moderate comments for ${article.title}`}>
+                                    Moderate comments
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-h-[85dvh] max-w-2xl overflow-y-auto text-left">
+                                  <DialogHeader>
+                                    <DialogTitle>Moderate comments</DialogTitle>
+                                    <DialogDescription>{article.title}</DialogDescription>
+                                  </DialogHeader>
+                                  <ArticleDiscussion articleId={article.id} moderation />
+                                </DialogContent>
+                              </Dialog>
+                            )}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" disabled={publishingIds.has(article.id)} aria-label={`Actions for ${article.title}`}>
