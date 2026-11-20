@@ -1,0 +1,25 @@
+// Isolated in-memory PostgreSQL regression checks; never connects to a server.
+const {PGlite}=await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const db=new PGlite();
+const article='11111111-1111-4111-8111-111111111111',owner='22222222-2222-4222-8222-222222222222',other='33333333-3333-4333-8333-333333333333',admin='44444444-4444-4444-8444-444444444444',comment='55555555-5555-4555-8555-555555555555';
+await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid primary key); CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$; CREATE TABLE public.profiles(user_id uuid,first_name text,last_name text,is_active boolean); CREATE TABLE public.articles(id uuid primary key,is_published boolean); CREATE FUNCTION public.has_role(u uuid,r text) RETURNS boolean LANGUAGE sql AS $$SELECT u='${admin}'::uuid AND r='admin'$$; INSERT INTO auth.users VALUES('${owner}'),('${other}'),('${admin}'); INSERT INTO profiles VALUES('${owner}','Ada','Obi',true),('${other}','Other','Reader',true),('${admin}','Admin','Reader',true); INSERT INTO articles VALUES('${article}',true);`);
+await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261120010000_article_engagement.sql',import.meta.url),'utf8'));
+const as=async(id,role='authenticated')=>{await db.exec('RESET ROLE');await db.query("SELECT set_config('request.jwt.claim.sub',$1,false)",[id??'']);await db.exec('SET ROLE '+role);};
+const call=async(sql,args=[])=> (await db.query(sql,args)).rows;
+const snapshot=async()=> (await call('SELECT get_article_engagement($1) AS data',[article]))[0].data;
+await as(null,'anon');assert.equal((await snapshot()).likes,0);await assert.rejects(()=>call('SELECT * FROM article_likes'));await assert.rejects(()=>call('SELECT set_article_like($1,true)',[article]));
+await as(owner);await call('SELECT set_article_like($1,true)',[article]);await call('SELECT set_article_like($1,true)',[article]);assert.equal((await snapshot()).likes,1);assert.equal((await snapshot()).liked,true);
+await call('SELECT add_article_comment($1,$2,$3)',[article,comment,'  Useful advice  ']);await call('SELECT add_article_comment($1,$2,$3)',[article,comment,'Useful advice']);assert.equal((await snapshot()).comment_count,1);assert.equal((await snapshot()).comments[0].body,'Useful advice');assert.equal((await snapshot()).comments[0].mine,true);await assert.rejects(()=>call('SELECT add_article_comment($1,$2,$3)',[article,comment,'changed']));
+await as(other);assert.equal((await snapshot()).liked,false);assert.equal((await snapshot()).comments[0].mine,false);assert.equal('user_id' in (await snapshot()).comments[0],false);await call('SELECT remove_article_comment($1,$2)',[article,comment]);assert.equal((await snapshot()).comment_count,1);await assert.rejects(()=>call('SELECT add_article_comment($1,$2,$3)',[article,crypto.randomUUID(),' '.repeat(3)]));await assert.rejects(()=>call('SELECT add_article_comment($1,$2,$3)',[article,crypto.randomUUID(),'x'.repeat(1001)]));
+await as(admin);await call('SELECT remove_article_comment($1,$2)',[article,comment]);assert.equal((await snapshot()).comment_count,0);
+await as(owner);await call('SELECT set_article_like($1,false)',[article]);await call('SELECT set_article_like($1,false)',[article]);assert.equal((await snapshot()).likes,0);
+await call('SELECT add_article_comment($1,$2,$3)',[article,comment,'My removable comment']);await call('SELECT remove_article_comment($1,$2)',[article,comment]);assert.equal((await snapshot()).comment_count,0);
+for(let i=0;i<5;i++)await call('SELECT add_article_comment($1,$2,$3)',[article,crypto.randomUUID(),'Comment '+i]);await assert.rejects(()=>call('SELECT add_article_comment($1,$2,$3)',[article,crypto.randomUUID(),'Too many']));
+await db.exec('RESET ROLE');await db.exec(`UPDATE profiles SET is_active=false WHERE user_id='${owner}'`);await as(owner);await assert.rejects(()=>call('SELECT set_article_like($1,true)',[article]));
+await db.exec('RESET ROLE');
+for(let i=0;i<25;i++)await call('INSERT INTO article_comments(id,article_id,user_id,author_name,body) VALUES($1,$2,$3,$4,$5)',[crypto.randomUUID(),article,other,'Reader','Page '+i]);
+await as(null,'anon');const first=await snapshot();assert.equal(first.comments.length,20);assert.equal(first.has_older,true);const second=(await call('SELECT get_article_engagement($1,$2) AS data',[article,first.comments.at(-1).ordinal]))[0].data;assert.equal(second.has_older,false);assert(first.comments.every(c=>!second.comments.some(d=>d.id===c.id)));
+await db.exec('RESET ROLE');await db.exec(`UPDATE articles SET is_published=false`);await as(null,'anon');await assert.rejects(()=>snapshot());
+console.log('PASS: migration execution, anonymous reads, private voter rows, auth writes, idempotent likes/comments, bounded text, rate limit, ownership, admin removal, inactive accounts, unpublished articles.');await db.close();

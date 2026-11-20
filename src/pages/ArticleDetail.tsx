@@ -1,3 +1,4 @@
+import { ArticleDiscussion } from '@/components/articles/ArticleDiscussion';
 import { ArticleImage } from '@/components/articles/ArticleImage';
 import { ArticleBody } from '@/components/articles/ArticleBody';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -271,6 +272,7 @@ export default function ArticleDetail() {
 
             {/* Content */}
             <ArticleBody content={article.content} />
+            <ArticleDiscussion articleId={article.id} />
 
             <Separator className="my-12" />
 

@@ -75,6 +75,10 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
       };
     };
     Functions: Omit<Database['public']['Functions'],'add_pet_owner_health_entry'> & {
+      get_article_engagement: {Args:{article_uuid:string;before_ordinal?:number};Returns:import('./types').Json};
+      set_article_like: {Args:{article_uuid:string;liked:boolean};Returns:undefined};
+      add_article_comment: {Args:{article_uuid:string;comment_id:string;comment_body:string};Returns:string};
+      remove_article_comment: {Args:{article_uuid:string;comment_id:string};Returns:undefined};
       // PostgREST generation omits SQL argument nullability. These two values
       // must be explicitly null for entry kinds that do not use them.
       add_pet_owner_health_entry: {
