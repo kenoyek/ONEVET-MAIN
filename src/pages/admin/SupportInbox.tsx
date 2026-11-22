@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth-context';
 import {
-  MAX_SUPPORT_SEARCH_LENGTH, listSupportMessages, markSupportMessageRead, setSupportMessageResolved,
+  MAX_SUPPORT_SEARCH_LENGTH, getSupportInboxTotals, listSupportMessages, markSupportMessageRead, setSupportMessageResolved,
   type SupportMessage, type SupportMessageCursor, type SupportMessageFilter,
 } from '@/lib/services/support-inbox-service';
 
@@ -36,6 +36,12 @@ function Inbox({ userId }: { userId: string }) {
   const inbox = useQuery({
     queryKey: [...inboxKey, filter, search, cursor],
     queryFn: () => listSupportMessages(filter, search, cursor),
+    refetchInterval: 30000,
+    retry: false,
+  });
+  const totals = useQuery({
+    queryKey: [...inboxKey, 'totals'],
+    queryFn: getSupportInboxTotals,
     refetchInterval: 30000,
     retry: false,
   });
@@ -68,6 +74,25 @@ function Inbox({ userId }: { userId: string }) {
       <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-24 pt-28">
         <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>
         <PageHeading title="Support inbox" description="Review submissions from the Contact form. Read and resolution status are shared with other admins." />
+        <section aria-label="Inbox totals" className="space-y-2">
+          <h2 className="text-sm font-semibold">Inbox totals</h2>
+          {totals.isPending && <p role="status" className="text-sm text-muted-foreground">Loading inbox totals…</p>}
+          {totals.isError && <p role="status" className="text-sm text-muted-foreground">Inbox totals are unavailable.</p>}
+          {totals.isSuccess && (
+            <dl className="grid grid-cols-3 gap-2 sm:gap-4">
+              {([
+                ['Open', totals.data.open],
+                ['Unread', totals.data.unread],
+                ['Resolved', totals.data.resolved],
+              ] as const).map(([label, count]) => (
+                <div key={label} className="space-y-1 rounded-lg border bg-card p-3 sm:p-4">
+                  <dt className="text-sm text-muted-foreground">{label}</dt>
+                  <dd className="text-xl font-semibold tabular-nums sm:text-2xl">{count.toLocaleString('en-NG')}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </section>
         <div className="grid gap-5 md:grid-cols-[minmax(14rem,1fr)_minmax(0,2fr)]">
           <section aria-label="Support messages" className="min-w-0 space-y-3">
             <div className="flex flex-wrap items-end gap-2">
@@ -85,7 +110,8 @@ function Inbox({ userId }: { userId: string }) {
                   <option value="all">All messages</option>
                 </select>
               </div>
-              <Button variant="outline" disabled={inbox.isFetching} onClick={() => void inbox.refetch()}>Refresh</Button>
+              <Button variant="outline" disabled={inbox.isFetching || totals.isFetching}
+                onClick={() => void Promise.all([inbox.refetch(), totals.refetch()])}>Refresh</Button>
             </div>
             <form className="space-y-2" onSubmit={event => {
               event.preventDefault();

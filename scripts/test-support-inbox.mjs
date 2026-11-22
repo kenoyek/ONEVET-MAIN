@@ -35,6 +35,8 @@ try {
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122160000_support_message_resolution.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122170000_support_message_notes.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122180000_support_message_search.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122190000_support_inbox_totals.sql', import.meta.url), 'utf8'));
+  const totals = () => call('SELECT support_inbox_totals() AS result');
   const search = (filter, text, cursor = null) => call(
     'SELECT list_support_messages($1::text,$2,$3,$4) AS result', [filter, cursor?.created_at, cursor?.id, text],
   );
@@ -48,15 +50,18 @@ try {
 
   await as(null, 'anon');
   await assert.rejects(() => list(true));
+  await assert.rejects(() => totals());
   await assert.rejects(() => notes(crypto.randomUUID()));
   await assert.rejects(() => search('all', 'visitor'));
   await assert.rejects(() => resolve(crypto.randomUUID(), true));
   await as(reader);
   await assert.rejects(() => list(false));
+  await assert.rejects(() => totals());
   await assert.rejects(() => addNote(crypto.randomUUID(), crypto.randomUUID(), 'Denied'));
   await assert.rejects(() => mark(crypto.randomUUID(), true));
   await assert.rejects(() => resolve(crypto.randomUUID(), true));
   await as(admin);
+  assert.deepEqual(await totals(), { open: 28, unread: 28, resolved: 0 });
   const page = await list(true);
   assert.equal(page.length, 26);
   const next = await list(true, page[24]);
@@ -69,6 +74,7 @@ try {
   assert.deepEqual(await search('all', 'fixture message'), []);
   await assert.rejects(() => search('all', 'x'.repeat(255)));
   assert.equal(await mark(page[0].id, true), true);
+  assert.deepEqual(await totals(), { open: 28, unread: 27, resolved: 0 });
   assert(!(await list(true)).some(message => message.id === page[0].id));
   assert.equal((await list(false))[0].is_read, true);
   assert.equal(await mark(page[0].id, false), true);
@@ -76,12 +82,14 @@ try {
   assert.equal(await mark(crypto.randomUUID(), true), false);
   const resolvedAt = await resolve(page[0].id, true);
   assert(resolvedAt);
+  assert.deepEqual(await totals(), { open: 27, unread: 28, resolved: 1 });
   assert.deepEqual(await resolve(page[0].id, true), resolvedAt);
   assert.equal((await filtered('resolved'))[0].id, page[0].id);
   assert.deepEqual((await search('resolved', 'visitor@example.invalid')).map(message => message.id), [page[0].id]);
   assert(!(await filtered('open')).some(message => message.id === page[0].id));
   assert.equal((await filtered('unread'))[0].id, page[0].id);
   assert.equal(await resolve(page[0].id, false), null);
+  assert.deepEqual(await totals(), { open: 28, unread: 28, resolved: 0 });
   assert.equal((await filtered('open'))[0].id, page[0].id);
   assert.deepEqual(await filtered('resolved'), []);
   const target = page[0].id;
@@ -104,7 +112,7 @@ try {
   await assert.rejects(() => mark(page[0].id, true));
   await assert.rejects(() => resolve(page[0].id, true));
   await assert.rejects(() => notes(target));
-  console.log('PASS: support inbox privileges, pagination, unread filtering, shared read status, resolution, private notes, and filtered search.');
+  console.log('PASS: support inbox privileges, pagination, unread filtering, shared read status, resolution, private notes, filtered search, and queue totals.');
 } finally {
   await db.close();
 }

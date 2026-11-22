@@ -7,6 +7,16 @@ export type SupportMessageFilter = 'open' | 'unread' | 'resolved' | 'all';
 export const MAX_SUPPORT_SEARCH_LENGTH = 254;
 const pageSize = 25;
 
+export async function getSupportInboxTotals() {
+  const { data, error } = await supabase.rpc('support_inbox_totals');
+  if (error) throw error;
+  const totals = data as { open: number; unread: number; resolved: number } | null;
+  if (!totals || ![totals.open, totals.unread, totals.resolved].every(value => Number.isSafeInteger(value) && value >= 0)) {
+    throw Error('Support inbox totals unavailable');
+  }
+  return totals;
+}
+
 export async function listSupportMessages(filter: SupportMessageFilter, search: string, cursor?: SupportMessageCursor) {
   const { data, error } = await supabase.rpc('list_support_messages', {
     message_filter: filter,
