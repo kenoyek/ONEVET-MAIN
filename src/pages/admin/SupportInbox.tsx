@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { SupportMessageNotes } from '@/components/support/SupportMessageNotes';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Button } from '@/components/ui/button';
@@ -137,6 +138,7 @@ function Inbox({ userId }: { userId: string }) {
                 </Button>
               </div>
               {changeStatus.isError && <p role="alert" className="text-sm text-destructive">Could not update message status. Try again.</p>}
+              <SupportMessageNotes key={detail.id} messageId={detail.id} userId={userId} />
             </article>
           )}
         </div>

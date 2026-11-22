@@ -34,3 +34,27 @@ export async function setSupportMessageResolved(id: string, resolved: boolean) {
   if (error) throw error;
   return data;
 }
+
+export type SupportMessageNote = {
+  id: number;
+  author_name: string;
+  body: string;
+  created_at: string;
+};
+
+export async function listSupportMessageNotes(id: string, before?: number) {
+  const { data, error } = await supabase.rpc('list_support_message_notes', {
+    target_message: id, before_note: before ?? null,
+  });
+  if (error) throw error;
+  if (!Array.isArray(data)) throw Error('Private notes unavailable');
+  const notes = data as SupportMessageNote[];
+  return { notes: notes.slice(0, pageSize), hasMore: notes.length > pageSize };
+}
+
+export async function addSupportMessageNote(id: string, requestId: string, body: string) {
+  const { error } = await supabase.rpc('add_support_message_note', {
+    target_message: id, note_request: requestId, note_body: body,
+  });
+  if (error) throw error;
+}
