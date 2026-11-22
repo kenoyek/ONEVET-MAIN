@@ -37,6 +37,10 @@ try {
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122090000_care_chat_guest_reply_alert.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122100000_care_chat_inbox_filters.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122110000_care_chat_ownership.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122120000_care_chat_assignment_filters.sql', import.meta.url), 'utf8'));
+  const assignedPage = (status, assignment) => get(
+    'SELECT care_chat_inbox_page($1,NULL,NULL,$2) AS result', [status, assignment],
+  );
   const changeOwner = (id, expected, release = false) =>
     get('SELECT care_chat_assign($1,$2,$3) AS result', [id, expected, release]);
   const inboxPage = (status, updatedAt = null, id = null) =>
@@ -46,6 +50,7 @@ try {
   await as(null, 'anon');
   await assert.rejects(() => waitingCount());
   await assert.rejects(() => inboxPage('waiting'));
+  await assert.rejects(() => assignedPage('waiting', 'all'));
   const guestRead = key => get('SELECT care_chat_visitor($1) AS result', [key]);
   const guestSend = (key, id, body) =>
     get('SELECT care_chat_visitor($1,$2,$3) AS result', [key, id, body]);
@@ -72,7 +77,10 @@ try {
   await as(admin);
   assert.equal(await waitingCount(), 1);
   const [thread] = await get('SELECT care_chat_inbox() AS result');
-  assert.deepEqual(await inboxPage('waiting'), [thread]);
+  assert.deepEqual(await inboxPage('waiting'), [{ ...thread, assignment: 'unassigned' }]);
+  assert.equal((await assignedPage('waiting', 'unassigned'))[0].id, thread.id);
+  assert.deepEqual(await assignedPage('waiting', 'mine'), []);
+  await assert.rejects(() => assignedPage('waiting', 'unsupported'));
   assert.equal(thread.awaiting_reply, true);
   assert.notEqual(thread.id, guest);
   assert.equal((await get('SELECT care_chat_staff($1) AS result', [thread.id])).owner_id, null);
@@ -90,12 +98,16 @@ try {
   assert.equal(await waitingCount(), 0);
   assert.deepEqual(await inboxPage('waiting'), []);
   assert.equal((await inboxPage('replied'))[0].id, thread.id);
+  assert.equal((await assignedPage('replied', 'mine'))[0].assignment, 'mine');
+  assert.deepEqual(await assignedPage('replied', 'unassigned'), []);
   await assert.rejects(() => inboxPage('invalid'));
   await assert.rejects(() => inboxPage('waiting', null, thread.id));
   assert.equal((await get('SELECT care_chat_inbox() AS result'))[0].awaiting_reply, false);
 
   await as(secondAdmin);
   assert.equal((await get('SELECT care_chat_staff($1) AS result', [thread.id])).owned_by_me, false);
+  assert.deepEqual(await assignedPage('replied', 'mine'), []);
+  assert.equal((await assignedPage('replied', 'all'))[0].assignment, 'teammate');
   await assert.rejects(() => get('SELECT care_chat_staff($1,$2,$3) AS result', [thread.id, crypto.randomUUID(), 'Duplicate staff reply']));
   await assert.rejects(() => get('SELECT care_chat_staff($1,close_chat=>true) AS result', [thread.id]));
   await assert.rejects(() => changeOwner(thread.id, null));
@@ -104,6 +116,7 @@ try {
   await assert.rejects(() => changeOwner(thread.id, secondAdmin, true));
   await as(secondAdmin);
   assert.equal((await changeOwner(thread.id, secondAdmin, true)).owner_id, null);
+  assert.equal((await assignedPage('replied', 'unassigned'))[0].id, thread.id);
   await as(null, 'anon');
   assert.deepEqual(await guestRead(guest), { closed: replied.closed, messages: replied.messages });
   await assert.rejects(() => changeOwner(thread.id, null));

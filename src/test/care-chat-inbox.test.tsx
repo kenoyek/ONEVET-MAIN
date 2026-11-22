@@ -18,10 +18,11 @@ vi.mock('@/lib/services/care-chat-service', () => ({
 it('starts with waiting chats, pages the results, and resets paging on a status change', async () => {
   const row = {
     id: 'first', updated_at: '2026-11-22T10:00:00Z', preview: 'Can I book grooming?',
-    closed: false, awaiting_reply: true,
+    closed: false, awaiting_reply: true, assignment: 'unassigned' as const,
   };
   vi.mocked(listCareChats)
     .mockResolvedValueOnce({ items: [row], hasMore: true })
+    .mockResolvedValueOnce({ items: [], hasMore: false })
     .mockResolvedValueOnce({ items: [], hasMore: false })
     .mockResolvedValueOnce({ items: [], hasMore: false });
   render(<QueryClientProvider client={new QueryClient()}>
@@ -29,13 +30,18 @@ it('starts with waiting chats, pages the results, and resets paging on a status 
   </QueryClientProvider>);
 
   await screen.findByText(row.preview);
-  expect(listCareChats).toHaveBeenLastCalledWith('waiting', undefined);
+  expect(screen.getByRole('button', { name: /Unassigned/ })).toBeInTheDocument();
+  expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'all', undefined);
   fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
-  await screen.findByText('No chats on this page.');
-  expect(listCareChats).toHaveBeenLastCalledWith('waiting', { id: row.id, updated_at: row.updated_at });
+  await screen.findByText('No chats match these filters on this page.');
+  expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'all', { id: row.id, updated_at: row.updated_at });
+  fireEvent.change(screen.getByLabelText('Assignment'), { target: { value: 'mine' } });
+  await screen.findByText('No chats match these filters on this page.');
+  expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'mine', undefined);
+  expect(screen.queryByRole('button', { name: 'Previous page' })).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Chat status'), { target: { value: 'closed' } });
-  await screen.findByText('No chats on this page.');
-  expect(listCareChats).toHaveBeenLastCalledWith('closed', undefined);
+  await screen.findByText('No chats match these filters on this page.');
+  expect(listCareChats).toHaveBeenLastCalledWith('closed', 'mine', undefined);
   expect(screen.queryByRole('button', { name: 'Previous page' })).not.toBeInTheDocument();
 });
 
@@ -44,7 +50,7 @@ it('keeps the selected chat open after replying moves it out of the waiting queu
     .mockResolvedValueOnce({
       items: [{
         id: 'waiting', updated_at: '2026-11-22T10:00:00Z', preview: 'Can I book?',
-        closed: false, awaiting_reply: true,
+        closed: false, awaiting_reply: true, assignment: 'unassigned' as const,
       }],
       hasMore: false,
     }).mockResolvedValue({ items: [], hasMore: false });
