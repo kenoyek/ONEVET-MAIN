@@ -185,3 +185,24 @@ it('requires confirmation to take over and only enables replies once assigned', 
   expect(assign).toHaveBeenCalledExactlyOnceWith('teammate', false);
   expect(screen.getByRole('button', { name: 'Release chat' })).toBeInTheDocument();
 });
+
+it('lets a visitor end an existing chat after confirming and keeps its messages visible', async () => {
+  const chat: CareChat = {
+    closed: false,
+    messages: [{ id: 1, sender: 'visitor', body: 'Thanks for your help.', created_at: '2026-11-22T10:00:00Z' }],
+  };
+  const endGuestChat = vi.fn().mockResolvedValue({ ...chat, closed: true });
+  render(<QueryClientProvider client={new QueryClient()}>
+    <CareChatThread queryKey={['end-visitor-chat']} load={async () => chat} send={vi.fn()} endGuestChat={endGuestChat} />
+  </QueryClientProvider>);
+
+  fireEvent.click(await screen.findByRole('button', { name: 'End chat' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Keep open' }));
+  expect(endGuestChat).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'End chat' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm end chat' }));
+  await screen.findByText('This chat is closed.');
+  expect(endGuestChat).toHaveBeenCalledOnce();
+  expect(screen.getByText('Thanks for your help.')).toBeInTheDocument();
+  expect(screen.queryByLabelText('Your message')).not.toBeInTheDocument();
+});

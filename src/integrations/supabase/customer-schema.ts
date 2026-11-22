@@ -76,6 +76,7 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
     };
     Functions: Omit<Database['public']['Functions'],'add_pet_owner_health_entry'> & {
       care_chat_assign: { Args: { chat_id: string; expected_owner: string | null; release_chat: boolean }; Returns: import('./types').Json };
+      care_chat_visitor_end: { Args: { guest_key: string }; Returns: import('./types').Json };
       care_chat_reply_pending: { Args: { guest_key: string; after_id: number }; Returns: boolean };
       care_chat_waiting_count: { Args: Record<PropertyKey, never>; Returns: number };
       care_chat_is_available: { Args: Record<PropertyKey, never>; Returns: boolean };

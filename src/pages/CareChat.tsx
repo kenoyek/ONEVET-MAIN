@@ -6,7 +6,7 @@ import { VisitorChatAvailability } from '@/components/chat/CareChatAvailability'
 import { CareChatThread } from '@/components/chat/CareChatThread';
 import { Button } from '@/components/ui/button';
 import { getCareChatKey, markCareChatReplyViewed, rememberCareChatKey } from '@/lib/care-chat-session';
-import { visitCareChat } from '@/lib/services/care-chat-service';
+import { endGuestCareChat, visitCareChat } from '@/lib/services/care-chat-service';
 
 export default function CareChat() {
   const [key, setKey] = useState(() => getCareChatKey() ?? crypto.randomUUID());
@@ -29,6 +29,7 @@ export default function CareChat() {
             rememberCareChatKey(key);
             return visitCareChat(key, message);
           }}
+          endGuestChat={() => endGuestCareChat(key)}
           onReplyViewed={id => markCareChatReplyViewed(key, id)} />
         <Button variant="outline" onClick={() => {
           if (!window.confirm('Start a new chat? This tab will stop showing the previous conversation.')) return;

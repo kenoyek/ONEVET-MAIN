@@ -39,6 +39,12 @@ export async function visitCareChat(key: string, message?: CareChatSend) {
   return data as CareChat | null;
 }
 
+export async function endGuestCareChat(key: string) {
+  const { data, error } = await supabase.rpc('care_chat_visitor_end', { guest_key: key });
+  if (error) throw error;
+  return data as CareChat | null;
+}
+
 export type CareChatInboxFilter = 'waiting' | 'replied' | 'closed';
 export type CareChatInboxAssignment = 'all' | 'mine' | 'unassigned';
 export type CareChatInboxCursor = Pick<CareChatInboxItem, 'id' | 'queue_at'>;

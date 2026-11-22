@@ -39,6 +39,8 @@ try {
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122110000_care_chat_ownership.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122120000_care_chat_assignment_filters.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122130000_care_chat_wait_order.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122140000_care_chat_visitor_end.sql', import.meta.url), 'utf8'));
+  const endChat = key => get('SELECT care_chat_visitor_end($1) AS result', [key]);
   const waitingPage = (after = null, id = null) => get(
     "SELECT care_chat_inbox_page('waiting',$1,$2,'all',true) AS result", [after, id],
   );
@@ -135,7 +137,17 @@ try {
   await as(admin);
   assert.equal(await waitingCount(), 1);
   const open = (await get('SELECT care_chat_inbox() AS result')).find(item => item.awaiting_reply);
-  await get('SELECT care_chat_staff($1,close_chat=>true) AS result', [open.id]);
+  await as(null, 'anon');
+  assert.equal(await endChat(crypto.randomUUID()), null);
+  assert.equal((await guestRead(stranger)).closed, false);
+  const ended = await endChat(stranger);
+  assert.equal(ended.closed, true);
+  assert.equal(ended.messages[0].body, 'A new visitor');
+  assert.deepEqual(await endChat(stranger), ended);
+  await assert.rejects(() => guestSend(stranger, crypto.randomUUID(), 'After ending chat'));
+  await as(admin);
+  await assert.rejects(() => get('SELECT care_chat_staff($1,$2,$3) AS result',
+    [open.id, crypto.randomUUID(), 'Late reply']));
   assert.equal((await inboxPage('closed'))[0].id, open.id);
   assert.equal(await waitingCount(), 0);
   await get('SELECT care_chat_staff($1,close_chat=>true) AS result', [thread.id]);
@@ -146,6 +158,7 @@ try {
   await db.query("UPDATE care_chat_threads SET created_at=now()-interval '8 days' WHERE id=$1", [thread.id]);
   await as(null, 'anon');
   assert.deepEqual(await guestRead(guest), { closed: true, messages: [] });
+  assert.equal(await endChat(guest), null);
   assert.equal(await replyPending(guest, 0), false);
   await db.exec('RESET ROLE');
   await db.exec(`

@@ -12,12 +12,13 @@ type Props = {
   load: () => Promise<CareChat | null>;
   send: (message: CareChatSend) => Promise<CareChat | null>;
   close?: () => Promise<CareChat | null>;
+  endGuestChat?: () => Promise<CareChat | null>;
   assign?: (expectedOwner: string | null, release: boolean) => Promise<CareChat | null>;
   onChange?: () => void;
   onReplyViewed?: (id: number) => void;
 };
 
-export function CareChatThread({ queryKey, load, send, close, assign, onChange, onReplyViewed }: Props) {
+export function CareChatThread({ queryKey, load, send, close, endGuestChat, assign, onChange, onReplyViewed }: Props) {
   const inputId = useId();
   const bookingId = useId();
   const cache = useQueryClient();
@@ -53,7 +54,7 @@ export function CareChatThread({ queryKey, load, send, close, assign, onChange, 
     mutationFn: async (update?: ThreadAction) => {
       const result = update
         ? 'release' in update ? await assign?.(update.owner, update.release) : await send(update)
-        : await close?.();
+        : await (close ?? endGuestChat)?.();
       if (!result) throw Error('The conversation has expired.');
       return result;
     },
@@ -82,6 +83,7 @@ export function CareChatThread({ queryKey, load, send, close, assign, onChange, 
   }
 
   const canSend = thread.isSuccess && !thread.data?.closed && !heldByTeammate && (!close || !!thread.data);
+  const canClose = canSend && !!thread.data && !!(close || endGuestChat);
   const code = action.error && 'code' in action.error ? action.error.code : undefined;
 
   return (
@@ -159,15 +161,17 @@ export function CareChatThread({ queryKey, load, send, close, assign, onChange, 
                 setDraft('Use the booking link below to browse providers and check availability.');
                 setBookingCategory(current => current || 'all');
               }}>Use booking reply</Button>}
-            {close && !confirmClose && <Button type="button" variant="ghost" disabled={action.isPending}
-              onClick={() => setConfirmClose(true)}>Close chat</Button>}
+            {canClose && !confirmClose && <Button type="button" variant="ghost" disabled={action.isPending}
+              onClick={() => setConfirmClose(true)}>{close ? 'Close chat' : 'End chat'}</Button>}
           </div>
         </form>
       )}
-      {canSend && confirmClose && (
+      {canClose && confirmClose && (
         <div className="flex flex-wrap items-center gap-2">
-          <p>Close this conversation?</p>
-          <Button variant="destructive" disabled={action.isPending} onClick={() => perform()}>Confirm closure</Button>
+          <p>{close ? 'Close this conversation?' : 'End this chat? You can still read the conversation in this tab.'}</p>
+          <Button variant="destructive" disabled={action.isPending} onClick={() => perform()}>
+            {close ? 'Confirm closure' : 'Confirm end chat'}
+          </Button>
           <Button variant="ghost" disabled={action.isPending} onClick={() => setConfirmClose(false)}>Keep open</Button>
         </div>
       )}
