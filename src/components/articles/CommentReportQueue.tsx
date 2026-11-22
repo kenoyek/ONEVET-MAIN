@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/lib/auth-context';
 import {
-  listCommentReviews, listReportedComments, reportReasons, resolveCommentReports, type ReportedComment,
+  MAX_DECISION_NOTE_LENGTH, listCommentReviews, listReportedComments, reportReasons, resolveCommentReports, type ReportedComment,
 } from '@/lib/services/article-comment-reports';
 
 export function CommentReportQueue() {
@@ -36,14 +38,16 @@ export function CommentReportQueue() {
 }
 
 function Queue({ userId }: { userId: string }) {
+  const noteId = useId();
+  const [note, setNote] = useState('');
   const [selection, setSelection] = useState<{ comment: ReportedComment; remove: boolean } | null>(null);
   const [feedback, setFeedback] = useState('');
   const cache = useQueryClient();
   const queueKey = ['article-comment-reports', userId];
   const queue = useQuery({ queryKey: queueKey, queryFn: listReportedComments });
   const resolve = useMutation({
-    mutationFn: ({ comment, remove }: NonNullable<typeof selection>) =>
-      resolveCommentReports(comment.comment_id, remove),
+    mutationFn: ({ comment, remove, note }: NonNullable<typeof selection> & { note: string | null }) =>
+      resolveCommentReports(comment.comment_id, remove, note),
     onSuccess: async (_, { comment, remove }) => {
       setSelection(null);
       setFeedback(remove ? 'Comment removed.' : 'Reports dismissed.');
@@ -58,6 +62,7 @@ function Queue({ userId }: { userId: string }) {
   function select(comment: ReportedComment, remove: boolean) {
     resolve.reset();
     setFeedback('');
+    setNote('');
     setSelection({ comment, remove });
   }
 
@@ -82,9 +87,12 @@ function Queue({ userId }: { userId: string }) {
               {selection?.comment.comment_id === comment.comment_id ? (
                 <div className="space-y-2">
                   <p>{selection.remove ? 'Permanently remove this comment?' : 'Dismiss all open reports for this comment?'}</p>
+                  <Label htmlFor={noteId}>Private decision note (optional)</Label>
+                  <Textarea id={noteId} rows={3} value={note} maxLength={MAX_DECISION_NOTE_LENGTH}
+                    disabled={resolve.isPending} onChange={event => setNote(event.target.value)} />
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" variant={selection.remove ? 'destructive' : 'default'}
-                      disabled={resolve.isPending} onClick={() => resolve.mutate(selection)}>Confirm</Button>
+                      disabled={resolve.isPending} onClick={() => resolve.mutate({ ...selection, note: note.trim() || null })}>Confirm</Button>
                     <Button size="sm" variant="ghost" disabled={resolve.isPending}
                       onClick={() => setSelection(null)}>Cancel</Button>
                   </div>
@@ -140,6 +148,7 @@ function ReviewHistory({ userId }: { userId: string }) {
             <li key={review.id} className="space-y-1 rounded-lg border p-4">
               <h3 className="break-words font-semibold">{review.article_title}</h3>
               <p>{review.action === 'removed' ? 'Comment removed' : 'Reports dismissed'}</p>
+              {review.note && <p className="whitespace-pre-wrap break-words text-sm">{review.note}</p>}
               <p className="break-words text-sm text-muted-foreground">
                 {review.moderator_name} · {review.report_count} {review.report_count === 1 ? 'report' : 'reports'}
               </p>

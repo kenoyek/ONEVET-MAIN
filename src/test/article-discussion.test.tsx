@@ -92,9 +92,10 @@ it('lets an admin dismiss reports without removing the comment', async () => {
  await screen.findByText('Helpful article');
  fireEvent.click(screen.getByRole('button',{name:'Dismiss reports'}));
  expect(resolveCommentReports).not.toHaveBeenCalled();
+ fireEvent.change(screen.getByLabelText('Private decision note (optional)'),{target:{value:'  No policy violation  '}});
  fireEvent.click(screen.getByRole('button',{name:'Confirm'}));
  await screen.findByText('No open comment reports.');
- expect(resolveCommentReports).toHaveBeenCalledExactlyOnceWith('comment-a',false);
+ expect(resolveCommentReports).toHaveBeenCalledExactlyOnceWith('comment-a',false,'No policy violation');
 });
 
 it('shows review history and requests older decisions by cursor', async () => {
@@ -104,7 +105,7 @@ it('shows review history and requests older decisions by cursor', async () => {
  vi.mocked(listCommentReviews).mockResolvedValueOnce({
   reviews: [{
    id: 5, article_title: 'Care guide', moderator_name: 'Admin Reader',
-   action: 'removed', report_count: 2, reviewed_at: '2026-11-22T10:00:00Z',
+   action: 'removed', note: 'Contains personal information', report_count: 2, reviewed_at: '2026-11-22T10:00:00Z',
   }],
   hasOlder: true,
  }).mockResolvedValueOnce({ reviews: [], hasOlder: false });
@@ -113,6 +114,7 @@ it('shows review history and requests older decisions by cursor', async () => {
  fireEvent.click(screen.getByRole('button',{name:'Comment reports'}));
  fireEvent.mouseDown(screen.getByRole('tab',{name:'Review history'}),{button:0,ctrlKey:false});
  await screen.findByText('Comment removed');
+ expect(screen.getByText('Contains personal information')).toBeInTheDocument();
  expect(screen.getByText('Admin Reader · 2 reports')).toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Older decisions'}));
  await screen.findByText('No recorded decisions on this page.');

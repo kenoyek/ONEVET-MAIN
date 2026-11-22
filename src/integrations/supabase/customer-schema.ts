@@ -78,7 +78,7 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
       list_article_comment_review_history: { Args: { before_id?: number }; Returns: import('./types').Json };
       report_article_comment: { Args: { target_comment: string; report_reason: string }; Returns: undefined };
       list_article_comment_reports: { Args: Record<PropertyKey, never>; Returns: import('./types').Json };
-      resolve_article_comment_reports: { Args: { target_comment: string; remove_comment: boolean }; Returns: undefined };
+      resolve_article_comment_reports: { Args: { target_comment: string; remove_comment: boolean; decision_note: string | null }; Returns: undefined };
       get_article_engagement: {Args:{article_uuid:string;before_ordinal?:number};Returns:import('./types').Json};
       set_article_like: {Args:{article_uuid:string;liked:boolean};Returns:undefined};
       add_article_comment: {Args:{article_uuid:string;comment_id:string;comment_body:string};Returns:string};

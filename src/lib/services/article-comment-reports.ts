@@ -33,10 +33,13 @@ export async function listReportedComments() {
   return data as unknown as ReportedComment[];
 }
 
-export async function resolveCommentReports(id: string, remove: boolean) {
+export const MAX_DECISION_NOTE_LENGTH = 500;
+
+export async function resolveCommentReports(id: string, remove: boolean, note: string | null) {
   const { error } = await supabase.rpc('resolve_article_comment_reports', {
     target_comment: id,
     remove_comment: remove,
+    decision_note: note,
   });
   if (error) throw error;
 }
@@ -48,6 +51,7 @@ export type CommentReview = {
   action: 'dismissed' | 'removed';
   report_count: number;
   reviewed_at: string;
+  note?: string | null;
 };
 
 const reviewPageSize = 50;
