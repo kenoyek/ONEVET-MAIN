@@ -118,5 +118,12 @@ it('shows review history and requests older decisions by cursor', async () => {
  expect(screen.getByText('Admin Reader · 2 reports')).toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Older decisions'}));
  await screen.findByText('No recorded decisions on this page.');
- expect(listCommentReviews).toHaveBeenLastCalledWith(5);
+ expect(listCommentReviews).toHaveBeenLastCalledWith({article:'',action:''},5);
+ vi.mocked(listCommentReviews).mockResolvedValueOnce({ reviews: [], hasOlder: false });
+ fireEvent.change(screen.getByLabelText('Article title'),{target:{value:'  Care guide  '}});
+ fireEvent.change(screen.getByLabelText('Decision'),{target:{value:'removed'}});
+ fireEvent.click(screen.getByRole('button',{name:'Apply filters'}));
+ await screen.findByText('No decisions match these filters.');
+ expect(listCommentReviews).toHaveBeenLastCalledWith({article:'Care guide',action:'removed'},undefined);
+ expect(screen.queryByRole('button',{name:'Newer decisions'})).not.toBeInTheDocument();
 });

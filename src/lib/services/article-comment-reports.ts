@@ -54,13 +54,20 @@ export type CommentReview = {
   note?: string | null;
 };
 
+export type CommentReviewFilters = {
+  article: string;
+  action: CommentReview['action'] | '';
+};
+
+export const MAX_REVIEW_ARTICLE_QUERY_LENGTH = 120;
 const reviewPageSize = 50;
 
-export async function listCommentReviews(before?: number) {
-  const { data, error } = await supabase.rpc(
-    'list_article_comment_review_history',
-    before === undefined ? {} : { before_id: before },
-  );
+export async function listCommentReviews(filters: CommentReviewFilters, before?: number) {
+  const { data, error } = await supabase.rpc('list_article_comment_review_history', {
+    before_id: before ?? null,
+    decision_action: filters.action || null,
+    article_query: filters.article || null,
+  });
   if (error) throw error;
   if (!Array.isArray(data)) throw new Error('Comment review history unavailable');
 

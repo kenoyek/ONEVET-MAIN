@@ -5,11 +5,13 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/lib/auth-context';
 import {
-  MAX_DECISION_NOTE_LENGTH, listCommentReviews, listReportedComments, reportReasons, resolveCommentReports, type ReportedComment,
+  MAX_DECISION_NOTE_LENGTH, MAX_REVIEW_ARTICLE_QUERY_LENGTH, listCommentReviews, listReportedComments,
+  reportReasons, resolveCommentReports, type CommentReviewFilters, type ReportedComment,
 } from '@/lib/services/article-comment-reports';
 
 export function CommentReportQueue() {
@@ -120,17 +122,58 @@ const reviewDate = new Intl.DateTimeFormat('en-NG', {
   timeZone: 'Africa/Lagos',
 });
 
+const emptyReviewFilters: CommentReviewFilters = { article: '', action: '' };
+
 function ReviewHistory({ userId }: { userId: string }) {
+  const articleId = useId();
+  const actionId = useId();
+  const [draft, setDraft] = useState(emptyReviewFilters);
+  const [filters, setFilters] = useState(emptyReviewFilters);
   const [cursors, setCursors] = useState<number[]>([]);
   const before = cursors.at(-1);
   const history = useQuery({
-    queryKey: ['article-comment-reviews', userId, before],
-    queryFn: () => listCommentReviews(before),
+    queryKey: ['article-comment-reviews', userId, filters, before],
+    queryFn: () => listCommentReviews(filters, before),
   });
   const lastReview = history.data?.reviews.at(-1);
+  const isFiltered = Boolean(filters.article || filters.action);
+
+  function applyFilters(next: CommentReviewFilters) {
+    setFilters(next);
+    setCursors([]);
+  }
 
   return (
     <div className="space-y-4">
+      <form className="space-y-3" onSubmit={event => {
+        event.preventDefault();
+        applyFilters({ ...draft, article: draft.article.trim() });
+      }}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1">
+            <Label htmlFor={articleId}>Article title</Label>
+            <Input id={articleId} value={draft.article} maxLength={MAX_REVIEW_ARTICLE_QUERY_LENGTH}
+              onChange={event => setDraft({ ...draft, article: event.target.value })} />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor={actionId}>Decision</Label>
+            <select id={actionId} value={draft.action} className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              onChange={event => setDraft({ ...draft, action: event.target.value as CommentReviewFilters['action'] })}>
+              <option value="">All decisions</option>
+              <option value="dismissed">Reports dismissed</option>
+              <option value="removed">Comment removed</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" size="sm">Apply filters</Button>
+          <Button type="button" variant="ghost" size="sm" disabled={!isFiltered && !draft.article && !draft.action}
+            onClick={() => {
+              setDraft(emptyReviewFilters);
+              applyFilters(emptyReviewFilters);
+            }}>Clear filters</Button>
+        </div>
+      </form>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" disabled={history.isFetching}
           onClick={() => void history.refetch()}>Refresh history</Button>
@@ -141,7 +184,7 @@ function ReviewHistory({ userId }: { userId: string }) {
       </div>
       {history.isPending && <p role="status">Loading review history…</p>}
       {history.isError && <p role="alert">Could not load review history. Try refreshing.</p>}
-      {history.isSuccess && history.data.reviews.length === 0 && <p>No recorded decisions on this page.</p>}
+      {history.isSuccess && history.data.reviews.length === 0 && <p>{isFiltered ? 'No decisions match these filters.' : 'No recorded decisions on this page.'}</p>}
       {history.isSuccess && history.data.reviews.length > 0 && (
         <ul className="space-y-3" aria-label="Review decisions">
           {history.data.reviews.map(review => (
