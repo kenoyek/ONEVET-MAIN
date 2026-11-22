@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth-context';
 import {
-  listSupportMessages, markSupportMessageRead, type SupportMessage, type SupportMessageCursor,
+  listSupportMessages, markSupportMessageRead, setSupportMessageResolved,
+  type SupportMessage, type SupportMessageCursor, type SupportMessageFilter,
 } from '@/lib/services/support-inbox-service';
 
 const receivedAt = new Intl.DateTimeFormat('en-NG', {
@@ -22,22 +23,28 @@ export default function SupportInbox() {
 }
 
 function Inbox({ userId }: { userId: string }) {
-  const [unreadOnly, setUnreadOnly] = useState(true);
+  const [filter, setFilter] = useState<SupportMessageFilter>('open');
   const [selected, setSelected] = useState<SupportMessage | null>(null);
   const [cursors, setCursors] = useState<SupportMessageCursor[]>([]);
   const cursor = cursors.at(-1);
   const cache = useQueryClient();
   const inboxKey = ['support-inbox', userId];
   const inbox = useQuery({
-    queryKey: [...inboxKey, unreadOnly, cursor],
-    queryFn: () => listSupportMessages(unreadOnly, cursor),
+    queryKey: [...inboxKey, filter, cursor],
+    queryFn: () => listSupportMessages(filter, cursor),
     refetchInterval: 30000,
     retry: false,
   });
-  const changeReadState = useMutation({
-    mutationFn: ({ id, is_read }: SupportMessage) => markSupportMessageRead(id, !is_read),
-    onSuccess: async (_, message) => {
-      setSelected(previous => previous?.id === message.id ? { ...previous, is_read: !message.is_read } : previous);
+  const changeStatus = useMutation({
+    mutationFn: async ({ message, action }: { message: SupportMessage; action: 'read' | 'resolution' }) => {
+      if (action === 'resolution') {
+        return { resolved_at: await setSupportMessageResolved(message.id, !message.resolved_at) };
+      }
+      await markSupportMessageRead(message.id, !message.is_read);
+      return { is_read: !message.is_read };
+    },
+    onSuccess: async (updated, { message }) => {
+      setSelected(previous => previous?.id === message.id ? { ...previous, ...updated } : previous);
       await cache.invalidateQueries({ queryKey: inboxKey });
     },
   });
@@ -50,21 +57,23 @@ function Inbox({ userId }: { userId: string }) {
       <Navbar />
       <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-24 pt-28">
         <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>
-        <PageHeading title="Support inbox" description="Review submissions from the Contact form. Read status is shared with other admins." />
+        <PageHeading title="Support inbox" description="Review submissions from the Contact form. Read and resolution status are shared with other admins." />
         <div className="grid gap-5 md:grid-cols-[minmax(14rem,1fr)_minmax(0,2fr)]">
           <section aria-label="Support messages" className="min-w-0 space-y-3">
             <div className="flex flex-wrap items-end gap-2">
               <div className="space-y-1">
                 <Label htmlFor="support-message-filter">Messages</Label>
-                <select id="support-message-filter" value={unreadOnly ? 'unread' : 'all'}
+                <select id="support-message-filter" value={filter}
                   className="block h-10 rounded-md border bg-background px-3 text-sm"
                   onChange={event => {
-                    setUnreadOnly(event.target.value === 'unread');
+                    setFilter(event.target.value as SupportMessageFilter);
                     setCursors([]);
                     setSelected(null);
-                    changeReadState.reset();
+                    changeStatus.reset();
                   }}>
+                  <option value="open">Open</option>
                   <option value="unread">Unread</option>
+                  <option value="resolved">Resolved</option>
                   <option value="all">All messages</option>
                 </select>
               </div>
@@ -73,7 +82,7 @@ function Inbox({ userId }: { userId: string }) {
             {inbox.isPending && <p role="status">Loading support messages…</p>}
             {inbox.isError && <p role="alert">Could not load support messages. Try refreshing.</p>}
             {inbox.isSuccess && inbox.data.records.length === 0 && (
-              <p>{unreadOnly && !cursor ? 'No unread messages.' : 'No messages on this page.'}</p>
+              <p>{cursor || filter === 'all' ? 'No messages on this page.' : `No ${filter} messages.`}</p>
             )}
             {inbox.isSuccess && inbox.data.records.length > 0 && (
               <ul className="max-h-[30rem] space-y-2 overflow-y-auto" aria-label="Contact form submissions">
@@ -83,11 +92,11 @@ function Inbox({ userId }: { userId: string }) {
                       className="h-auto w-full flex-col items-start gap-1 p-3 text-left"
                       onClick={() => {
                         setSelected(message);
-                        changeReadState.reset();
+                        changeStatus.reset();
                       }}>
                       <span className="max-w-full truncate">{message.subject}</span>
                       <span className="max-w-full truncate text-xs font-normal text-muted-foreground">
-                        {message.name} · {message.is_read ? 'Read' : 'Unread'}
+                        {message.name} · {message.resolved_at ? 'Resolved' : 'Open'} · {message.is_read ? 'Read' : 'Unread'}
                       </span>
                       <time dateTime={message.created_at} className="text-xs font-normal text-muted-foreground">
                         {receivedAt.format(new Date(message.created_at))} WAT
@@ -114,10 +123,20 @@ function Inbox({ userId }: { userId: string }) {
                 <p className="break-words text-sm text-muted-foreground">{detail.name} · {detail.email}</p>
               </header>
               <p className="whitespace-pre-wrap break-words">{detail.message}</p>
-              <Button variant="outline" disabled={changeReadState.isPending} onClick={() => changeReadState.mutate(detail)}>
-                {detail.is_read ? 'Mark unread' : 'Mark read'}
-              </Button>
-              {changeReadState.isError && <p role="alert" className="text-sm text-destructive">Could not update read status. Try again.</p>}
+              <p role="status" className="text-sm text-muted-foreground">
+                {detail.resolved_at ? `Resolved ${receivedAt.format(new Date(detail.resolved_at))} WAT` : 'Open'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button disabled={changeStatus.isPending}
+                  onClick={() => changeStatus.mutate({ message: detail, action: 'resolution' })}>
+                  {detail.resolved_at ? 'Reopen' : 'Resolve'}
+                </Button>
+                <Button variant="outline" disabled={changeStatus.isPending}
+                  onClick={() => changeStatus.mutate({ message: detail, action: 'read' })}>
+                  {detail.is_read ? 'Mark unread' : 'Mark read'}
+                </Button>
+              </div>
+              {changeStatus.isError && <p role="alert" className="text-sm text-destructive">Could not update message status. Try again.</p>}
             </article>
           )}
         </div>

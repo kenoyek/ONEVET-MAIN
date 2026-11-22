@@ -32,15 +32,20 @@ try {
     FROM generate_series(1, 28) n;
   `);
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122150000_support_message_inbox.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122160000_support_message_resolution.sql', import.meta.url), 'utf8'));
+  const filtered = filter => call('SELECT list_support_messages($1::text,NULL,NULL) AS result', [filter]);
+  const resolve = (id, state) => call('SELECT set_support_message_resolved($1,$2) AS result', [id, state]);
   const list = (unread, cursor = null) =>
-    call('SELECT list_support_messages($1,$2,$3) AS result', [unread, cursor?.created_at, cursor?.id]);
+    call('SELECT list_support_messages($1::boolean,$2,$3) AS result', [unread, cursor?.created_at, cursor?.id]);
   const mark = (id, read) => call('SELECT set_support_message_read($1,$2) AS result', [id, read]);
 
   await as(null, 'anon');
   await assert.rejects(() => list(true));
+  await assert.rejects(() => resolve(crypto.randomUUID(), true));
   await as(reader);
   await assert.rejects(() => list(false));
   await assert.rejects(() => mark(crypto.randomUUID(), true));
+  await assert.rejects(() => resolve(crypto.randomUUID(), true));
   await as(admin);
   const page = await list(true);
   assert.equal(page.length, 26);
@@ -53,11 +58,21 @@ try {
   assert.equal(await mark(page[0].id, false), true);
   assert.equal((await list(true))[0].id, page[0].id);
   assert.equal(await mark(crypto.randomUUID(), true), false);
+  const resolvedAt = await resolve(page[0].id, true);
+  assert(resolvedAt);
+  assert.deepEqual(await resolve(page[0].id, true), resolvedAt);
+  assert.equal((await filtered('resolved'))[0].id, page[0].id);
+  assert(!(await filtered('open')).some(message => message.id === page[0].id));
+  assert.equal((await filtered('unread'))[0].id, page[0].id);
+  assert.equal(await resolve(page[0].id, false), null);
+  assert.equal((await filtered('open'))[0].id, page[0].id);
+  assert.deepEqual(await filtered('resolved'), []);
   await db.exec('RESET ROLE');
   await db.query('UPDATE profiles SET is_active=false WHERE user_id=$1', [admin]);
   await as(admin);
   await assert.rejects(() => list(false));
   await assert.rejects(() => mark(page[0].id, true));
+  await assert.rejects(() => resolve(page[0].id, true));
   console.log('PASS: support inbox privileges, pagination, unread filtering, and shared read status.');
 } finally {
   await db.close();
