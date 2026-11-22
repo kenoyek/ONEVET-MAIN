@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/auth-context';
 import {
-  listReportedComments, reportReasons, resolveCommentReports, type ReportedComment,
+  listCommentReviews, listReportedComments, reportReasons, resolveCommentReports, type ReportedComment,
 } from '@/lib/services/article-comment-reports';
 
 export function CommentReportQueue() {
@@ -19,9 +20,16 @@ export function CommentReportQueue() {
       <DialogContent className="max-h-[85dvh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Comment reports</DialogTitle>
-          <DialogDescription>Review up to 50 reported comments, oldest reports first.</DialogDescription>
+          <DialogDescription>Review open reports and see past decisions.</DialogDescription>
         </DialogHeader>
-        <Queue userId={user.id} />
+        <Tabs defaultValue="open">
+          <TabsList aria-label="Comment reports">
+            <TabsTrigger value="open">Open reports</TabsTrigger>
+            <TabsTrigger value="history">Review history</TabsTrigger>
+          </TabsList>
+          <TabsContent value="open"><Queue userId={user.id} /></TabsContent>
+          <TabsContent value="history"><ReviewHistory userId={user.id} /></TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
@@ -41,6 +49,7 @@ function Queue({ userId }: { userId: string }) {
       setFeedback(remove ? 'Comment removed.' : 'Reports dismissed.');
       await Promise.all([
         cache.invalidateQueries({ queryKey: queueKey }),
+        cache.invalidateQueries({ queryKey: ['article-comment-reviews', userId] }),
         cache.invalidateQueries({ queryKey: ['article-engagement', comment.article_id] }),
       ]);
     },
@@ -54,6 +63,7 @@ function Queue({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">Up to 50 reported comments, oldest reports first.</p>
       <Button variant="outline" size="sm" disabled={queue.isFetching || resolve.isPending}
         onClick={() => void queue.refetch()}>Refresh reports</Button>
       {queue.isPending && <p role="status">Loading comment reports…</p>}
@@ -91,6 +101,58 @@ function Queue({ userId }: { userId: string }) {
             </li>
           ))}
         </ul>
+      )}
+    </div>
+  );
+}
+
+const reviewDate = new Intl.DateTimeFormat('en-NG', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Africa/Lagos',
+});
+
+function ReviewHistory({ userId }: { userId: string }) {
+  const [cursors, setCursors] = useState<number[]>([]);
+  const before = cursors.at(-1);
+  const history = useQuery({
+    queryKey: ['article-comment-reviews', userId, before],
+    queryFn: () => listCommentReviews(before),
+  });
+  const lastReview = history.data?.reviews.at(-1);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm" disabled={history.isFetching}
+          onClick={() => void history.refetch()}>Refresh history</Button>
+        {cursors.length > 0 && (
+          <Button variant="outline" size="sm"
+            onClick={() => setCursors(previous => previous.slice(0, -1))}>Newer decisions</Button>
+        )}
+      </div>
+      {history.isPending && <p role="status">Loading review history…</p>}
+      {history.isError && <p role="alert">Could not load review history. Try refreshing.</p>}
+      {history.isSuccess && history.data.reviews.length === 0 && <p>No recorded decisions on this page.</p>}
+      {history.isSuccess && history.data.reviews.length > 0 && (
+        <ul className="space-y-3" aria-label="Review decisions">
+          {history.data.reviews.map(review => (
+            <li key={review.id} className="space-y-1 rounded-lg border p-4">
+              <h3 className="break-words font-semibold">{review.article_title}</h3>
+              <p>{review.action === 'removed' ? 'Comment removed' : 'Reports dismissed'}</p>
+              <p className="break-words text-sm text-muted-foreground">
+                {review.moderator_name} · {review.report_count} {review.report_count === 1 ? 'report' : 'reports'}
+              </p>
+              <time className="text-sm text-muted-foreground" dateTime={review.reviewed_at}>
+                {reviewDate.format(new Date(review.reviewed_at))} WAT
+              </time>
+            </li>
+          ))}
+        </ul>
+      )}
+      {history.data?.hasOlder && lastReview && (
+        <Button variant="outline" size="sm" disabled={history.isFetching}
+          onClick={() => setCursors(previous => [...previous, lastReview.id])}>Older decisions</Button>
       )}
     </div>
   );

@@ -40,3 +40,26 @@ export async function resolveCommentReports(id: string, remove: boolean) {
   });
   if (error) throw error;
 }
+
+export type CommentReview = {
+  id: number;
+  article_title: string;
+  moderator_name: string;
+  action: 'dismissed' | 'removed';
+  report_count: number;
+  reviewed_at: string;
+};
+
+const reviewPageSize = 50;
+
+export async function listCommentReviews(before?: number) {
+  const { data, error } = await supabase.rpc(
+    'list_article_comment_review_history',
+    before === undefined ? {} : { before_id: before },
+  );
+  if (error) throw error;
+  if (!Array.isArray(data)) throw new Error('Comment review history unavailable');
+
+  const reviews = data as unknown as CommentReview[];
+  return { reviews: reviews.slice(0, reviewPageSize), hasOlder: reviews.length > reviewPageSize };
+}

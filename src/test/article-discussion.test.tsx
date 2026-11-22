@@ -5,9 +5,10 @@ import {beforeEach,describe,expect,it,vi} from 'vitest';
 const mock=vi.hoisted(()=>({user:'reader-a' as string|null,role:'pet_owner',get:vi.fn(),like:vi.fn(),comment:vi.fn(),remove:vi.fn()}));
 vi.mock('@/lib/auth-context',()=>({useAuth:()=>({user:mock.user?{id:mock.user}:null,role:mock.role})}));
 vi.mock('@/lib/services/article-engagement-service',()=>({articleEngagementService:mock}));
-import { listReportedComments, reportComment, resolveCommentReports } from '@/lib/services/article-comment-reports';
+import { listCommentReviews, listReportedComments, reportComment, resolveCommentReports } from '@/lib/services/article-comment-reports';
 vi.mock('@/lib/services/article-comment-reports', async importOriginal => ({
  ...(await importOriginal<typeof import('@/lib/services/article-comment-reports')>()),
+ listCommentReviews: vi.fn(),
  listReportedComments: vi.fn(),
  reportComment: vi.fn(),
  resolveCommentReports: vi.fn(),
@@ -94,4 +95,26 @@ it('lets an admin dismiss reports without removing the comment', async () => {
  fireEvent.click(screen.getByRole('button',{name:'Confirm'}));
  await screen.findByText('No open comment reports.');
  expect(resolveCommentReports).toHaveBeenCalledExactlyOnceWith('comment-a',false);
+});
+
+it('shows review history and requests older decisions by cursor', async () => {
+ mock.user = 'admin-a';
+ mock.role = 'admin';
+ vi.mocked(listReportedComments).mockResolvedValue([]);
+ vi.mocked(listCommentReviews).mockResolvedValueOnce({
+  reviews: [{
+   id: 5, article_title: 'Care guide', moderator_name: 'Admin Reader',
+   action: 'removed', report_count: 2, reviewed_at: '2026-11-22T10:00:00Z',
+  }],
+  hasOlder: true,
+ }).mockResolvedValueOnce({ reviews: [], hasOlder: false });
+ const cache = new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={cache}><CommentReportQueue /></QueryClientProvider>);
+ fireEvent.click(screen.getByRole('button',{name:'Comment reports'}));
+ fireEvent.mouseDown(screen.getByRole('tab',{name:'Review history'}),{button:0,ctrlKey:false});
+ await screen.findByText('Comment removed');
+ expect(screen.getByText('Admin Reader · 2 reports')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Older decisions'}));
+ await screen.findByText('No recorded decisions on this page.');
+ expect(listCommentReviews).toHaveBeenLastCalledWith(5);
 });
