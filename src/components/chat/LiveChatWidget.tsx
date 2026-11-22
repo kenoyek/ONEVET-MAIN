@@ -69,14 +69,16 @@ export function LiveChatWidget() {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-50"
+            className="pointer-events-auto"
           >
             <Button
               onClick={() => setOpen(true)}
               size="icon"
-              className="h-14 w-14 rounded-full shadow-lg relative"
+              variant="outline"
+              aria-label="Open veterinary consultation chat"
+              className="relative size-14 shadow-lg [&_svg]:size-6"
             >
-              <MessageCircle className="h-6 w-6" />
+              <MessageCircle className="h-6 w-6" aria-hidden="true" />
               {vetsOnline && (
                 <span className="absolute top-0 right-0 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-background">
                   <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75" />

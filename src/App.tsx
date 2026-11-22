@@ -14,6 +14,7 @@ import { CartProvider } from "@/hooks/use-cart";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
 import { PageLoader } from "@/components/shared/PageLoader";
 import {RouteErrorBoundary} from "./components/shared/RouteErrorBoundary";
+import { CareChatLauncher } from "./components/chat/CareChatLauncher";
 import { LiveChatWidget } from "./components/chat/LiveChatWidget";
 import { MobileBottomNav } from "./components/layout/MobileBottomNav";
 
@@ -265,7 +266,10 @@ const App = () => (
                   </Routes>
                 </Suspense>
               </RouteErrorBoundary>
-              <LiveChatWidget />
+              <div className="pointer-events-none fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-[max(1rem,env(safe-area-inset-right))] z-40 flex flex-col items-end gap-3 md:bottom-6 md:right-6">
+                <LiveChatWidget />
+                <CareChatLauncher />
+              </div>
               <MobileBottomNav />
             </BrowserRouter>
           </TooltipProvider>
