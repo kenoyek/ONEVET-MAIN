@@ -92,3 +92,29 @@ it('links admins to the inbox and clears the badge when no chats are waiting', a
   await screen.findByRole('link', { name: 'Care chat inbox' });
   expect(screen.queryByText('2')).not.toBeInTheDocument();
 });
+
+it('attaches the selected booking category and renders a directory link in the reply', async () => {
+  const cache = new QueryClient();
+  const send = vi.fn().mockResolvedValue({
+    closed: false,
+    messages: [{
+      id: 2, sender: 'team', body: 'You can browse providers here.',
+      created_at: '2026-11-22T12:00:00Z', booking_category: 'grooming',
+    }],
+  });
+  render(<QueryClientProvider client={cache}>
+    <MemoryRouter>
+      <CareChatThread queryKey={['staff-chat-link']} load={async () => ({ closed: false, messages: [] })}
+        send={send} close={vi.fn()} />
+    </MemoryRouter>
+  </QueryClientProvider>);
+  fireEvent.change(await screen.findByLabelText('Reply'), { target: { value: 'You can browse providers here.' } });
+  fireEvent.change(screen.getByLabelText('Booking link (optional)'), { target: { value: 'grooming' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+  const bookingLink = await screen.findByRole('link', { name: 'Browse grooming & wellbeing' });
+  expect(bookingLink).toHaveAttribute('href', '/provider-marketplace?category=grooming');
+  expect(send).toHaveBeenCalledWith(expect.objectContaining({
+    message_body: 'You can browse providers here.', booking_category: 'grooming',
+  }));
+  expect(screen.getByLabelText('Booking link (optional)')).toHaveValue('');
+});

@@ -33,6 +33,7 @@ try {
   `);
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122050000_care_chat.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122070000_care_chat_waiting_count.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122080000_care_chat_booking_links.sql', import.meta.url), 'utf8'));
   const waitingCount = () => get('SELECT care_chat_waiting_count() AS result');
   await as(null, 'anon');
   await assert.rejects(() => waitingCount());
@@ -62,14 +63,22 @@ try {
   const [thread] = await get('SELECT care_chat_inbox() AS result');
   assert.equal(thread.awaiting_reply, true);
   assert.notEqual(thread.id, guest);
-  const replied = await get('SELECT care_chat_staff($1,$2,$3) AS result',
-    [thread.id, crypto.randomUUID(), 'Use the Find veterinary care link.']);
+  const replyId = crypto.randomUUID();
+  const staffReply = category => get('SELECT care_chat_staff($1,$2,$3,false,$4) AS result',
+    [thread.id, replyId, 'Browse grooming services here.', category]);
+  await assert.rejects(() => staffReply('https://example.com'));
+  const replied = await staffReply('grooming');
   assert.equal(replied.messages.at(-1).sender, 'team');
+  assert.equal(replied.messages.at(-1).booking_category, 'grooming');
+  assert.deepEqual(await staffReply('grooming'), replied);
+  await assert.rejects(() => staffReply('training'));
   assert.equal(await waitingCount(), 0);
   assert.equal((await get('SELECT care_chat_inbox() AS result'))[0].awaiting_reply, false);
 
   await as(null, 'anon');
   assert.deepEqual(await guestRead(guest), replied);
+  await assert.rejects(() => staffReply('grooming'));
+  await assert.rejects(() => db.query('SELECT care_chat_visitor($1,$2,$3,$4)', [guest, crypto.randomUUID(), 'Text', 'grooming']));
   await guestSend(stranger, crypto.randomUUID(), 'A new visitor');
   await as(admin);
   assert.equal(await waitingCount(), 1);

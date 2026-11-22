@@ -1,8 +1,17 @@
+import type { careSearchCategories } from '@/lib/care-search';
 import { supabase } from '@/integrations/supabase/client';
+
+export type CareChatBookingCategory = typeof careSearchCategories[number][0];
 
 export type CareChat = {
   closed: boolean;
-  messages: { id: number; sender: 'visitor' | 'team'; body: string; created_at: string }[];
+  messages: {
+    id: number;
+    sender: 'visitor' | 'team';
+    body: string;
+    created_at: string;
+    booking_category?: CareChatBookingCategory | null;
+  }[];
 };
 export type CareChatInboxItem = {
   id: string;
@@ -12,10 +21,16 @@ export type CareChatInboxItem = {
   awaiting_reply: boolean;
 };
 
-export type CareChatSend = { message_key: string; message_body: string };
+export type CareChatSend = {
+  message_key: string;
+  message_body: string;
+  booking_category?: CareChatBookingCategory;
+};
 
 export async function visitCareChat(key: string, message?: CareChatSend) {
-  const { data, error } = await supabase.rpc('care_chat_visitor', { guest_key: key, ...message });
+  const { data, error } = await supabase.rpc('care_chat_visitor', {
+    guest_key: key, message_key: message?.message_key, message_body: message?.message_body,
+  });
   if (error) throw error;
   return data as CareChat | null;
 }
@@ -28,7 +43,13 @@ export async function listCareChats() {
 }
 
 export async function staffCareChat(id: string, message?: CareChatSend, close = false) {
-  const { data, error } = await supabase.rpc('care_chat_staff', { chat_id: id, ...message, close_chat: close });
+  const { data, error } = await supabase.rpc('care_chat_staff', {
+    chat_id: id,
+    message_key: message?.message_key ?? null,
+    message_body: message?.message_body ?? null,
+    close_chat: close,
+    booking_category_arg: message?.booking_category ?? null,
+  });
   if (error) throw error;
   return data as CareChat | null;
 }
