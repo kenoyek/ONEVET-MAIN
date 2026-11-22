@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { AdminMessageNav } from '@/components/admin/AdminMessageNav';
 import { SupportMessageNotes } from '@/components/support/SupportMessageNotes';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth-context';
 import {
-  MAX_SUPPORT_SEARCH_LENGTH, getSupportInboxTotals, listSupportMessages, markSupportMessageRead, setSupportMessageResolved,
+  MAX_SUPPORT_SEARCH_LENGTH, supportInboxKey, getSupportInboxTotals, listSupportMessages, markSupportMessageRead, setSupportMessageResolved,
   type SupportMessage, type SupportMessageCursor, type SupportMessageFilter,
 } from '@/lib/services/support-inbox-service';
 
@@ -32,7 +32,7 @@ function Inbox({ userId }: { userId: string }) {
   const [cursors, setCursors] = useState<SupportMessageCursor[]>([]);
   const cursor = cursors.at(-1);
   const cache = useQueryClient();
-  const inboxKey = ['support-inbox', userId];
+  const inboxKey = supportInboxKey(userId);
   const inbox = useQuery({
     queryKey: [...inboxKey, filter, search, cursor],
     queryFn: () => listSupportMessages(filter, search, cursor),
@@ -73,7 +73,7 @@ function Inbox({ userId }: { userId: string }) {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-24 pt-28">
-        <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>
+        <AdminMessageNav />
         <PageHeading title="Support inbox" description="Review submissions from the Contact form. Read and resolution status are shared with other admins." />
         <section aria-label="Inbox totals" className="space-y-2">
           <h2 className="text-sm font-semibold">Inbox totals</h2>

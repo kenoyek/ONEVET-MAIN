@@ -6,6 +6,7 @@ export type SupportMessageCursor = Pick<SupportMessage, 'created_at' | 'id'>;
 export type SupportMessageFilter = 'open' | 'unread' | 'resolved' | 'all';
 export const MAX_SUPPORT_SEARCH_LENGTH = 254;
 const pageSize = 25;
+export const supportInboxKey = (userId: string) => ['support-inbox', userId] as const;
 
 export async function getSupportInboxTotals() {
   const { data, error } = await supabase.rpc('support_inbox_totals');

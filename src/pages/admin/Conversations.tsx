@@ -1,10 +1,10 @@
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { AdminMessageNav } from '@/components/admin/AdminMessageNav';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { 
-  ArrowLeft, MessageCircle, Search, Filter, Loader2, 
+  MessageCircle, Search, Filter, Loader2,
   Eye, Clock, CheckCircle, XCircle, User
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -177,19 +177,10 @@ export default function AdminConversations() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Link to="/admin">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <PageHeading size="workspace" className="" title={<> Conversation Monitor </>}/>
-              <p className="text-muted-foreground mt-1">
-                View and moderate consultations (read-only)
-              </p>
-            </div>
+          <div className="mb-8 space-y-4">
+            <AdminMessageNav />
+            <PageHeading size="workspace" title="Consultation conversations"
+              description="Read-only view of consultation records and messages." />
           </div>
 
           {/* Filters */}

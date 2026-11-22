@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { AdminMessageNav } from '@/components/admin/AdminMessageNav';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { StaffChatAvailability } from '@/components/chat/CareChatAvailability';
@@ -62,7 +62,7 @@ function Inbox({ userId }: { userId: string }) {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-24 pt-28 md:pb-16">
-        <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>
+        <AdminMessageNav />
         <PageHeading title="Care chat inbox" description="Reply to general care and booking questions." />
         <StaffChatAvailability userId={userId} />
         <div className="grid gap-4 md:grid-cols-[minmax(14rem,1fr)_minmax(0,2fr)]">

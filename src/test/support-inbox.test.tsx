@@ -9,6 +9,7 @@ vi.mock('@/lib/auth-context', () => ({ useAuth: () => ({ user: { id: 'admin' } }
 vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => null }));
 vi.mock('@/lib/services/support-inbox-service', () => ({
   getSupportInboxTotals: vi.fn(),
+  supportInboxKey: (userId: string) => ['support-inbox', userId],
   MAX_SUPPORT_SEARCH_LENGTH: 254,
   addSupportMessageNote: vi.fn(), listSupportMessageNotes: vi.fn(),
   listSupportMessages: vi.fn(), markSupportMessageRead: vi.fn(), setSupportMessageResolved: vi.fn(),

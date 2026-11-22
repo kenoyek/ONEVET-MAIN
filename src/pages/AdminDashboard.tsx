@@ -274,34 +274,37 @@ const AdminDashboard = () => {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="vets" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
-              <TabsTrigger value="analytics" className="gap-2" asChild>
-                <Link to="/admin/analytics">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="hidden sm:inline">Analytics</span>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+                <TabsTrigger value="analytics" className="gap-2" asChild>
+                  <Link to="/admin/analytics">
+                    <TrendingUp className="h-4 w-4" />
+                    <span className="hidden sm:inline">Analytics</span>
+                  </Link>
+                </TabsTrigger>
+                <TabsTrigger value="vets" className="gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden sm:inline">Vet Verification</span>
+                </TabsTrigger>
+                <TabsTrigger value="users" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Users</span>
+                </TabsTrigger>
+                <TabsTrigger value="content" className="gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Content</span>
+                </TabsTrigger>
+                <TabsTrigger value="subscriptions" className="gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  <span className="hidden sm:inline">Subscriptions</span>
+                </TabsTrigger>
+              </TabsList>
+              <Button asChild variant="outline" size="sm" className="min-h-10 gap-2">
+                <Link to="/admin/messages">
+                  <MessageCircle className="size-4" aria-hidden="true" /> Messages
                 </Link>
-              </TabsTrigger>
-              <TabsTrigger value="vets" className="gap-2">
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Vet Verification</span>
-              </TabsTrigger>
-              <TabsTrigger value="users" className="gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Users</span>
-              </TabsTrigger>
-              <TabsTrigger value="content" className="gap-2">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Content</span>
-              </TabsTrigger>
-              <TabsTrigger value="subscriptions" className="gap-2">
-                <CreditCard className="h-4 w-4" />
-                <span className="hidden sm:inline">Subscriptions</span>
-              </TabsTrigger>
-              <TabsTrigger value="conversations" className="gap-2">
-                <MessageCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Monitor</span>
-              </TabsTrigger>
-            </TabsList>
+              </Button>
+            </div>
 
             {/* Vet Verification Tab */}
             <TabsContent value="vets">
@@ -477,33 +480,6 @@ const AdminDashboard = () => {
               </Card>
             </TabsContent>
 
-            {/* Conversation Monitor Tab */}
-            <TabsContent value="conversations">
-              <div className="mb-4 flex flex-wrap gap-2">
-                <Button asChild variant="outline"><Link to="/admin/care-chat">Care chat inbox</Link></Button>
-                <Button asChild variant="outline"><Link to="/admin/support">Support inbox</Link></Button>
-              </div>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Conversation Monitor</CardTitle>
-                  <CardDescription>
-                    Monitor consultations for moderation
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <MessageCircle className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">Conversation monitoring interface</p>
-                    <Link to="/admin/conversations">
-                      <Button>
-                        Monitor Conversations
-                        <ChevronRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
         </motion.div>
       </main>
