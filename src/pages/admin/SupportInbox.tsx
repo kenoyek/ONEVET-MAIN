@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AdminMessageNav } from '@/components/admin/AdminMessageNav';
 import { SupportMessageNotes } from '@/components/support/SupportMessageNotes';
@@ -21,11 +22,14 @@ const receivedAt = new Intl.DateTimeFormat('en-NG', {
 
 export default function SupportInbox() {
   const { user } = useAuth();
-  return user ? <Inbox key={user.id} userId={user.id} /> : null;
+  const [params] = useSearchParams();
+  const status = params.get('status');
+  const initialFilter = status === 'unread' || status === 'resolved' || status === 'all' ? status : 'open';
+  return user ? <Inbox key={`${user.id}:${initialFilter}`} userId={user.id} initialFilter={initialFilter} /> : null;
 }
 
-function Inbox({ userId }: { userId: string }) {
-  const [filter, setFilter] = useState<SupportMessageFilter>('open');
+function Inbox({ userId, initialFilter }: { userId: string; initialFilter: SupportMessageFilter }) {
+  const [filter, setFilter] = useState(initialFilter);
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<SupportMessage | null>(null);

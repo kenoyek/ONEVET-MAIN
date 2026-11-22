@@ -71,3 +71,14 @@ it('keeps the selected chat open after replying moves it out of the waiting queu
   await screen.findByText('No chats awaiting a reply.');
   expect(screen.getByText('Yes, see our directory.')).toBeInTheDocument();
 });
+
+it('opens waiting chats assigned to the current admin from a shortcut', async () => {
+  vi.mocked(listCareChats).mockReset().mockResolvedValue({ items: [], hasMore: false });
+  render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter initialEntries={['/admin/care-chat?assignment=mine']}><CareChatInbox /></MemoryRouter>
+  </QueryClientProvider>);
+  await screen.findByText('No chats match these filters on this page.');
+  expect(screen.getByLabelText('Chat status')).toHaveValue('waiting');
+  expect(screen.getByLabelText('Assignment')).toHaveValue('mine');
+  expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'mine', undefined);
+});

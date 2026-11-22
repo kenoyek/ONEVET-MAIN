@@ -137,3 +137,13 @@ it('searches the active status from the first page and clears the search', async
   await screen.findByRole('button', { name: /General inquiry/ });
   expect(screen.getByLabelText('Search messages')).toHaveValue('');
 });
+
+it('opens unread requests directly from a Messages shortcut', async () => {
+  vi.mocked(listSupportMessages).mockReset().mockResolvedValue({ records: [], hasMore: false });
+  render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter initialEntries={['/admin/support?status=unread']}><SupportInbox /></MemoryRouter>
+  </QueryClientProvider>);
+  await screen.findByText('No unread messages.');
+  expect(screen.getByLabelText('Messages')).toHaveValue('unread');
+  expect(listSupportMessages).toHaveBeenLastCalledWith('unread', '', undefined);
+});

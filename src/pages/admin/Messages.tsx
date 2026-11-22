@@ -32,10 +32,12 @@ function MessagingOverview({ userId }: { userId: string }) {
         <AdminMessageNav />
         <PageHeading size="workspace" title="Messages" />
         <AdminMessageChannels
-          careStatus={chats.isSuccess ? `${chats.data.toLocaleString('en-NG')} awaiting reply`
-            : chats.isError ? 'Waiting count unavailable' : 'Checking waiting chats…'}
-          supportStatus={support.isSuccess ? `${support.data.open.toLocaleString('en-NG')} open · ${support.data.unread.toLocaleString('en-NG')} unread`
-            : support.isError ? 'Support counts unavailable' : 'Checking support requests…'} />
+          careStatus={chats.isSuccess ? `${chats.data.toLocaleString('en-NG')} awaiting reply` : 'Awaiting reply'}
+          openSupport={support.isSuccess ? `${support.data.open.toLocaleString('en-NG')} open` : 'Open requests'}
+          unreadSupport={support.isSuccess ? `${support.data.unread.toLocaleString('en-NG')} unread` : 'Unread requests'} />
+        {(chats.isError || support.isError) && (
+          <p role="status" className="text-sm text-muted-foreground">Some queue counts are unavailable.</p>
+        )}
       </main>
     </div>
   );

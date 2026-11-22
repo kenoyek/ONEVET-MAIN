@@ -29,8 +29,10 @@ it('shows team workloads and links to the existing messaging routes', async () =
       </Routes>
     </MemoryRouter>
   </QueryClientProvider>);
-  expect(await screen.findByText('2 awaiting reply')).toBeInTheDocument();
-  expect(await screen.findByText('6 open · 3 unread')).toBeInTheDocument();
+  expect(await screen.findByRole('link', { name: '2 awaiting reply' })).toHaveAttribute('href', '/admin/care-chat');
+  expect(await screen.findByRole('link', { name: '6 open' })).toHaveAttribute('href', '/admin/support?status=open');
+  expect(await screen.findByRole('link', { name: '3 unread' })).toHaveAttribute('href', '/admin/support?status=unread');
+  expect(screen.getByRole('link', { name: 'My waiting chats' })).toHaveAttribute('href', '/admin/care-chat?assignment=mine');
   const nav = within(screen.getByRole('navigation', { name: 'Admin messaging' }));
   expect(nav.getByRole('link', { name: 'Messages' })).toHaveAttribute('aria-current', 'page');
   fireEvent.click(nav.getByRole('link', { name: 'Support inbox' }));

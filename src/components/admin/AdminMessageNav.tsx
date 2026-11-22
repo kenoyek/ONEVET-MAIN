@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, LayoutGrid, Mail, MessageCircle, Stethoscope } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const adminMessageChannels = [
@@ -30,12 +31,18 @@ export function AdminMessageNav() {
   );
 }
 
-export function AdminMessageChannels({ careStatus, supportStatus }: { careStatus: string; supportStatus: string }) {
+export function AdminMessageChannels({
+  careStatus, openSupport, unreadSupport,
+}: {
+  careStatus: string;
+  openSupport: string;
+  unreadSupport: string;
+}) {
   return (
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {adminMessageChannels.map(({ path, label, icon: Icon, description }) => (
-        <li key={path}>
-          <Link to={path} className="group flex h-full flex-col gap-4 rounded-xl border bg-card p-5 hover:border-primary/40 hover:bg-muted/30">
+        <li key={path} className="flex flex-col gap-4 rounded-xl border bg-card p-5">
+          <Link to={path} className="group flex flex-col gap-4 rounded-md hover:text-primary focus-visible:ring-2 focus-visible:ring-ring">
             <div className="flex items-start justify-between gap-3">
               <span className="rounded-lg bg-primary/10 p-2.5 text-primary">
                 <Icon className="size-5" aria-hidden="true" />
@@ -46,17 +53,19 @@ export function AdminMessageChannels({ careStatus, supportStatus }: { careStatus
               <h2 className="text-xl font-semibold">{label}</h2>
               <p className="text-sm text-muted-foreground">{description}</p>
             </div>
-            {path === '/admin/care-chat' && (
-              <p className="mt-auto text-sm font-semibold">
-                {careStatus}
-              </p>
-            )}
-            {path === '/admin/support' && (
-              <p className="mt-auto text-sm font-semibold">
-                {supportStatus}
-              </p>
-            )}
           </Link>
+          {path === '/admin/care-chat' && (
+            <div className="mt-auto flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm"><Link to={path}>{careStatus}</Link></Button>
+              <Button asChild variant="outline" size="sm"><Link to={`${path}?assignment=mine`}>My waiting chats</Link></Button>
+            </div>
+          )}
+          {path === '/admin/support' && (
+            <div className="mt-auto flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm"><Link to={`${path}?status=open`}>{openSupport}</Link></Button>
+              <Button asChild variant="outline" size="sm"><Link to={`${path}?status=unread`}>{unreadSupport}</Link></Button>
+            </div>
+          )}
         </li>
       ))}
     </ul>

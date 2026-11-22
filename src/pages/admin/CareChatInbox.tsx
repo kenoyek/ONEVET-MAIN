@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AdminMessageNav } from '@/components/admin/AdminMessageNav';
 import { Navbar } from '@/components/layout/Navbar';
@@ -14,7 +15,10 @@ import {
 
 export default function CareChatInbox() {
   const { user } = useAuth();
-  return user ? <Inbox key={user.id} userId={user.id} /> : null;
+  const [params] = useSearchParams();
+  const assignment = params.get('assignment');
+  const initialAssignment = assignment === 'mine' || assignment === 'unassigned' ? assignment : 'all';
+  return user ? <Inbox key={`${user.id}:${initialAssignment}`} userId={user.id} initialAssignment={initialAssignment} /> : null;
 }
 
 const filterLabels = {
@@ -41,10 +45,10 @@ const timestamp = new Intl.DateTimeFormat('en-NG', {
   timeZone: 'Africa/Lagos',
 });
 
-function Inbox({ userId }: { userId: string }) {
+function Inbox({ userId, initialAssignment }: { userId: string; initialAssignment: CareChatInboxAssignment }) {
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<CareChatInboxFilter>('waiting');
-  const [assignment, setAssignment] = useState<CareChatInboxAssignment>('all');
+  const [assignment, setAssignment] = useState(initialAssignment);
   const [cursors, setCursors] = useState<CareChatInboxCursor[]>([]);
   const cursor = cursors.at(-1);
   const cache = useQueryClient();
