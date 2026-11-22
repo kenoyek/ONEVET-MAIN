@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { emailContactMessage } from "./email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +29,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email || typeof email !== "string" || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return new Response(JSON.stringify({ error: "Invalid email" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -52,27 +53,42 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { error } = await supabase.from("contact_messages").insert({
+    const contact = {
       name: name.trim(),
       email: email.trim(),
       subject: subject.trim(),
       message: message.trim(),
-    });
+    };
+    const id = crypto.randomUUID();
+    const { error } = await supabase.from("contact_messages").insert({ ...contact, id });
 
     if (error) {
-      console.error("Database error:", error);
+      console.error("Contact message insert failed", { code: error.code });
       return new Response(JSON.stringify({ error: "Failed to submit message" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    const apiKey = Deno.env.get("CONTACT_RESEND_API_KEY");
+    const from = Deno.env.get("CONTACT_EMAIL_FROM") || "1Vet Support <support@1vet.store>";
+    let emailAccepted = false;
+
+    if (apiKey) {
+      try {
+        await emailContactMessage(contact, id, apiKey, from);
+        emailAccepted = true;
+      } catch {
+        console.error("Contact email forwarding could not be confirmed", { id });
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true, emailAccepted }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
-    console.error("Error:", err);
+  } catch {
+    console.error("Contact form handler failed");
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

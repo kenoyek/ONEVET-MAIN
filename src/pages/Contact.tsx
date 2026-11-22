@@ -55,6 +55,7 @@ export default function Contact() {
   const { toast } = useToast();
   const sendLock=useRef(false);
   const [submitted,setSubmitted]=useState(false);
+  const [emailUnconfirmed, setEmailUnconfirmed] = useState(false);
   const [sendError,setSendError]=useState('');
   useEffect(()=>{if(submitted)document.getElementById('contact-success-heading')?.focus();},[submitted]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,8 +79,9 @@ export default function Contact() {
 
       if (error || result?.success!==true) throw error || new Error('Submission not acknowledged');
 
+      setEmailUnconfirmed(result.emailAccepted === false);
       toast({
-        title: "Message sent!",
+        title: result.emailAccepted === false ? "Message saved" : "Message sent!",
         description: "Your support message has been received. Response times vary.",
       });
       reset();setSubmitted(true);
@@ -124,7 +126,7 @@ export default function Contact() {
                   <CardDescription className="font-medium text-sm">Share your question and the details we need to help.</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
-                  {submitted&&<section className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5"><h3 id="contact-success-heading" tabIndex={-1} className="font-semibold">Your support message has been received</h3><p role="status" className="mt-2 text-sm text-muted-foreground">We have your submission. Response times vary. Check the email address you provided for any follow-up.</p><Button variant="link" className="mt-2 p-0" onClick={()=>setSubmitted(false)}>Write another message</Button></section>}
+                  {submitted&&<section className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5"><h3 id="contact-success-heading" tabIndex={-1} className="font-semibold">Your support message has been received</h3><p role="status" className="mt-2 text-sm text-muted-foreground">{emailUnconfirmed ? <>Your message was saved. If you need to reach the team directly, email <a className="text-primary underline" href="mailto:support@1vet.store">support@1vet.store</a>.</> : 'We have your submission. Response times vary. Check the email address you provided for any follow-up.'}</p><Button variant="link" className="mt-2 p-0" onClick={()=>setSubmitted(false)}>Write another message</Button></section>}
                   <form noValidate aria-busy={isSubmitting} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <fieldset disabled={isSubmitting} className="space-y-6 min-w-0"><legend className="sr-only">Support message details</legend>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

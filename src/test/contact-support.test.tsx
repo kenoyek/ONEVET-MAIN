@@ -35,3 +35,11 @@ it('marks invalid inputs without sending and offers real support destinations',a
  fireEvent.click(screen.getByRole('button',{name:'How quickly will I get a response?'}));
  expect(await screen.findByText(/Response times vary. This form is for account/)).toBeInTheDocument();
 });
+
+it('offers the direct support address when the message was saved but forwarding was unconfirmed',async()=>{
+ mock.invoke.mockResolvedValueOnce({data:{success:true,emailAccepted:false},error:null});
+ mount();fill();
+ fireEvent.click(screen.getByRole('button',{name:'Send message'}));
+ const saved=await screen.findByText(/Your message was saved/);
+ expect(saved.querySelector('a')).toHaveAttribute('href','mailto:support@1vet.store');
+});
