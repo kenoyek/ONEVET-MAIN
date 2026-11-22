@@ -1,15 +1,18 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import { StaffChatAvailability, VisitorChatAvailability } from '@/components/chat/CareChatAvailability';
+import { GuestCareChatAlert } from '@/components/chat/GuestCareChatAlert';
+import { lastViewedCareChatReply, markCareChatReplyViewed, rememberCareChatKey } from '@/lib/care-chat-session';
 import { CareChatAlert } from '@/components/chat/CareChatAlert';
-import { careChatWaitingKey, countWaitingCareChats, isCareChatAvailable, staffCareChatAvailability } from '@/lib/services/care-chat-service';
+import { careChatWaitingKey, countWaitingCareChats, hasCareChatReply, isCareChatAvailable, staffCareChatAvailability } from '@/lib/services/care-chat-service';
 import { CareChatThread } from '@/components/chat/CareChatThread';
 import type { CareChat, CareChatSend } from '@/lib/services/care-chat-service';
 
 vi.mock('@/lib/services/care-chat-service', () => ({
   countWaitingCareChats: vi.fn(),
+  hasCareChatReply: vi.fn(),
   careChatWaitingKey: (userId: string) => ['care-chat', 'waiting', userId],
   careChatAvailabilityKey: ['care-chat', 'availability'],
   isCareChatAvailable: vi.fn(),
@@ -117,4 +120,50 @@ it('attaches the selected booking category and renders a directory link in the r
     message_body: 'You can browse providers here.', booking_category: 'grooming',
   }));
   expect(screen.getByLabelText('Booking link (optional)')).toHaveValue('');
+});
+
+it('links visitors back to their chat when the team replies', async () => {
+  const key = crypto.randomUUID();
+  rememberCareChatKey(key);
+  markCareChatReplyViewed(key, 4);
+  vi.mocked(hasCareChatReply).mockResolvedValueOnce(true);
+  try {
+    render(<QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={['/services']}><GuestCareChatAlert /></MemoryRouter>
+    </QueryClientProvider>);
+    const link = await screen.findByRole('link', { name: 'New reply from the care team' });
+    expect(link).toHaveAttribute('href', '/care-chat');
+    expect(hasCareChatReply).toHaveBeenLastCalledWith(key, 4);
+    const nextKey = crypto.randomUUID();
+    rememberCareChatKey(nextKey);
+    markCareChatReplyViewed(key, 10);
+    expect(lastViewedCareChatReply(nextKey)).toBe(0);
+  } finally {
+    sessionStorage.removeItem('onevet-care-chat');
+    sessionStorage.removeItem('onevet-care-chat-last-reply');
+  }
+});
+
+it('marks the latest team reply viewed only when the chat tab is visible', async () => {
+  const state = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+  const viewed = vi.fn();
+  const chat: CareChat = {
+    closed: false,
+    messages: [
+      { id: 3, sender: 'team', body: 'Try the care directory.', created_at: '2026-11-22T10:00:00Z' },
+      { id: 4, sender: 'visitor', body: 'Thanks.', created_at: '2026-11-22T10:01:00Z' },
+    ],
+  };
+  try {
+    render(<QueryClientProvider client={new QueryClient()}>
+      <CareChatThread queryKey={['guest-view']} load={async () => chat} send={vi.fn()} onReplyViewed={viewed} />
+    </QueryClientProvider>);
+    await screen.findByText('Try the care directory.');
+    expect(viewed).not.toHaveBeenCalled();
+    state.mockReturnValue('visible');
+    fireEvent(document, new Event('visibilitychange'));
+    await waitFor(() => expect(viewed).toHaveBeenCalledExactlyOnceWith(3));
+  } finally {
+    state.mockRestore();
+  }
 });

@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { careSearchCategories, careSearchLink } from '@/lib/care-search';
@@ -13,9 +13,10 @@ type Props = {
   send: (message: CareChatSend) => Promise<CareChat | null>;
   close?: () => Promise<CareChat | null>;
   onChange?: () => void;
+  onReplyViewed?: (id: number) => void;
 };
 
-export function CareChatThread({ queryKey, load, send, close, onChange }: Props) {
+export function CareChatThread({ queryKey, load, send, close, onChange, onReplyViewed }: Props) {
   const inputId = useId();
   const bookingId = useId();
   const cache = useQueryClient();
@@ -25,6 +26,22 @@ export function CareChatThread({ queryKey, load, send, close, onChange }: Props)
   const retry = useRef<CareChatSend | null>(null);
   const lock = useRef(false);
   const thread = useQuery({ queryKey, queryFn: load, refetchInterval: 5000, retry: false });
+  const messagesRef = useRef<HTMLOListElement>(null);
+  const latestReply = thread.data?.messages.filter(message => message.sender === 'team').at(-1)?.id;
+
+  useEffect(() => {
+    if (!onReplyViewed || !thread.isSuccess || latestReply === undefined) return;
+    function viewReply() {
+      if (document.visibilityState !== 'visible' || latestReply === undefined || !onReplyViewed) return;
+      const messages = messagesRef.current;
+      if (messages) messages.scrollTop = messages.scrollHeight;
+      onReplyViewed(latestReply);
+    }
+    viewReply();
+    document.addEventListener('visibilitychange', viewReply);
+    return () => document.removeEventListener('visibilitychange', viewReply);
+  }, [latestReply, onReplyViewed, thread.isSuccess]);
+
   const action = useMutation({
     mutationFn: async (message?: CareChatSend) => {
       const result = message ? await send(message) : await close?.();
@@ -59,7 +76,7 @@ export function CareChatThread({ queryKey, load, send, close, onChange }: Props)
       {thread.isPending && <p role="status">Opening chat…</p>}
       {thread.isError && <p role="alert">Could not load this chat. <Button variant="link" onClick={() => void thread.refetch()}>Retry</Button></p>}
       {thread.isSuccess && (
-        <ol aria-label="Messages" className="max-h-96 space-y-3 overflow-y-auto rounded-lg border p-4" aria-live="polite" aria-relevant="additions">
+        <ol ref={messagesRef} aria-label="Messages" className="max-h-96 space-y-3 overflow-y-auto rounded-lg border p-4" aria-live="polite" aria-relevant="additions">
           {!thread.data?.messages.length && <li className="text-muted-foreground">{close ? 'This chat is no longer available.' : 'Send a message to start.'}</li>}
           {thread.data?.messages.map(message => {
             const booking = message.sender === 'team'

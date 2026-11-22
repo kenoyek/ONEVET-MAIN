@@ -5,27 +5,11 @@ import { PageHeading } from '@/components/layout/PageHeading';
 import { VisitorChatAvailability } from '@/components/chat/CareChatAvailability';
 import { CareChatThread } from '@/components/chat/CareChatThread';
 import { Button } from '@/components/ui/button';
+import { getCareChatKey, markCareChatReplyViewed, rememberCareChatKey } from '@/lib/care-chat-session';
 import { visitCareChat } from '@/lib/services/care-chat-service';
 
-const storageKey = 'onevet-care-chat';
-const guestKeyPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function loadGuestKey() {
-  try {
-    const previous = sessionStorage.getItem(storageKey);
-    if (previous && guestKeyPattern.test(previous)) return previous;
-  } catch {
-    // Chat can still work in memory when browser storage is unavailable.
-  }
-  return crypto.randomUUID();
-}
-
 export default function CareChat() {
-  const [key, setKey] = useState(loadGuestKey);
-
-  function remember(guestKey: string) {
-    try { sessionStorage.setItem(storageKey, guestKey); } catch { /* In-memory session */ }
-  }
+  const [key, setKey] = useState(() => getCareChatKey() ?? crypto.randomUUID());
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,13 +26,14 @@ export default function CareChat() {
         <CareChatThread key={key} queryKey={['care-chat', 'guest', key]}
           load={() => visitCareChat(key)}
           send={message => {
-            remember(key);
+            rememberCareChatKey(key);
             return visitCareChat(key, message);
-          }} />
+          }}
+          onReplyViewed={id => markCareChatReplyViewed(key, id)} />
         <Button variant="outline" onClick={() => {
           if (!window.confirm('Start a new chat? This tab will stop showing the previous conversation.')) return;
           const next = crypto.randomUUID();
-          remember(next);
+          rememberCareChatKey(next);
           setKey(next);
         }}>Start a new chat</Button>
       </main>

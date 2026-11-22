@@ -34,6 +34,8 @@ try {
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122050000_care_chat.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122070000_care_chat_waiting_count.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122080000_care_chat_booking_links.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122090000_care_chat_guest_reply_alert.sql', import.meta.url), 'utf8'));
+  const replyPending = (key, after) => get('SELECT care_chat_reply_pending($1,$2) AS result', [key, after]);
   const waitingCount = () => get('SELECT care_chat_waiting_count() AS result');
   await as(null, 'anon');
   await assert.rejects(() => waitingCount());
@@ -46,6 +48,7 @@ try {
   assert.equal(await guestRead(guest), null);
   const started = await guestSend(guest, request, ' Which service should I book? ');
   assert.equal(started.messages[0].body, 'Which service should I book?');
+  assert.equal(await replyPending(guest, 0), false);
   assert.deepEqual(await guestSend(guest, request, 'Which service should I book?'), started);
   await assert.rejects(() => guestSend(guest, request, 'A different message'));
   assert.equal(await guestRead(stranger), null);
@@ -77,6 +80,10 @@ try {
 
   await as(null, 'anon');
   assert.deepEqual(await guestRead(guest), replied);
+  const lastReply = replied.messages.at(-1).id;
+  assert.equal(await replyPending(guest, 0), true);
+  assert.equal(await replyPending(guest, lastReply), false);
+  assert.equal(await replyPending(stranger, 0), false);
   await assert.rejects(() => staffReply('grooming'));
   await assert.rejects(() => db.query('SELECT care_chat_visitor($1,$2,$3,$4)', [guest, crypto.randomUUID(), 'Text', 'grooming']));
   await guestSend(stranger, crypto.randomUUID(), 'A new visitor');
@@ -93,6 +100,7 @@ try {
   await db.query("UPDATE care_chat_threads SET created_at=now()-interval '8 days' WHERE id=$1", [thread.id]);
   await as(null, 'anon');
   assert.deepEqual(await guestRead(guest), { closed: true, messages: [] });
+  assert.equal(await replyPending(guest, 0), false);
   await db.exec('RESET ROLE');
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122060000_care_chat_availability.sql', import.meta.url), 'utf8'));
   const available = () => get('SELECT care_chat_is_available() AS result');

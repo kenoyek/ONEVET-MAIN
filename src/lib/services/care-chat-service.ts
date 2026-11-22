@@ -80,3 +80,10 @@ export async function countWaitingCareChats() {
   if (!Number.isSafeInteger(data) || data < 0) throw Error('Chat count could not be confirmed');
   return data;
 }
+
+export async function hasCareChatReply(key: string, after: number) {
+  const { data, error } = await supabase.rpc('care_chat_reply_pending', { guest_key: key, after_id: after });
+  if (error) throw error;
+  if (typeof data !== 'boolean') throw Error('Chat reply status could not be confirmed');
+  return data;
+}

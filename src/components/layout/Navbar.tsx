@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/hooks/use-cart';
 import { NotificationBadge } from '@/components/shared/NotificationBadge';
+import { GuestCareChatAlert } from '@/components/chat/GuestCareChatAlert';
 import { CareChatAlert } from '@/components/chat/CareChatAlert';
 import { NotificationPopover } from '@/components/shared/NotificationPopover';
 import {
@@ -98,6 +99,7 @@ export function Navbar() {
               )}
             </Link>
 
+            <GuestCareChatAlert />
             {user && <NotificationPopover />}
             {user && !loading && !permissionsError && (role === 'admin' || roles?.includes('admin')) && (
               <CareChatAlert userId={user.id} />
