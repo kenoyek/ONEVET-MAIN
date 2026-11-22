@@ -1,12 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import { StaffChatAvailability, VisitorChatAvailability } from '@/components/chat/CareChatAvailability';
-import { isCareChatAvailable, staffCareChatAvailability } from '@/lib/services/care-chat-service';
+import { CareChatAlert } from '@/components/chat/CareChatAlert';
+import { careChatWaitingKey, countWaitingCareChats, isCareChatAvailable, staffCareChatAvailability } from '@/lib/services/care-chat-service';
 import { CareChatThread } from '@/components/chat/CareChatThread';
 import type { CareChat, CareChatSend } from '@/lib/services/care-chat-service';
 
 vi.mock('@/lib/services/care-chat-service', () => ({
+  countWaitingCareChats: vi.fn(),
+  careChatWaitingKey: (userId: string) => ['care-chat', 'waiting', userId],
   careChatAvailabilityKey: ['care-chat', 'availability'],
   isCareChatAvailable: vi.fn(),
   staffCareChatAvailability: vi.fn(),
@@ -73,4 +77,18 @@ it('lets staff go available and end their availability', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Go away' }));
   await screen.findByRole('button', { name: 'Go available for 30 minutes' });
   expect(staffCareChatAvailability).toHaveBeenLastCalledWith(false);
+});
+
+it('links admins to the inbox and clears the badge when no chats are waiting', async () => {
+  const cache = new QueryClient();
+  vi.mocked(countWaitingCareChats).mockResolvedValue(2);
+  render(<QueryClientProvider client={cache}>
+    <MemoryRouter><CareChatAlert userId="admin" /></MemoryRouter>
+  </QueryClientProvider>);
+  const alert = await screen.findByRole('link', { name: 'Care chat inbox, 2 chats awaiting a reply' });
+  expect(alert).toHaveAttribute('href', '/admin/care-chat');
+  vi.mocked(countWaitingCareChats).mockResolvedValue(0);
+  await cache.invalidateQueries({ queryKey: careChatWaitingKey('admin') });
+  await screen.findByRole('link', { name: 'Care chat inbox' });
+  expect(screen.queryByText('2')).not.toBeInTheDocument();
 });

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/hooks/use-cart';
 import { NotificationBadge } from '@/components/shared/NotificationBadge';
+import { CareChatAlert } from '@/components/chat/CareChatAlert';
 import { NotificationPopover } from '@/components/shared/NotificationPopover';
 import {
   DropdownMenu,
@@ -35,7 +36,7 @@ const navLinks = [
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user, profile, role, roles, signOut, loading } = useAuth();
+  const { user, profile, role, roles, signOut, loading, permissionsError } = useAuth();
   const { theme, setTheme } = useTheme();
   const { totalItems } = useCart();
   const navigate = useNavigate();
@@ -98,6 +99,9 @@ export function Navbar() {
             </Link>
 
             {user && <NotificationPopover />}
+            {user && !loading && !permissionsError && (role === 'admin' || roles?.includes('admin')) && (
+              <CareChatAlert userId={user.id} />
+            )}
             <ThemeToggle />
 
             <Separator orientation="vertical" className="h-6 hidden md:block mx-1" />

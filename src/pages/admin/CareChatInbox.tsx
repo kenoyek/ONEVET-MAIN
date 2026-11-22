@@ -7,7 +7,7 @@ import { StaffChatAvailability } from '@/components/chat/CareChatAvailability';
 import { CareChatThread } from '@/components/chat/CareChatThread';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
-import { listCareChats, staffCareChat } from '@/lib/services/care-chat-service';
+import { careChatWaitingKey, listCareChats, staffCareChat } from '@/lib/services/care-chat-service';
 
 export default function CareChatInbox() {
   const { user } = useAuth();
@@ -48,7 +48,10 @@ function Inbox({ userId }: { userId: string }) {
               load={() => staffCareChat(active)}
               send={message => staffCareChat(active, message)}
               close={() => staffCareChat(active, undefined, true)}
-              onChange={() => void cache.invalidateQueries({ queryKey: inboxKey })} />}
+              onChange={() => {
+                void cache.invalidateQueries({ queryKey: inboxKey });
+                void cache.invalidateQueries({ queryKey: careChatWaitingKey(userId) });
+              }} />}
           </div>
         )}
       </main>

@@ -50,3 +50,12 @@ export async function staffCareChatAvailability(accepting?: boolean) {
   if (error) throw error;
   return data;
 }
+
+export const careChatWaitingKey = (userId: string) => ['care-chat', 'waiting', userId] as const;
+
+export async function countWaitingCareChats() {
+  const { data, error } = await supabase.rpc('care_chat_waiting_count');
+  if (error) throw error;
+  if (!Number.isSafeInteger(data) || data < 0) throw Error('Chat count could not be confirmed');
+  return data;
+}

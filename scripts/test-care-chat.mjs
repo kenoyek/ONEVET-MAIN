@@ -32,7 +32,10 @@ try {
     INSERT INTO profiles VALUES ('${admin}', true), ('${secondAdmin}', true), ('${reader}', true);
   `);
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122050000_care_chat.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122070000_care_chat_waiting_count.sql', import.meta.url), 'utf8'));
+  const waitingCount = () => get('SELECT care_chat_waiting_count() AS result');
   await as(null, 'anon');
+  await assert.rejects(() => waitingCount());
   const guestRead = key => get('SELECT care_chat_visitor($1) AS result', [key]);
   const guestSend = (key, id, body) =>
     get('SELECT care_chat_visitor($1,$2,$3) AS result', [key, id, body]);
@@ -51,20 +54,28 @@ try {
   await assert.rejects(() => guestSend(guest, crypto.randomUUID(), 'Sixth message'));
 
   await as(reader);
+  await assert.rejects(() => waitingCount());
   await assert.rejects(() => db.query('SELECT care_chat_inbox()'));
   await assert.rejects(() => db.query("SELECT care_chat_staff('any')"));
   await as(admin);
+  assert.equal(await waitingCount(), 1);
   const [thread] = await get('SELECT care_chat_inbox() AS result');
   assert.equal(thread.awaiting_reply, true);
   assert.notEqual(thread.id, guest);
   const replied = await get('SELECT care_chat_staff($1,$2,$3) AS result',
     [thread.id, crypto.randomUUID(), 'Use the Find veterinary care link.']);
   assert.equal(replied.messages.at(-1).sender, 'team');
+  assert.equal(await waitingCount(), 0);
   assert.equal((await get('SELECT care_chat_inbox() AS result'))[0].awaiting_reply, false);
 
   await as(null, 'anon');
   assert.deepEqual(await guestRead(guest), replied);
+  await guestSend(stranger, crypto.randomUUID(), 'A new visitor');
   await as(admin);
+  assert.equal(await waitingCount(), 1);
+  const open = (await get('SELECT care_chat_inbox() AS result')).find(item => item.awaiting_reply);
+  await get('SELECT care_chat_staff($1,close_chat=>true) AS result', [open.id]);
+  assert.equal(await waitingCount(), 0);
   await get('SELECT care_chat_staff($1,close_chat=>true) AS result', [thread.id]);
   await as(null, 'anon');
   assert.equal((await guestRead(guest)).closed, true);
