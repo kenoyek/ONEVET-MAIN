@@ -4,11 +4,13 @@ import type { Database } from '@/integrations/supabase/types';
 export type SupportMessage = Database['public']['Tables']['contact_messages']['Row'] & { resolved_at: string | null };
 export type SupportMessageCursor = Pick<SupportMessage, 'created_at' | 'id'>;
 export type SupportMessageFilter = 'open' | 'unread' | 'resolved' | 'all';
+export const MAX_SUPPORT_SEARCH_LENGTH = 254;
 const pageSize = 25;
 
-export async function listSupportMessages(filter: SupportMessageFilter, cursor?: SupportMessageCursor) {
+export async function listSupportMessages(filter: SupportMessageFilter, search: string, cursor?: SupportMessageCursor) {
   const { data, error } = await supabase.rpc('list_support_messages', {
     message_filter: filter,
+    search_text: search || null,
     before_created_at: cursor?.created_at ?? null,
     before_id: cursor?.id ?? null,
   });

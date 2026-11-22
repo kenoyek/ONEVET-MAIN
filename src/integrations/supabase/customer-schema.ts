@@ -78,7 +78,7 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
       care_chat_assign: { Args: { chat_id: string; expected_owner: string | null; release_chat: boolean }; Returns: import('./types').Json };
       list_support_message_notes: { Args: { target_message: string; before_note: number | null }; Returns: import('./types').Json };
       add_support_message_note: { Args: { target_message: string; note_request: string; note_body: string }; Returns: undefined };
-      list_support_messages: { Args: { message_filter: string; before_created_at: string | null; before_id: string | null }; Returns: import('./types').Json };
+      list_support_messages: { Args: { message_filter: string; before_created_at: string | null; before_id: string | null; search_text: string | null }; Returns: import('./types').Json };
       set_support_message_resolved: { Args: { message_id: string; resolved_state: boolean }; Returns: string | null };
       set_support_message_read: { Args: { message_id: string; read_state: boolean }; Returns: boolean };
       care_chat_visitor_end: { Args: { guest_key: string }; Returns: import('./types').Json };

@@ -5,10 +5,11 @@ import { SupportMessageNotes } from '@/components/support/SupportMessageNotes';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth-context';
 import {
-  listSupportMessages, markSupportMessageRead, setSupportMessageResolved,
+  MAX_SUPPORT_SEARCH_LENGTH, listSupportMessages, markSupportMessageRead, setSupportMessageResolved,
   type SupportMessage, type SupportMessageCursor, type SupportMessageFilter,
 } from '@/lib/services/support-inbox-service';
 
@@ -25,14 +26,16 @@ export default function SupportInbox() {
 
 function Inbox({ userId }: { userId: string }) {
   const [filter, setFilter] = useState<SupportMessageFilter>('open');
+  const [draft, setDraft] = useState('');
+  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<SupportMessage | null>(null);
   const [cursors, setCursors] = useState<SupportMessageCursor[]>([]);
   const cursor = cursors.at(-1);
   const cache = useQueryClient();
   const inboxKey = ['support-inbox', userId];
   const inbox = useQuery({
-    queryKey: [...inboxKey, filter, cursor],
-    queryFn: () => listSupportMessages(filter, cursor),
+    queryKey: [...inboxKey, filter, search, cursor],
+    queryFn: () => listSupportMessages(filter, search, cursor),
     refetchInterval: 30000,
     retry: false,
   });
@@ -53,6 +56,12 @@ function Inbox({ userId }: { userId: string }) {
   const detail = inbox.data?.records.find(message => message.id === selected?.id) ?? selected;
   const last = inbox.data?.records.at(-1);
 
+  function resetView() {
+    setCursors([]);
+    setSelected(null);
+    changeStatus.reset();
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -68,9 +77,7 @@ function Inbox({ userId }: { userId: string }) {
                   className="block h-10 rounded-md border bg-background px-3 text-sm"
                   onChange={event => {
                     setFilter(event.target.value as SupportMessageFilter);
-                    setCursors([]);
-                    setSelected(null);
-                    changeStatus.reset();
+                    resetView();
                   }}>
                   <option value="open">Open</option>
                   <option value="unread">Unread</option>
@@ -80,10 +87,29 @@ function Inbox({ userId }: { userId: string }) {
               </div>
               <Button variant="outline" disabled={inbox.isFetching} onClick={() => void inbox.refetch()}>Refresh</Button>
             </div>
+            <form className="space-y-2" onSubmit={event => {
+              event.preventDefault();
+              setSearch(draft.trim());
+              resetView();
+            }}>
+              <Label htmlFor="support-message-search">Search messages</Label>
+              <Input id="support-message-search" type="search" placeholder="Name, email, or subject"
+                value={draft} maxLength={MAX_SUPPORT_SEARCH_LENGTH}
+                onChange={event => setDraft(event.target.value)} />
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" type="submit">Search</Button>
+                {(search || draft) && <Button size="sm" type="button" variant="ghost" onClick={() => {
+                  setDraft('');
+                  setSearch('');
+                  resetView();
+                }}>Clear search</Button>}
+              </div>
+            </form>
             {inbox.isPending && <p role="status">Loading support messages…</p>}
             {inbox.isError && <p role="alert">Could not load support messages. Try refreshing.</p>}
             {inbox.isSuccess && inbox.data.records.length === 0 && (
-              <p>{cursor || filter === 'all' ? 'No messages on this page.' : `No ${filter} messages.`}</p>
+              <p>{search && !cursor ? 'No messages match this search.'
+                : cursor || filter === 'all' ? 'No messages on this page.' : `No ${filter} messages.`}</p>
             )}
             {inbox.isSuccess && inbox.data.records.length > 0 && (
               <ul className="max-h-[30rem] space-y-2 overflow-y-auto" aria-label="Contact form submissions">

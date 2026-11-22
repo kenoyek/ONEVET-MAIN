@@ -8,6 +8,7 @@ import { addSupportMessageNote, listSupportMessageNotes, listSupportMessages, ma
 vi.mock('@/lib/auth-context', () => ({ useAuth: () => ({ user: { id: 'admin' } }) }));
 vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => null }));
 vi.mock('@/lib/services/support-inbox-service', () => ({
+  MAX_SUPPORT_SEARCH_LENGTH: 254,
   addSupportMessageNote: vi.fn(), listSupportMessageNotes: vi.fn(),
   listSupportMessages: vi.fn(), markSupportMessageRead: vi.fn(), setSupportMessageResolved: vi.fn(),
 }));
@@ -41,7 +42,7 @@ it('shows an unread submission, marks it read, and keeps its transcript visible'
   expect(screen.getByText(message.message)).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Messages'), { target: { value: 'all' } });
   await screen.findByRole('button', { name: /Booking help/ });
-  expect(listSupportMessages).toHaveBeenLastCalledWith('all', undefined);
+  expect(listSupportMessages).toHaveBeenLastCalledWith('all', '', undefined);
 });
 
 it('resolves a message in the open queue and allows it to be reopened', async () => {
@@ -62,7 +63,7 @@ it('resolves a message in the open queue and allows it to be reopened', async ()
   </QueryClientProvider>);
 
   fireEvent.click(await screen.findByRole('button', { name: /Booking follow-up/ }));
-  expect(listSupportMessages).toHaveBeenLastCalledWith('open', undefined);
+  expect(listSupportMessages).toHaveBeenLastCalledWith('open', '', undefined);
   fireEvent.click(screen.getByRole('button', { name: 'Resolve' }));
   await screen.findByText('No open messages.');
   expect(setSupportMessageResolved).toHaveBeenLastCalledWith(message.id, true);
@@ -99,4 +100,29 @@ it('retries a private note with the same request key and displays the saved auth
   await screen.findByText('Ada Admin');
   expect(vi.mocked(addSupportMessageNote).mock.calls[1]).toEqual(vi.mocked(addSupportMessageNote).mock.calls[0]);
   expect(draft).toHaveValue('');
+});
+
+it('searches the active status from the first page and clears the search', async () => {
+  const message = {
+    id: 'search-ticket', name: 'Ada', email: 'ada@example.invalid', subject: 'General inquiry',
+    message: 'Please help with a booking.', created_at: '2026-11-22T12:00:00Z',
+    is_read: false, resolved_at: null,
+  };
+  vi.mocked(listSupportMessages).mockReset().mockImplementation(async (_filter, search, cursor) => ({
+    records: search || cursor ? [] : [message], hasMore: !search && !cursor,
+  }));
+  render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter><SupportInbox /></MemoryRouter>
+  </QueryClientProvider>);
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Next page' }));
+  await screen.findByText('No messages on this page.');
+  fireEvent.change(screen.getByLabelText('Search messages'), { target: { value: '  ada@example.invalid  ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+  await screen.findByText('No messages match this search.');
+  expect(listSupportMessages).toHaveBeenLastCalledWith('open', 'ada@example.invalid', undefined);
+  expect(screen.queryByRole('button', { name: 'Previous page' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+  await screen.findByRole('button', { name: /General inquiry/ });
+  expect(screen.getByLabelText('Search messages')).toHaveValue('');
 });

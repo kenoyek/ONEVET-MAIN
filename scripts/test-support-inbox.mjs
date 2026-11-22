@@ -28,12 +28,16 @@ try {
       message text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), is_read boolean NOT NULL DEFAULT false
     );
     INSERT INTO contact_messages (id, name, email, subject, message)
-    SELECT gen_random_uuid(), 'Test Visitor', 'visitor@example.invalid', 'Question ' || n, 'A fixture message'
+    SELECT gen_random_uuid(), 'Test Visitor', 'visitor@example.invalid', 'Question ' || lpad(n::text, 2, '0'), 'A fixture message'
     FROM generate_series(1, 28) n;
   `);
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122150000_support_message_inbox.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122160000_support_message_resolution.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122170000_support_message_notes.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122180000_support_message_search.sql', import.meta.url), 'utf8'));
+  const search = (filter, text, cursor = null) => call(
+    'SELECT list_support_messages($1::text,$2,$3,$4) AS result', [filter, cursor?.created_at, cursor?.id, text],
+  );
   const notes = (id, cursor = null) => call('SELECT list_support_message_notes($1,$2) AS result', [id, cursor]);
   const addNote = (id, request, body) => call('SELECT add_support_message_note($1,$2,$3) AS result', [id, request, body]);
   const filtered = filter => call('SELECT list_support_messages($1::text,NULL,NULL) AS result', [filter]);
@@ -45,6 +49,7 @@ try {
   await as(null, 'anon');
   await assert.rejects(() => list(true));
   await assert.rejects(() => notes(crypto.randomUUID()));
+  await assert.rejects(() => search('all', 'visitor'));
   await assert.rejects(() => resolve(crypto.randomUUID(), true));
   await as(reader);
   await assert.rejects(() => list(false));
@@ -57,6 +62,12 @@ try {
   const next = await list(true, page[24]);
   assert.equal(next.length, 3);
   assert.equal(next[0].id, page[25].id);
+  assert.equal((await search('all', '  ' + next[0].subject.toUpperCase() + '  '))[0].id, next[0].id);
+  assert.equal((await search('all', 'VISITOR@EXAMPLE.INVALID', page[24]))[0].id, next[0].id);
+  assert.equal((await search('all', 'Test Visitor'))[0].name, 'Test Visitor');
+  assert.deepEqual(await search('all', '%'), []);
+  assert.deepEqual(await search('all', 'fixture message'), []);
+  await assert.rejects(() => search('all', 'x'.repeat(255)));
   assert.equal(await mark(page[0].id, true), true);
   assert(!(await list(true)).some(message => message.id === page[0].id));
   assert.equal((await list(false))[0].is_read, true);
@@ -67,6 +78,7 @@ try {
   assert(resolvedAt);
   assert.deepEqual(await resolve(page[0].id, true), resolvedAt);
   assert.equal((await filtered('resolved'))[0].id, page[0].id);
+  assert.deepEqual((await search('resolved', 'visitor@example.invalid')).map(message => message.id), [page[0].id]);
   assert(!(await filtered('open')).some(message => message.id === page[0].id));
   assert.equal((await filtered('unread'))[0].id, page[0].id);
   assert.equal(await resolve(page[0].id, false), null);
@@ -92,7 +104,7 @@ try {
   await assert.rejects(() => mark(page[0].id, true));
   await assert.rejects(() => resolve(page[0].id, true));
   await assert.rejects(() => notes(target));
-  console.log('PASS: support inbox privileges, pagination, unread filtering, shared read status, resolution, and private notes.');
+  console.log('PASS: support inbox privileges, pagination, unread filtering, shared read status, resolution, private notes, and filtered search.');
 } finally {
   await db.close();
 }
