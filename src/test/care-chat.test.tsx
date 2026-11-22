@@ -1,8 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, it, vi } from 'vitest';
+import { StaffChatAvailability, VisitorChatAvailability } from '@/components/chat/CareChatAvailability';
+import { isCareChatAvailable, staffCareChatAvailability } from '@/lib/services/care-chat-service';
 import { CareChatThread } from '@/components/chat/CareChatThread';
 import type { CareChat, CareChatSend } from '@/lib/services/care-chat-service';
+
+vi.mock('@/lib/services/care-chat-service', () => ({
+  careChatAvailabilityKey: ['care-chat', 'availability'],
+  isCareChatAvailable: vi.fn(),
+  staffCareChatAvailability: vi.fn(),
+}));
 
 it('retains the visitor draft and retry key after a failed send', async () => {
   const cache = new QueryClient();
@@ -41,4 +49,28 @@ it('asks staff to confirm before closing a chat', async () => {
   await screen.findByText('This chat is closed.');
   expect(close).toHaveBeenCalledOnce();
   expect(screen.queryByLabelText('Reply')).not.toBeInTheDocument();
+});
+
+it('shows a visitor when the team is away', async () => {
+  vi.mocked(isCareChatAvailable).mockResolvedValueOnce(false);
+  render(<QueryClientProvider client={new QueryClient()}>
+    <VisitorChatAvailability />
+  </QueryClientProvider>);
+  await screen.findByText(/The care team is away/);
+});
+
+it('lets staff go available and end their availability', async () => {
+  vi.mocked(staffCareChatAvailability)
+    .mockResolvedValueOnce(null)
+    .mockResolvedValueOnce('2026-11-22T12:30:00Z')
+    .mockResolvedValueOnce(null);
+  render(<QueryClientProvider client={new QueryClient()}>
+    <StaffChatAvailability userId="admin" />
+  </QueryClientProvider>);
+  fireEvent.click(await screen.findByRole('button', { name: 'Go available for 30 minutes' }));
+  await screen.findByText(/You’re accepting live chats until/);
+  expect(staffCareChatAvailability).toHaveBeenLastCalledWith(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Go away' }));
+  await screen.findByRole('button', { name: 'Go available for 30 minutes' });
+  expect(staffCareChatAvailability).toHaveBeenLastCalledWith(false);
 });

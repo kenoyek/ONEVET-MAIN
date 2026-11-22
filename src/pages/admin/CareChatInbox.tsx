@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
+import { StaffChatAvailability } from '@/components/chat/CareChatAvailability';
 import { CareChatThread } from '@/components/chat/CareChatThread';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
@@ -26,6 +27,7 @@ function Inbox({ userId }: { userId: string }) {
       <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-16 pt-28">
         <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>
         <PageHeading title="Care chat inbox" description="Reply to general care and booking questions. Chats waiting for a reply appear first." />
+        <StaffChatAvailability userId={userId} />
         {inbox.isPending && <p role="status">Loading chats…</p>}
         {inbox.isError && <p role="alert">Could not load chats. <Button variant="link" onClick={() => void inbox.refetch()}>Retry</Button></p>}
         {inbox.isSuccess && inbox.data.length === 0 && <p>No recent conversations.</p>}

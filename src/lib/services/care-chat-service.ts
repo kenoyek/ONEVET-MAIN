@@ -32,3 +32,21 @@ export async function staffCareChat(id: string, message?: CareChatSend, close = 
   if (error) throw error;
   return data as CareChat | null;
 }
+
+export const careChatAvailabilityKey = ['care-chat', 'availability'] as const;
+
+export async function isCareChatAvailable() {
+  const { data, error } = await supabase.rpc('care_chat_is_available');
+  if (error) throw error;
+  if (typeof data !== 'boolean') throw Error('Chat availability could not be confirmed');
+  return data;
+}
+
+export async function staffCareChatAvailability(accepting?: boolean) {
+  const { data, error } = await supabase.rpc(
+    'care_chat_staff_availability',
+    accepting === undefined ? {} : { accepting },
+  );
+  if (error) throw error;
+  return data;
+}
