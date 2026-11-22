@@ -107,7 +107,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <section className="container-wide mb-10"><div className="rounded-2xl border bg-card p-5 sm:p-7"><h2 className="text-xl mb-3">Find the right next step</h2><p className="text-sm text-muted-foreground mb-5">For appointment updates, use your request’s conversation. For an emergency, seek in-person care.</p><div className="flex flex-wrap gap-3"><Button asChild variant="outline"><Link to="/my-bookings">Your appointment requests</Link></Button><Button asChild variant="outline"><Link to="/provider-marketplace">Find care services</Link></Button><Button asChild variant="outline"><Link to="/urgent-care">Urgent care guidance</Link></Button></div></div></section>
+      <section className="container-wide mb-10"><div className="rounded-2xl border bg-card p-5 sm:p-7"><h2 className="text-xl mb-3">Find the right next step</h2><p className="text-sm text-muted-foreground mb-5">For appointment updates, use your request’s conversation. For an emergency, seek in-person care.</p><div className="flex flex-wrap gap-3"><Button asChild><Link to="/care-chat">Chat with our care team</Link></Button><Button asChild variant="outline"><Link to="/my-bookings">Your appointment requests</Link></Button><Button asChild variant="outline"><Link to="/provider-marketplace">Find care services</Link></Button><Button asChild variant="outline"><Link to="/urgent-care">Urgent care guidance</Link></Button></div></div></section>
       {/* Contact Form + Info */}
       <section className="section-padding pt-0">
         <div className="container-wide">

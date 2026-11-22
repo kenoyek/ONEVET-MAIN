@@ -479,6 +479,7 @@ const AdminDashboard = () => {
 
             {/* Conversation Monitor Tab */}
             <TabsContent value="conversations">
+              <Button asChild variant="outline" className="mb-4"><Link to="/admin/care-chat">Care chat inbox</Link></Button>
               <Card>
                 <CardHeader>
                   <CardTitle>Conversation Monitor</CardTitle>
