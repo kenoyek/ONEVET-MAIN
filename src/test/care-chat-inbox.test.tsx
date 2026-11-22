@@ -17,7 +17,7 @@ vi.mock('@/lib/services/care-chat-service', () => ({
 
 it('starts with waiting chats, pages the results, and resets paging on a status change', async () => {
   const row = {
-    id: 'first', updated_at: '2026-11-22T10:00:00Z', preview: 'Can I book grooming?',
+    id: 'first', updated_at: '2026-11-22T10:00:00Z', queue_at: '2026-11-22T09:50:00Z', preview: 'Can I book grooming?',
     closed: false, awaiting_reply: true, assignment: 'unassigned' as const,
   };
   vi.mocked(listCareChats)
@@ -30,11 +30,12 @@ it('starts with waiting chats, pages the results, and resets paging on a status 
   </QueryClientProvider>);
 
   await screen.findByText(row.preview);
+  expect(screen.getByText(/^Waiting since/)).toHaveAttribute('datetime', row.queue_at);
   expect(screen.getByRole('button', { name: /Unassigned/ })).toBeInTheDocument();
   expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'all', undefined);
   fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
   await screen.findByText('No chats match these filters on this page.');
-  expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'all', { id: row.id, updated_at: row.updated_at });
+  expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'all', { id: row.id, queue_at: row.queue_at });
   fireEvent.change(screen.getByLabelText('Assignment'), { target: { value: 'mine' } });
   await screen.findByText('No chats match these filters on this page.');
   expect(listCareChats).toHaveBeenLastCalledWith('waiting', 'mine', undefined);
@@ -49,7 +50,7 @@ it('keeps the selected chat open after replying moves it out of the waiting queu
   vi.mocked(listCareChats).mockReset()
     .mockResolvedValueOnce({
       items: [{
-        id: 'waiting', updated_at: '2026-11-22T10:00:00Z', preview: 'Can I book?',
+        id: 'waiting', updated_at: '2026-11-22T10:00:00Z', queue_at: '2026-11-22T10:00:00Z', preview: 'Can I book?',
         closed: false, awaiting_reply: true, assignment: 'unassigned' as const,
       }],
       hasMore: false,

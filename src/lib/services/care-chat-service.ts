@@ -19,6 +19,7 @@ export type CareChatInboxItem = {
   id: string;
   closed: boolean;
   updated_at: string;
+  queue_at: string;
   preview: string;
   awaiting_reply: boolean;
   assignment: 'unassigned' | 'mine' | 'teammate';
@@ -40,14 +41,15 @@ export async function visitCareChat(key: string, message?: CareChatSend) {
 
 export type CareChatInboxFilter = 'waiting' | 'replied' | 'closed';
 export type CareChatInboxAssignment = 'all' | 'mine' | 'unassigned';
-export type CareChatInboxCursor = Pick<CareChatInboxItem, 'id' | 'updated_at'>;
+export type CareChatInboxCursor = Pick<CareChatInboxItem, 'id' | 'queue_at'>;
 const careChatInboxPageSize = 25;
 
 export async function listCareChats(filter: CareChatInboxFilter, assignment: CareChatInboxAssignment, cursor?: CareChatInboxCursor) {
   const { data, error } = await supabase.rpc('care_chat_inbox_page', {
     filter_status: filter,
     filter_assignment: assignment,
-    after_updated_at: cursor?.updated_at ?? null,
+    after_updated_at: cursor?.queue_at ?? null,
+    sort_by_first_wait: true,
     after_chat_id: cursor?.id ?? null,
   });
   if (error) throw error;

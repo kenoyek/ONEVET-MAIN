@@ -38,6 +38,10 @@ try {
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122100000_care_chat_inbox_filters.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122110000_care_chat_ownership.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122120000_care_chat_assignment_filters.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122130000_care_chat_wait_order.sql', import.meta.url), 'utf8'));
+  const waitingPage = (after = null, id = null) => get(
+    "SELECT care_chat_inbox_page('waiting',$1,$2,'all',true) AS result", [after, id],
+  );
   const assignedPage = (status, assignment) => get(
     'SELECT care_chat_inbox_page($1,NULL,NULL,$2) AS result', [status, assignment],
   );
@@ -51,6 +55,7 @@ try {
   await assert.rejects(() => waitingCount());
   await assert.rejects(() => inboxPage('waiting'));
   await assert.rejects(() => assignedPage('waiting', 'all'));
+  await assert.rejects(() => waitingPage());
   const guestRead = key => get('SELECT care_chat_visitor($1) AS result', [key]);
   const guestSend = (key, id, body) =>
     get('SELECT care_chat_visitor($1,$2,$3) AS result', [key, id, body]);
@@ -77,7 +82,7 @@ try {
   await as(admin);
   assert.equal(await waitingCount(), 1);
   const [thread] = await get('SELECT care_chat_inbox() AS result');
-  assert.deepEqual(await inboxPage('waiting'), [{ ...thread, assignment: 'unassigned' }]);
+  assert.deepEqual(await inboxPage('waiting'), [{ ...thread, assignment: 'unassigned', queue_at: thread.updated_at }]);
   assert.equal((await assignedPage('waiting', 'unassigned'))[0].id, thread.id);
   assert.deepEqual(await assignedPage('waiting', 'mine'), []);
   await assert.rejects(() => assignedPage('waiting', 'unsupported'));
@@ -158,6 +163,26 @@ try {
   const boundary = firstPage[24];
   assert.deepEqual((await inboxPage('waiting', boundary.updated_at, boundary.id)).map(item => item.id),
     ['fixture-026', 'fixture-027']);
+  await db.exec('RESET ROLE');
+  await db.exec(`
+    INSERT INTO care_chat_threads (id, updated_at) VALUES
+      ('earliest-wait', now()), ('later-wait', now() - interval '5 minutes');
+    INSERT INTO care_chat_messages (thread_id, request_id, sender, body, created_at) VALUES
+      ('later-wait', '00000000-0000-0000-0000-000000000002', 'visitor', 'Earlier question', now() - interval '40 minutes'),
+      ('later-wait', '00000000-0000-0000-0000-000000000003', 'team', 'Answered', now() - interval '30 minutes'),
+      ('earliest-wait', '00000000-0000-0000-0000-000000000004', 'visitor', 'Waiting since 20 minutes ago', now() - interval '20 minutes'),
+      ('later-wait', '00000000-0000-0000-0000-000000000005', 'visitor', 'New question', now() - interval '5 minutes'),
+      ('earliest-wait', '00000000-0000-0000-0000-000000000006', 'visitor', 'Follow-up', now());
+  `);
+  await as(admin);
+  const [earliest, later] = await waitingPage();
+  assert.equal(earliest.id, 'earliest-wait');
+  assert.equal(earliest.preview, 'Follow-up');
+  assert(earliest.queue_at < earliest.updated_at);
+  assert.equal(later.id, 'later-wait');
+  assert.equal(later.queue_at, later.updated_at);
+  assert.equal((await waitingPage(earliest.queue_at, earliest.id))[0].id, 'later-wait');
+  assert.equal((await inboxPage('waiting')).findIndex(item => item.id === 'earliest-wait'), -1);
   await db.exec('RESET ROLE');
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122060000_care_chat_availability.sql', import.meta.url), 'utf8'));
   const available = () => get('SELECT care_chat_is_available() AS result');

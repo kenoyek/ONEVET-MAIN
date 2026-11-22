@@ -86,7 +86,7 @@ function Inbox({ userId }: { userId: string }) {
               }}>
               {Object.entries(assignmentOptions).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
-            {filter === 'waiting' && <p className="text-sm text-muted-foreground">Oldest waiting messages first.</p>}
+            {filter === 'waiting' && <p className="text-sm text-muted-foreground">Longest waiting chats first.</p>}
             {inbox.isPending && <p role="status">Loading chats…</p>}
             {inbox.isError && <p role="alert">Could not load chats. <Button variant="link" onClick={() => void inbox.refetch()}>Retry</Button></p>}
             {inbox.isSuccess && inbox.data.items.length === 0 && (
@@ -101,8 +101,8 @@ function Inbox({ userId }: { userId: string }) {
                       className="h-auto w-full flex-col items-start gap-1 p-3 text-left" onClick={() => setSelected(item.id)}>
                       <span className="max-w-full truncate">{item.preview}</span>
                       <span className="text-xs font-normal text-muted-foreground">{assignmentLabels[item.assignment]}</span>
-                      <time className="text-xs font-normal text-muted-foreground" dateTime={item.updated_at}>
-                        {timestamp.format(new Date(item.updated_at))} WAT
+                      <time className="text-xs font-normal text-muted-foreground" dateTime={item.queue_at}>
+                        {filter === 'waiting' ? 'Waiting since ' : 'Updated '}{timestamp.format(new Date(item.queue_at))} WAT
                       </time>
                     </Button>
                   </li>
@@ -114,7 +114,7 @@ function Inbox({ userId }: { userId: string }) {
                 onClick={() => setCursors(previous => previous.slice(0, -1))}>Previous page</Button>}
               {inbox.isSuccess && inbox.data.hasMore && lastItem && (
                 <Button size="sm" variant="outline" disabled={inbox.isFetching}
-                  onClick={() => setCursors(previous => [...previous, { id: lastItem.id, updated_at: lastItem.updated_at }])}>
+                  onClick={() => setCursors(previous => [...previous, { id: lastItem.id, queue_at: lastItem.queue_at }])}>
                   Next page
                 </Button>
               )}
