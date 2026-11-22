@@ -35,11 +35,20 @@ export async function visitCareChat(key: string, message?: CareChatSend) {
   return data as CareChat | null;
 }
 
-export async function listCareChats() {
-  const { data, error } = await supabase.rpc('care_chat_inbox');
+export type CareChatInboxFilter = 'waiting' | 'replied' | 'closed';
+export type CareChatInboxCursor = Pick<CareChatInboxItem, 'id' | 'updated_at'>;
+const careChatInboxPageSize = 25;
+
+export async function listCareChats(filter: CareChatInboxFilter, cursor?: CareChatInboxCursor) {
+  const { data, error } = await supabase.rpc('care_chat_inbox_page', {
+    filter_status: filter,
+    after_updated_at: cursor?.updated_at ?? null,
+    after_chat_id: cursor?.id ?? null,
+  });
   if (error) throw error;
   if (!Array.isArray(data)) throw Error('Inbox unavailable');
-  return data as CareChatInboxItem[];
+  const items = data as CareChatInboxItem[];
+  return { items: items.slice(0, careChatInboxPageSize), hasMore: items.length > careChatInboxPageSize };
 }
 
 export async function staffCareChat(id: string, message?: CareChatSend, close = false) {

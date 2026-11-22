@@ -80,7 +80,7 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
       care_chat_is_available: { Args: Record<PropertyKey, never>; Returns: boolean };
       care_chat_staff_availability: { Args: { accepting?: boolean }; Returns: string | null };
       care_chat_visitor: { Args: { guest_key: string; message_key?: string; message_body?: string }; Returns: import('./types').Json };
-      care_chat_inbox: { Args: Record<PropertyKey, never>; Returns: import('./types').Json };
+      care_chat_inbox_page: { Args: { filter_status: string; after_updated_at: string | null; after_chat_id: string | null }; Returns: import('./types').Json };
       care_chat_staff: { Args: { chat_id: string; message_key: string | null; message_body: string | null; close_chat: boolean; booking_category_arg: string | null }; Returns: import('./types').Json };
       list_article_comment_review_history: { Args: { before_id: number | null; decision_action: string | null; article_query: string | null }; Returns: import('./types').Json };
       report_article_comment: { Args: { target_comment: string; report_reason: string }; Returns: undefined };

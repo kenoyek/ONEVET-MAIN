@@ -35,10 +35,14 @@ try {
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122070000_care_chat_waiting_count.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122080000_care_chat_booking_links.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122090000_care_chat_guest_reply_alert.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122100000_care_chat_inbox_filters.sql', import.meta.url), 'utf8'));
+  const inboxPage = (status, updatedAt = null, id = null) =>
+    get('SELECT care_chat_inbox_page($1,$2,$3) AS result', [status, updatedAt, id]);
   const replyPending = (key, after) => get('SELECT care_chat_reply_pending($1,$2) AS result', [key, after]);
   const waitingCount = () => get('SELECT care_chat_waiting_count() AS result');
   await as(null, 'anon');
   await assert.rejects(() => waitingCount());
+  await assert.rejects(() => inboxPage('waiting'));
   const guestRead = key => get('SELECT care_chat_visitor($1) AS result', [key]);
   const guestSend = (key, id, body) =>
     get('SELECT care_chat_visitor($1,$2,$3) AS result', [key, id, body]);
@@ -59,11 +63,13 @@ try {
 
   await as(reader);
   await assert.rejects(() => waitingCount());
+  await assert.rejects(() => inboxPage('waiting'));
   await assert.rejects(() => db.query('SELECT care_chat_inbox()'));
   await assert.rejects(() => db.query("SELECT care_chat_staff('any')"));
   await as(admin);
   assert.equal(await waitingCount(), 1);
   const [thread] = await get('SELECT care_chat_inbox() AS result');
+  assert.deepEqual(await inboxPage('waiting'), [thread]);
   assert.equal(thread.awaiting_reply, true);
   assert.notEqual(thread.id, guest);
   const replyId = crypto.randomUUID();
@@ -76,6 +82,10 @@ try {
   assert.deepEqual(await staffReply('grooming'), replied);
   await assert.rejects(() => staffReply('training'));
   assert.equal(await waitingCount(), 0);
+  assert.deepEqual(await inboxPage('waiting'), []);
+  assert.equal((await inboxPage('replied'))[0].id, thread.id);
+  await assert.rejects(() => inboxPage('invalid'));
+  await assert.rejects(() => inboxPage('waiting', null, thread.id));
   assert.equal((await get('SELECT care_chat_inbox() AS result'))[0].awaiting_reply, false);
 
   await as(null, 'anon');
@@ -91,6 +101,7 @@ try {
   assert.equal(await waitingCount(), 1);
   const open = (await get('SELECT care_chat_inbox() AS result')).find(item => item.awaiting_reply);
   await get('SELECT care_chat_staff($1,close_chat=>true) AS result', [open.id]);
+  assert.equal((await inboxPage('closed'))[0].id, open.id);
   assert.equal(await waitingCount(), 0);
   await get('SELECT care_chat_staff($1,close_chat=>true) AS result', [thread.id]);
   await as(null, 'anon');
@@ -101,6 +112,22 @@ try {
   await as(null, 'anon');
   assert.deepEqual(await guestRead(guest), { closed: true, messages: [] });
   assert.equal(await replyPending(guest, 0), false);
+  await db.exec('RESET ROLE');
+  await db.exec(`
+    INSERT INTO care_chat_threads (id, updated_at)
+    SELECT 'fixture-' || lpad(n::text, 3, '0'), now() - interval '10 minutes'
+    FROM generate_series(1, 27) n;
+    INSERT INTO care_chat_messages (thread_id, request_id, sender, body)
+    SELECT id, '00000000-0000-0000-0000-000000000001', 'visitor', 'Waiting'
+    FROM care_chat_threads WHERE id LIKE 'fixture-%';
+  `);
+  await as(admin);
+  const firstPage = await inboxPage('waiting');
+  assert.equal(firstPage.length, 26);
+  assert.equal(firstPage[0].id, 'fixture-001');
+  const boundary = firstPage[24];
+  assert.deepEqual((await inboxPage('waiting', boundary.updated_at, boundary.id)).map(item => item.id),
+    ['fixture-026', 'fixture-027']);
   await db.exec('RESET ROLE');
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122060000_care_chat_availability.sql', import.meta.url), 'utf8'));
   const available = () => get('SELECT care_chat_is_available() AS result');
