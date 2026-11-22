@@ -479,7 +479,10 @@ const AdminDashboard = () => {
 
             {/* Conversation Monitor Tab */}
             <TabsContent value="conversations">
-              <Button asChild variant="outline" className="mb-4"><Link to="/admin/care-chat">Care chat inbox</Link></Button>
+              <div className="mb-4 flex flex-wrap gap-2">
+                <Button asChild variant="outline"><Link to="/admin/care-chat">Care chat inbox</Link></Button>
+                <Button asChild variant="outline"><Link to="/admin/support">Support inbox</Link></Button>
+              </div>
               <Card>
                 <CardHeader>
                   <CardTitle>Conversation Monitor</CardTitle>

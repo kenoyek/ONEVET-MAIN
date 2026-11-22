@@ -56,6 +56,7 @@ const Cart = lazyRoute(() => import("./pages/Cart"));
 const Checkout = lazyRoute(() => import("./pages/Checkout"));
 const About = lazyRoute(() => import("./pages/About"));
 const CareChat = lazyRoute(() => import("./pages/CareChat"));
+const SupportInbox = lazyRoute(() => import("./pages/admin/SupportInbox"));
 const CareChatInbox = lazyRoute(() => import("./pages/admin/CareChatInbox"));
 const Contact = lazyRoute(() => import("./pages/Contact"));
 const Pricing = lazyRoute(() => import("./pages/Pricing"));
@@ -143,6 +144,7 @@ const App = () => (
                         <AdminSubscriptions />
                       </ProtectedRoute>
                     } />
+                    <Route path="/admin/support" element={<ProtectedRoute allowedRoles={['admin']}><SupportInbox /></ProtectedRoute>} />
                     <Route path="/admin/care-chat" element={<ProtectedRoute allowedRoles={['admin']}><CareChatInbox /></ProtectedRoute>} />
                     <Route path="/admin/conversations" element={
                       <ProtectedRoute allowedRoles={['admin']}>

@@ -1,0 +1,127 @@
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { Navbar } from '@/components/layout/Navbar';
+import { PageHeading } from '@/components/layout/PageHeading';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/lib/auth-context';
+import {
+  listSupportMessages, markSupportMessageRead, type SupportMessage, type SupportMessageCursor,
+} from '@/lib/services/support-inbox-service';
+
+const receivedAt = new Intl.DateTimeFormat('en-NG', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Africa/Lagos',
+});
+
+export default function SupportInbox() {
+  const { user } = useAuth();
+  return user ? <Inbox key={user.id} userId={user.id} /> : null;
+}
+
+function Inbox({ userId }: { userId: string }) {
+  const [unreadOnly, setUnreadOnly] = useState(true);
+  const [selected, setSelected] = useState<SupportMessage | null>(null);
+  const [cursors, setCursors] = useState<SupportMessageCursor[]>([]);
+  const cursor = cursors.at(-1);
+  const cache = useQueryClient();
+  const inboxKey = ['support-inbox', userId];
+  const inbox = useQuery({
+    queryKey: [...inboxKey, unreadOnly, cursor],
+    queryFn: () => listSupportMessages(unreadOnly, cursor),
+    refetchInterval: 30000,
+    retry: false,
+  });
+  const changeReadState = useMutation({
+    mutationFn: ({ id, is_read }: SupportMessage) => markSupportMessageRead(id, !is_read),
+    onSuccess: async (_, message) => {
+      setSelected(previous => previous?.id === message.id ? { ...previous, is_read: !message.is_read } : previous);
+      await cache.invalidateQueries({ queryKey: inboxKey });
+    },
+  });
+
+  const detail = inbox.data?.records.find(message => message.id === selected?.id) ?? selected;
+  const last = inbox.data?.records.at(-1);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-24 pt-28">
+        <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>
+        <PageHeading title="Support inbox" description="Review submissions from the Contact form. Read status is shared with other admins." />
+        <div className="grid gap-5 md:grid-cols-[minmax(14rem,1fr)_minmax(0,2fr)]">
+          <section aria-label="Support messages" className="min-w-0 space-y-3">
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="support-message-filter">Messages</Label>
+                <select id="support-message-filter" value={unreadOnly ? 'unread' : 'all'}
+                  className="block h-10 rounded-md border bg-background px-3 text-sm"
+                  onChange={event => {
+                    setUnreadOnly(event.target.value === 'unread');
+                    setCursors([]);
+                    setSelected(null);
+                    changeReadState.reset();
+                  }}>
+                  <option value="unread">Unread</option>
+                  <option value="all">All messages</option>
+                </select>
+              </div>
+              <Button variant="outline" disabled={inbox.isFetching} onClick={() => void inbox.refetch()}>Refresh</Button>
+            </div>
+            {inbox.isPending && <p role="status">Loading support messages…</p>}
+            {inbox.isError && <p role="alert">Could not load support messages. Try refreshing.</p>}
+            {inbox.isSuccess && inbox.data.records.length === 0 && (
+              <p>{unreadOnly && !cursor ? 'No unread messages.' : 'No messages on this page.'}</p>
+            )}
+            {inbox.isSuccess && inbox.data.records.length > 0 && (
+              <ul className="max-h-[30rem] space-y-2 overflow-y-auto" aria-label="Contact form submissions">
+                {inbox.data.records.map(message => (
+                  <li key={message.id}>
+                    <Button variant={detail?.id === message.id ? 'secondary' : 'outline'} aria-pressed={detail?.id === message.id}
+                      className="h-auto w-full flex-col items-start gap-1 p-3 text-left"
+                      onClick={() => {
+                        setSelected(message);
+                        changeReadState.reset();
+                      }}>
+                      <span className="max-w-full truncate">{message.subject}</span>
+                      <span className="max-w-full truncate text-xs font-normal text-muted-foreground">
+                        {message.name} · {message.is_read ? 'Read' : 'Unread'}
+                      </span>
+                      <time dateTime={message.created_at} className="text-xs font-normal text-muted-foreground">
+                        {receivedAt.format(new Date(message.created_at))} WAT
+                      </time>
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {cursor && <Button size="sm" variant="outline" onClick={() => setCursors(previous => previous.slice(0, -1))}>Previous page</Button>}
+              {inbox.isSuccess && inbox.data.hasMore && last && (
+                <Button size="sm" variant="outline" disabled={inbox.isFetching}
+                  onClick={() => setCursors(previous => [...previous, { created_at: last.created_at, id: last.id }])}>
+                  Next page
+                </Button>
+              )}
+            </div>
+          </section>
+          {inbox.isSuccess && detail && (
+            <article className="min-w-0 space-y-4 rounded-lg border bg-card p-4 sm:p-6" aria-label="Selected support message">
+              <header className="space-y-2">
+                <h2 className="break-words text-xl font-semibold">{detail.subject}</h2>
+                <p className="break-words text-sm text-muted-foreground">{detail.name} · {detail.email}</p>
+              </header>
+              <p className="whitespace-pre-wrap break-words">{detail.message}</p>
+              <Button variant="outline" disabled={changeReadState.isPending} onClick={() => changeReadState.mutate(detail)}>
+                {detail.is_read ? 'Mark unread' : 'Mark read'}
+              </Button>
+              {changeReadState.isError && <p role="alert" className="text-sm text-destructive">Could not update read status. Try again.</p>}
+            </article>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
