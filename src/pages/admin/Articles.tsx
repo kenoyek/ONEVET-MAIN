@@ -1,3 +1,4 @@
+import { CommentReportQueue } from '@/components/articles/CommentReportQueue';
 import { articlePublicationState } from '@/lib/article-publication';
 import { ArticleDiscussion } from '@/components/articles/ArticleDiscussion';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -159,7 +160,7 @@ export default function AdminArticles() {
           transition={{ duration: 0.3 }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link to="/admin">
                 <Button variant="ghost" size="icon">
@@ -173,10 +174,13 @@ export default function AdminArticles() {
                 </p>
               </div>
             </div>
-            <Button onClick={() => navigate('/admin/articles/new')}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Article
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <CommentReportQueue />
+              <Button onClick={() => navigate('/admin/articles/new')}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Article
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}

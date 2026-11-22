@@ -5,6 +5,14 @@ import {beforeEach,describe,expect,it,vi} from 'vitest';
 const mock=vi.hoisted(()=>({user:'reader-a' as string|null,role:'pet_owner',get:vi.fn(),like:vi.fn(),comment:vi.fn(),remove:vi.fn()}));
 vi.mock('@/lib/auth-context',()=>({useAuth:()=>({user:mock.user?{id:mock.user}:null,role:mock.role})}));
 vi.mock('@/lib/services/article-engagement-service',()=>({articleEngagementService:mock}));
+import { listReportedComments, reportComment, resolveCommentReports } from '@/lib/services/article-comment-reports';
+vi.mock('@/lib/services/article-comment-reports', async importOriginal => ({
+ ...(await importOriginal<typeof import('@/lib/services/article-comment-reports')>()),
+ listReportedComments: vi.fn(),
+ reportComment: vi.fn(),
+ resolveCommentReports: vi.fn(),
+}));
+import { CommentReportQueue } from '@/components/articles/CommentReportQueue';
 import {ArticleDiscussion} from '@/components/articles/ArticleDiscussion';
 const comment={id:'comment-a',ordinal:8,author_name:'Ada',body:'Helpful article',mine:true,created_at:'2026-11-20T10:00:00Z'};
 const data={likes:3,liked:false,comment_count:1,has_older:false,comments:[comment]};
@@ -13,6 +21,16 @@ describe('Article discussion',()=>{
  beforeEach(()=>{vi.resetAllMocks();mock.user='reader-a';mock.role='pet_owner';mock.get.mockResolvedValue(data);mock.like.mockResolvedValue(undefined);mock.comment.mockResolvedValue(undefined);mock.remove.mockResolvedValue(undefined);});
  it('allows visitors to read while requiring sign-in to participate',async()=>{
   mock.user=null;mount();await screen.findByText('Helpful article');expect(screen.getByRole('button',{name:'3 likes'})).toBeDisabled();expect(screen.getByRole('link',{name:'Sign in to like or leave a comment'})).toHaveAttribute('href','/auth');expect(screen.queryByLabelText('Your comment')).not.toBeInTheDocument();
+ });
+ it('lets a signed-in reader report someone else’s comment with a reason',async()=>{
+  mock.get.mockResolvedValue({...data,comments:[{...comment,mine:false}]});
+  vi.mocked(reportComment).mockResolvedValue(undefined);
+  mount();
+  fireEvent.click(await screen.findByRole('button',{name:'Report comment'}));
+  fireEvent.change(screen.getByLabelText('Reason'),{target:{value:'privacy'}});
+  fireEvent.click(screen.getByRole('button',{name:'Submit report'}));
+  await screen.findByText('Report submitted.');
+  expect(reportComment).toHaveBeenCalledExactlyOnceWith('comment-a','privacy');
  });
  it('sets an explicit like state and prevents overlapping actions',async()=>{
   let finish!:()=>void;mock.like.mockImplementationOnce(()=>new Promise<void>(resolve=>{finish=resolve;}));mount();const button=await screen.findByRole('button',{name:'3 likes'});act(()=>{fireEvent.click(button);fireEvent.click(button);});expect(mock.like).toHaveBeenCalledExactlyOnceWith('article-a',true);expect(button).toBeDisabled();mock.get.mockResolvedValue({...data,likes:4,liked:true});await act(async()=>finish());expect(await screen.findByRole('button',{name:'4 likes'})).toHaveAttribute('aria-pressed','true');
@@ -57,4 +75,23 @@ describe('Article discussion',()=>{
  it('shows a failed lookup without inventing zero counts',async()=>{
   mock.get.mockRejectedValue(Error('Unavailable'));mount();expect(await screen.findByRole('alert')).toHaveTextContent('temporarily unavailable');expect(screen.queryByRole('button',{name:'0 likes'})).not.toBeInTheDocument();mock.get.mockResolvedValue(data);fireEvent.click(screen.getByRole('button',{name:'Retry discussion'}));await screen.findByText('Helpful article');
  });
+});
+
+it('lets an admin dismiss reports without removing the comment', async () => {
+ mock.user = 'admin-a';
+ mock.role = 'admin';
+ vi.mocked(listReportedComments).mockResolvedValueOnce([{
+  comment_id: 'comment-a', article_id: 'article-a', article_title: 'Care guide',
+  body: 'Helpful article', author_name: 'Ada', report_count: 2, reasons: ['spam'],
+ }]).mockResolvedValue([]);
+ vi.mocked(resolveCommentReports).mockResolvedValue(undefined);
+ const cache = new QueryClient({defaultOptions:{queries:{retry:false}}});
+ render(<QueryClientProvider client={cache}><CommentReportQueue /></QueryClientProvider>);
+ fireEvent.click(screen.getByRole('button',{name:'Comment reports'}));
+ await screen.findByText('Helpful article');
+ fireEvent.click(screen.getByRole('button',{name:'Dismiss reports'}));
+ expect(resolveCommentReports).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'Confirm'}));
+ await screen.findByText('No open comment reports.');
+ expect(resolveCommentReports).toHaveBeenCalledExactlyOnceWith('comment-a',false);
 });

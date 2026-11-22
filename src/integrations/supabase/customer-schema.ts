@@ -75,6 +75,9 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
       };
     };
     Functions: Omit<Database['public']['Functions'],'add_pet_owner_health_entry'> & {
+      report_article_comment: { Args: { target_comment: string; report_reason: string }; Returns: undefined };
+      list_article_comment_reports: { Args: Record<PropertyKey, never>; Returns: import('./types').Json };
+      resolve_article_comment_reports: { Args: { target_comment: string; remove_comment: boolean }; Returns: undefined };
       get_article_engagement: {Args:{article_uuid:string;before_ordinal?:number};Returns:import('./types').Json};
       set_article_like: {Args:{article_uuid:string;liked:boolean};Returns:undefined};
       add_article_comment: {Args:{article_uuid:string;comment_id:string;comment_body:string};Returns:string};
