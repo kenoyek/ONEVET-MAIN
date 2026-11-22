@@ -61,6 +61,7 @@ function Inbox({ userId }: { userId: string }) {
 
   const detail = inbox.data?.records.find(message => message.id === selected?.id) ?? selected;
   const last = inbox.data?.records.at(-1);
+  const showMessage = Boolean(detail && inbox.isSuccess);
 
   function resetView() {
     setCursors([]);
@@ -94,7 +95,7 @@ function Inbox({ userId }: { userId: string }) {
           )}
         </section>
         <div className="grid gap-5 md:grid-cols-[minmax(14rem,1fr)_minmax(0,2fr)]">
-          <section aria-label="Support messages" className="min-w-0 space-y-3">
+          <section aria-label="Support messages" className={`min-w-0 space-y-3 ${showMessage ? 'hidden md:block' : ''}`}>
             <div className="flex flex-wrap items-end gap-2">
               <div className="space-y-1">
                 <Label htmlFor="support-message-filter">Messages</Label>
@@ -171,11 +172,15 @@ function Inbox({ userId }: { userId: string }) {
           </section>
           {inbox.isSuccess && detail && (
             <article className="min-w-0 space-y-4 rounded-lg border bg-card p-4 sm:p-6" aria-label="Selected support message">
-              <header className="space-y-2">
+              <Button variant="ghost" size="sm" className="md:hidden" onClick={() => {
+                setSelected(null);
+                changeStatus.reset();
+              }}>Back to messages</Button>
+              <header className="space-y-2 border-b pb-3">
                 <h2 className="break-words text-xl font-semibold">{detail.subject}</h2>
                 <p className="break-words text-sm text-muted-foreground">{detail.name} · {detail.email}</p>
               </header>
-              <p className="whitespace-pre-wrap break-words">{detail.message}</p>
+              <p className="rounded-lg bg-muted/40 p-3 text-sm leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere] sm:p-4">{detail.message}</p>
               <p role="status" className="text-sm text-muted-foreground">
                 {detail.resolved_at ? `Resolved ${receivedAt.format(new Date(detail.resolved_at))} WAT` : 'Open'}
               </p>

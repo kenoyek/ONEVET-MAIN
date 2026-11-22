@@ -1,5 +1,6 @@
-import { useRef, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MessageTranscript } from './MessageTranscript';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { useAuth } from '@/lib/auth-context';
@@ -22,6 +23,8 @@ interface Message {
 interface ChatWindowProps {
   messages: Message[];
   loading: boolean;
+  error?: boolean;
+  onRetry?: () => void;
   onSendMessage: (content: string) => Promise<void>;
   disabled?: boolean;
   placeholder?: string;
@@ -30,52 +33,33 @@ interface ChatWindowProps {
 export function ChatWindow({
   messages,
   loading,
+  error,
+  onRetry,
   onSendMessage,
   disabled = false,
   placeholder = 'Type your message...',
 }: ChatWindowProps) {
   const { profile } = useAuth();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            <p>No messages yet. Start the conversation!</p>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isOwn={message.sender_id === profile?.id}
-            />
-          ))
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <ChatInput
-        onSend={onSendMessage}
-        disabled={disabled}
-        placeholder={placeholder}
-      />
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {loading ? (
+        <p role="status" className="flex items-center gap-2 rounded-xl border bg-card p-4 text-sm">
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />Loading conversation…
+        </p>
+      ) : error ? (
+        <div className="rounded-xl border bg-card p-4">
+          <p role="alert" className="text-sm">Could not load this conversation.</p>
+          {onRetry && <Button type="button" variant="link" onClick={onRetry}>Retry messages</Button>}
+        </div>
+      ) : (
+        <MessageTranscript label="Consultation messages" lastId={messages.at(-1)?.id}
+          empty="No messages yet." className="min-h-32 max-h-[min(55dvh,36rem)] flex-1">
+          {messages.map(message => (
+            <MessageBubble key={message.id} message={message} isOwn={message.sender_id === profile?.id} />
+          ))}
+        </MessageTranscript>
+      )}
+      <ChatInput onSend={onSendMessage} disabled={disabled || loading || error} placeholder={placeholder} />
     </div>
   );
 }

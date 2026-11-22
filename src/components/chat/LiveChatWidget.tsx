@@ -1,12 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { MessageCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ChatInput } from '@/components/chat/ChatInput';
-import { MessageBubble } from '@/components/chat/MessageBubble';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChatWindow } from '@/components/chat/ChatWindow';
 import { useAuth } from '@/lib/auth-context';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useVetPresence } from '@/hooks/useVetPresence';
@@ -18,24 +17,18 @@ export function LiveChatWidget() {
   const { onlineVetsCount } = useVetPresence();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const {
     status,
     messages,
     messagesLoading,
+    messagesError,
+    refetchMessages,
     loading,
     startChat,
     sendMessage,
     closeChat,
   } = useLiveChat();
-
-  // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   // Don't render for vets/admins, unauthenticated, or on consultation chat pages
   if (!user || !profile) return null;
@@ -96,8 +89,8 @@ export function LiveChatWidget() {
 
       {/* Chat Sheet */}
       <Sheet open={open} onOpenChange={(o) => { if (!o) handleClose(); else setOpen(true); }}>
-        <SheetContent side="right" className="w-full sm:max-w-[400px] p-0 flex flex-col">
-          <SheetHeader className="p-4 border-b">
+        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-[26rem]">
+          <SheetHeader className="border-b bg-card p-4 pr-12 text-left">
             <div className="flex items-center justify-between">
               <SheetTitle className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-primary" />
@@ -109,16 +102,15 @@ export function LiveChatWidget() {
                 </span>
               </SheetTitle>
             </div>
-            {status === 'idle' && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {vetsOnline
-                  ? `${onlineVetsCount} vet${onlineVetsCount > 1 ? 's' : ''} online — describe your urgent concern`
-                  : 'No vets currently online — your message will be queued'}
-              </p>
-            )}
+            <SheetDescription>
+              {status === 'idle' && (vetsOnline
+                ? `${onlineVetsCount} vet${onlineVetsCount > 1 ? 's' : ''} online. Describe your concern to start.`
+                : 'No vets are online right now. Your message will be queued.')}
+              {status !== 'idle' && 'Veterinary consultation messages'}
+            </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 sm:p-4">
             {status === 'waiting' && (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-center">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -147,22 +139,8 @@ export function LiveChatWidget() {
             )}
 
             {status === 'active' && (
-              <>
-                <ScrollArea className="flex-1 p-4">
-                  <div ref={scrollRef} className="space-y-4">
-                    {messagesLoading ? (
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : (
-                      messages.map((msg) => (
-                        <MessageBubble key={msg.id} message={msg} isOwn={msg.sender_id === profile.id} />
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
-                <ChatInput onSend={handleSend} placeholder="Type your message..." />
-              </>
+              <ChatWindow messages={messages} loading={messagesLoading} onSendMessage={handleSend}
+                error={Boolean(messagesError)} onRetry={() => void refetchMessages()} />
             )}
           </div>
         </SheetContent>

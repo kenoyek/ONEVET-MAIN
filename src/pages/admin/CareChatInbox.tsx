@@ -56,16 +56,17 @@ function Inbox({ userId }: { userId: string }) {
     retry: false,
   });
   const lastItem = inbox.data?.items.at(-1);
+  const showChat = Boolean(selected && inbox.isSuccess);
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-16 pt-28">
+      <main id="main-content" tabIndex={-1} className="container-wide space-y-6 pb-24 pt-28 md:pb-16">
         <Button asChild variant="ghost"><Link to="/admin">Back to admin</Link></Button>
         <PageHeading title="Care chat inbox" description="Reply to general care and booking questions." />
         <StaffChatAvailability userId={userId} />
         <div className="grid gap-4 md:grid-cols-[minmax(14rem,1fr)_minmax(0,2fr)]">
-          <div className="min-w-0 space-y-3">
+          <div className={`min-w-0 space-y-3 ${showChat ? 'hidden md:block' : ''}`}>
             <Label htmlFor="care-inbox-filter">Chat status</Label>
             <select id="care-inbox-filter" value={filter}
               className="h-10 w-full rounded-md border bg-background px-3 text-sm"
@@ -121,15 +122,19 @@ function Inbox({ userId }: { userId: string }) {
             </div>
           </div>
           {selected && inbox.isSuccess && (
-            <CareChatThread key={selected} queryKey={['care-chat', 'staff', userId, selected]}
-              load={() => staffCareChat(selected)}
-              send={message => staffCareChat(selected, message)}
-              close={() => staffCareChat(selected, undefined, true)}
-              assign={(owner, release) => assignCareChat(selected, owner, release)}
-              onChange={() => {
-                void cache.invalidateQueries({ queryKey: inboxKey });
-                void cache.invalidateQueries({ queryKey: careChatWaitingKey(userId) });
-              }} />
+            <section aria-label="Selected care chat" className="min-w-0 space-y-3 rounded-xl border bg-card p-3 sm:p-4">
+              <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setSelected(null)}>Back to chats</Button>
+              <h2 className="text-base font-semibold">Conversation</h2>
+              <CareChatThread key={selected} queryKey={['care-chat', 'staff', userId, selected]}
+                load={() => staffCareChat(selected)}
+                send={message => staffCareChat(selected, message)}
+                close={() => staffCareChat(selected, undefined, true)}
+                assign={(owner, release) => assignCareChat(selected, owner, release)}
+                onChange={() => {
+                  void cache.invalidateQueries({ queryKey: inboxKey });
+                  void cache.invalidateQueries({ queryKey: careChatWaitingKey(userId) });
+                }} />
+            </section>
           )}
         </div>
       </main>

@@ -1,5 +1,5 @@
 import { PageHeading } from '@/components/layout/PageHeading';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageItem, MessageTranscript } from '@/components/chat/MessageTranscript';
 import {
   Table,
   TableBody,
@@ -99,6 +99,8 @@ export default function AdminConversations() {
   const [viewingConsultation, setViewingConsultation] = useState<Consultation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [messagesFailed, setMessagesFailed] = useState(false);
+  const requestVersion = useRef(0);
 
   useEffect(() => {
     fetchConsultations();
@@ -127,7 +129,10 @@ export default function AdminConversations() {
   };
 
   const handleViewClick = async (consultation: Consultation) => {
+    const version = ++requestVersion.current;
     setViewingConsultation(consultation);
+    setMessages([]);
+    setMessagesFailed(false);
     setIsLoadingMessages(true);
 
     try {
@@ -141,11 +146,11 @@ export default function AdminConversations() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data as unknown as Message[]);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
+      if (version === requestVersion.current) setMessages((data ?? []) as unknown as Message[]);
+    } catch {
+      if (version === requestVersion.current) setMessagesFailed(true);
     } finally {
-      setIsLoadingMessages(false);
+      if (version === requestVersion.current) setIsLoadingMessages(false);
     }
   };
 
@@ -194,14 +199,15 @@ export default function AdminConversations() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by participant name or complaint..."
+                    aria-label="Search consultations"
+                    placeholder="Search by participant or complaint"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9"
                   />
                 </div>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger aria-label="Consultation status" className="w-full sm:w-[180px]">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
@@ -321,8 +327,13 @@ export default function AdminConversations() {
       </main>
 
       {/* View Dialog */}
-      <Dialog open={!!viewingConsultation} onOpenChange={() => setViewingConsultation(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <Dialog open={!!viewingConsultation} onOpenChange={open => {
+        if (open) return;
+        requestVersion.current++;
+        setViewingConsultation(null);
+        setMessages([]);
+      }}>
+        <DialogContent className="flex max-h-[85dvh] max-w-2xl flex-col overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Consultation Details</DialogTitle>
             <DialogDescription>
@@ -331,7 +342,7 @@ export default function AdminConversations() {
           </DialogHeader>
 
           {viewingConsultation && (
-            <div className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex min-h-0 flex-1 flex-col">
               {/* Consultation Info */}
               <div className="space-y-4 pb-4 border-b">
                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -379,50 +390,24 @@ export default function AdminConversations() {
               {/* Messages */}
               <div className="flex-1 min-h-0 pt-4">
                 <p className="font-medium text-sm mb-3">Messages ({messages.length})</p>
-                <ScrollArea className="h-[300px] pr-4">
-                  {isLoadingMessages ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      No messages in this consultation
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {messages.map((message) => {
-                        const isPetOwner = message.sender_id === viewingConsultation.pet_owner?.id;
-                        return (
-                          <div key={message.id} className="flex gap-3">
-                            <Avatar className="h-8 w-8 flex-shrink-0">
-                              <AvatarImage src={message.sender?.avatar_url || undefined} />
-                              <AvatarFallback className="text-xs">
-                                {message.sender?.first_name?.[0]}
-                                {message.sender?.last_name?.[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-medium">
-                                  {message.sender?.first_name} {message.sender?.last_name}
-                                </span>
-                                <Badge variant="outline" className="text-xs">
-                                  {isPetOwner ? 'Pet Owner' : 'Vet'}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {format(new Date(message.created_at), 'h:mm a')}
-                                </span>
-                              </div>
-                              <p className="text-sm bg-muted rounded-lg px-3 py-2">
-                                {message.content}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </ScrollArea>
+                {isLoadingMessages ? (
+                  <p role="status" className="rounded-xl border p-4 text-sm">Loading messages…</p>
+                ) : messagesFailed ? (
+                  <div className="rounded-xl border p-4 text-sm">
+                    <p role="alert">Could not load this conversation.</p>
+                    <Button variant="link" onClick={() => void handleViewClick(viewingConsultation)}>Retry messages</Button>
+                  </div>
+                ) : (
+                  <MessageTranscript label="Consultation messages" lastId={messages.at(-1)?.id}
+                    empty="No messages in this consultation." followLatest={false} className="max-h-[min(42dvh,22rem)]">
+                    {messages.map(message => {
+                      const owner = message.sender_id === viewingConsultation.pet_owner?.id;
+                      const name = [message.sender?.first_name, message.sender?.last_name].filter(Boolean).join(' ');
+                      return <MessageItem key={message.id} sender={name || (owner ? 'Pet owner' : 'Veterinarian')}
+                        body={message.content} sentAt={message.created_at} own={!owner} />;
+                    })}
+                  </MessageTranscript>
+                )}
               </div>
             </div>
           )}

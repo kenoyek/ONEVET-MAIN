@@ -20,7 +20,10 @@ export function useLiveChat() {
   const [loading, setLoading] = useState(false);
 
   const consultationId = consultation?.id;
-  const { messages, sendMessage: sendRealTimeMessage, loading: messagesLoading } = useRealTimeMessages(consultationId);
+  const {
+    messages, sendMessage: sendRealTimeMessage, loading: messagesLoading,
+    error: messagesError, refetch: refetchMessages,
+  } = useRealTimeMessages(consultationId);
 
   // Check for existing active urgent consultation on mount
   useEffect(() => {
@@ -130,8 +133,10 @@ export function useLiveChat() {
   return {
     status,
     consultation,
-    messages,
+    messages: messages.filter(message => message.consultation_id === consultationId),
     messagesLoading,
+    messagesError,
+    refetchMessages,
     loading,
     startChat,
     sendMessage,

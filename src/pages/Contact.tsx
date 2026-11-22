@@ -123,7 +123,7 @@ export default function Contact() {
               <Card className="card-elevated p-4 sm:p-8 rounded-3xl">
                 <CardHeader className="px-0 pt-0 mb-6">
                   <CardTitle className="text-2xl font-semibold tracking-tight mb-2">Send us a message</CardTitle>
-                  <CardDescription className="font-medium text-sm">Share your question and the details we need to help.</CardDescription>
+                  <CardDescription className="text-sm">Send a support request. If our team follows up, they’ll use the email address you enter.</CardDescription>
                 </CardHeader>
                 <CardContent className="px-0 pb-0">
                   {submitted&&<section className="mb-6 rounded-2xl border border-primary/20 bg-primary/5 p-5"><h3 id="contact-success-heading" tabIndex={-1} className="font-semibold">Your support message has been received</h3><p role="status" className="mt-2 text-sm text-muted-foreground">{emailUnconfirmed ? <>Your message was saved. If you need to reach the team directly, email <a className="text-primary underline" href="mailto:support@1vet.store">support@1vet.store</a>.</> : 'We have your submission. Response times vary. Check the email address you provided for any follow-up.'}</p><Button variant="link" className="mt-2 p-0" onClick={()=>setSubmitted(false)}>Write another message</Button></section>}
@@ -161,7 +161,7 @@ export default function Contact() {
                       {errors.message && <p id="contact-message-error" className="text-xs font-bold text-destructive mt-1">{errors.message.message}</p>}
                     </div>
 
-                    <Button type="submit" size="xl" className="w-full rounded-full font-semibold shadow-sm hover:scale-[1.02] transition-all" disabled={isSubmitting}>
+                    <Button type="submit" size="xl" className="w-full rounded-full font-semibold shadow-sm" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <><Loader2 className="w-5 h-5 mr-3 animate-spin" /> Sending…</>
                       ) : (

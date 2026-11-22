@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { careSearchCategories, careSearchLink } from '@/lib/care-search';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { MessageItem, MessageTranscript } from './MessageTranscript';
 import { Textarea } from '@/components/ui/textarea';
 import type { CareChat, CareChatBookingCategory, CareChatSend } from '@/lib/services/care-chat-service';
 
@@ -29,21 +30,19 @@ export function CareChatThread({ queryKey, load, send, close, endGuestChat, assi
   const retry = useRef<CareChatSend | null>(null);
   const lock = useRef(false);
   const thread = useQuery({ queryKey, queryFn: load, refetchInterval: 5000, retry: false });
-  const messagesRef = useRef<HTMLOListElement>(null);
+  const [atLatest, setAtLatest] = useState(true);
   const latestReply = thread.data?.messages.filter(message => message.sender === 'team').at(-1)?.id;
 
   useEffect(() => {
-    if (!onReplyViewed || !thread.isSuccess || latestReply === undefined) return;
+    if (!onReplyViewed || !atLatest || !thread.isSuccess || latestReply === undefined) return;
     function viewReply() {
       if (document.visibilityState !== 'visible' || latestReply === undefined || !onReplyViewed) return;
-      const messages = messagesRef.current;
-      if (messages) messages.scrollTop = messages.scrollHeight;
       onReplyViewed(latestReply);
     }
     viewReply();
     document.addEventListener('visibilitychange', viewReply);
     return () => document.removeEventListener('visibilitychange', viewReply);
-  }, [latestReply, onReplyViewed, thread.isSuccess]);
+  }, [atLatest, latestReply, onReplyViewed, thread.isSuccess]);
 
   const owner = thread.data?.owner_id ?? null;
   const ownedByMe = thread.data?.owned_by_me === true;
@@ -83,6 +82,7 @@ export function CareChatThread({ queryKey, load, send, close, endGuestChat, assi
   }
 
   const canSend = thread.isSuccess && !thread.data?.closed && !heldByTeammate && (!close || !!thread.data);
+  const sending = action.isPending && !!action.variables && 'message_key' in action.variables;
   const canClose = canSend && !!thread.data && !!(close || endGuestChat);
   const code = action.error && 'code' in action.error ? action.error.code : undefined;
 
@@ -91,25 +91,25 @@ export function CareChatThread({ queryKey, load, send, close, endGuestChat, assi
       {thread.isPending && <p role="status">Opening chat…</p>}
       {thread.isError && <p role="alert">Could not load this chat. <Button variant="link" onClick={() => void thread.refetch()}>Retry</Button></p>}
       {thread.isSuccess && (
-        <ol ref={messagesRef} aria-label="Messages" className="max-h-96 space-y-3 overflow-y-auto rounded-lg border p-4" aria-live="polite" aria-relevant="additions">
-          {!thread.data?.messages.length && <li className="text-muted-foreground">{close ? 'This chat is no longer available.' : 'Send a message to start.'}</li>}
+        <MessageTranscript label="Messages" onLatestChange={setAtLatest} lastId={thread.data?.messages.at(-1)?.id}
+          empty={close ? 'This chat is no longer available.' : 'Send a message to start.'} className="max-h-[min(48dvh,30rem)]">
           {thread.data?.messages.map(message => {
             const booking = message.sender === 'team'
               ? careSearchCategories.find(([value]) => value === message.booking_category)
               : undefined;
             return (
-              <li key={message.id} className="rounded-md bg-muted p-3">
-                <p className="text-sm font-semibold">{message.sender === 'team' ? 'Care team' : close ? 'Visitor' : 'You'}</p>
-                <p className="whitespace-pre-wrap break-words">{message.body}</p>
+              <MessageItem key={message.id}
+                sender={message.sender === 'team' ? 'Care team' : (close ? 'Visitor' : 'You')}
+                body={message.body} sentAt={message.created_at} own={close ? message.sender === 'team' : message.sender === 'visitor'}>
                 {booking && (
-                  <Button asChild size="sm" variant="outline" className="mt-2">
+                  <Button asChild size="sm" variant="outline" className="mt-2 h-auto min-h-9 whitespace-normal text-left">
                     <Link to={careSearchLink(booking[0], '')}>Browse {booking[1].toLowerCase()}</Link>
                   </Button>
                 )}
-              </li>
+              </MessageItem>
             );
           })}
-        </ol>
+        </MessageTranscript>
       )}
       {thread.data?.closed && <p role="status">This chat is closed.</p>}
       {assign && thread.isSuccess && thread.data && !thread.data.closed && (
@@ -130,7 +130,7 @@ export function CareChatThread({ queryKey, load, send, close, endGuestChat, assi
         </div>
       )}
       {canSend && (
-        <form className="space-y-3" onSubmit={event => {
+        <form className="space-y-3 rounded-xl border bg-card p-3 sm:p-4" onSubmit={event => {
           event.preventDefault();
           const body = draft.trim();
           if (!body || lock.current) return;
@@ -154,8 +154,9 @@ export function CareChatThread({ queryKey, load, send, close, endGuestChat, assi
               </select>
             </div>
           )}
+          <p className="text-xs text-muted-foreground">{draft.length.toLocaleString('en-NG')} / 2,000 characters</p>
           <div className="flex flex-wrap gap-2">
-            <Button disabled={!draft.trim() || action.isPending}>Send message</Button>
+            <Button disabled={!draft.trim() || action.isPending}>{sending ? 'Sending…' : 'Send message'}</Button>
             {close && <Button type="button" variant="outline" disabled={action.isPending || !!draft.trim()}
               onClick={() => {
                 setDraft('Use the booking link below to browse providers and check availability.');

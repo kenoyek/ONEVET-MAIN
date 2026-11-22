@@ -26,7 +26,7 @@ export default function ConsultationChat() {
   const [error, setError] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
 
-  const { messages, loading: messagesLoading, sendMessage, markAsRead } = useRealTimeMessages(id);
+  const { messages, loading: messagesLoading, error: messagesError, refetch: refreshMessages, sendMessage, markAsRead } = useRealTimeMessages(id);
   const { requestPermission, sendNotification } = useNotifications();
 
   const isVet = role === 'veterinarian';
@@ -310,7 +310,7 @@ export default function ConsultationChat() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col pt-16 md:pt-20">
+      <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col pb-24 pt-16 md:pb-8 md:pt-20">
         <div className="flex-1 flex flex-col max-w-4xl w-full mx-auto border-x">
           <ConsultationHeader
             consultation={consultation}
@@ -347,10 +347,13 @@ export default function ConsultationChat() {
             </div>
           )}
 
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-5">
             <ChatWindow
-              messages={messages}
+              key={`${profile?.id ?? 'guest'}:${id}`}
+              messages={messages.filter(message => message.consultation_id === id)}
               loading={messagesLoading}
+              error={Boolean(messagesError)}
+              onRetry={() => void refreshMessages()}
               onSendMessage={sendMessage}
               disabled={isChatDisabled}
               placeholder={isChatDisabled ? 'This consultation has ended' : 'Type your message...'}

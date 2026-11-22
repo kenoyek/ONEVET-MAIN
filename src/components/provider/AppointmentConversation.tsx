@@ -5,7 +5,7 @@ import {useAuth} from '@/lib/auth-context';
 import {Button} from '@/components/ui/button';
 import {Label} from '@/components/ui/label';
 import {Textarea} from '@/components/ui/textarea';
-import {bookingTime} from '@/lib/services/appointment-service';
+import {MessageItem,MessageTranscript} from '@/components/chat/MessageTranscript';
 import {appointmentConversationService as service,conversationError,conversationReadError} from '@/lib/services/appointment-conversation-service';
 function Conversation({bookingId,userId}:{bookingId:string;userId:string}){
  const cache=useQueryClient();const[cursors,setCursors]=useState<number[]>([]);const before=cursors.at(-1);const[draft,setDraft]=useState('');const[busy,setBusy]=useState(false);const[acknowledging,setAcknowledging]=useState(false);const[error,setError]=useState('');const[feedback,setFeedback]=useState('');const retry=useRef({body:'',nonce:''});
@@ -24,9 +24,14 @@ function Conversation({bookingId,userId}:{bookingId:string;userId:string}){
    {before!==undefined&&<p className="text-sm">You are viewing older messages. <Button variant="link" onClick={()=>setCursors(previous=>previous.slice(0,-1))}>View newer messages</Button><Button variant="link" onClick={()=>setCursors([])}>View latest messages</Button></p>}
    {messages.isPending?<p role="status">Loading messages…</p>:messages.isError?<><p role="alert">Could not load messages. Your draft is retained.</p><Button variant="outline" onClick={()=>void messages.refetch()}>Retry messages</Button></>:<>
     {!!messages.data?.hasOlder&&<Button variant="outline" onClick={()=>{const cursor=messages.data?.rows[0]?.ordinal;if(cursor!==undefined)setCursors(previous=>previous.at(-1)===cursor?previous:[...previous,cursor]);}}>Load older messages</Button>}
-    {!messages.data?.rows.length?<p>No messages on this page.</p>:<ol className="space-y-4" aria-label="Appointment messages">{messages.data.rows.map(message=><li key={message.id} className={`rounded-lg border p-4 ${message.sender_id===userId?'bg-primary/5':''}`}><div className="flex flex-wrap gap-2 justify-between text-sm"><p className="font-medium">{message.sender_name} · {message.sender_id===userId?'You':message.sender_role==='customer'?'Customer':'Provider team'}</p><time>{bookingTime(message.created_at)}</time></div><p className="whitespace-pre-wrap break-words mt-3">{message.body}</p></li>)}</ol>}
+    <MessageTranscript key={before ?? 'latest'} label="Appointment messages" empty="No messages on this page."
+      lastId={messages.data?.rows.at(-1)?.id} followLatest={before===undefined} className="max-h-[min(48dvh,30rem)]">
+      {messages.data?.rows.map(message=><MessageItem key={message.id}
+        sender={`${message.sender_name} · ${message.sender_id===userId?'You':message.sender_role==='customer'?'Customer':'Provider team'}`}
+        own={message.sender_id===userId} sentAt={message.created_at} body={message.body}/>)}
+    </MessageTranscript>
    </>}
-   {state.data.can_send?<form className="space-y-3" onSubmit={async event=>{
+   {state.data.can_send?<form className="space-y-3 rounded-xl border bg-card p-3 sm:p-4" onSubmit={async event=>{
     event.preventDefault();const body=draft.trim();if(sendLock.current||busy||state.isError||!state.data?.can_send||messages.isError||!body||body.length>2000)return;sendLock.current=true;setBusy(true);setError('');setFeedback('');if(retry.current.body!==body)retry.current={body,nonce:crypto.randomUUID()};
     try{await service.send(bookingId,body,retry.current.nonce);setDraft('');retry.current={body:'',nonce:''};setFeedback('Message saved to the conversation.');setCursors([]);try{await refresh();}catch{setFeedback('Message saved to the conversation. Refresh messages to load the latest view; do not send it again.');}}
     catch(cause){setError(conversationError(cause));void state.refetch();}

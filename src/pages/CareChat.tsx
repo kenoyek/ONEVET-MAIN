@@ -14,7 +14,7 @@ export default function CareChat() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main id="main-content" tabIndex={-1} className="container-wide max-w-3xl space-y-6 pb-16 pt-28">
+      <main id="main-content" tabIndex={-1} className="container-wide max-w-3xl space-y-6 pb-24 pt-24 sm:pt-28 md:pb-14">
         <PageHeading title="Chat with our care team" description="Ask a general care or booking question, without signing in." />
         <VisitorChatAvailability />
         <p className="text-sm text-muted-foreground">This chat is for general guidance and booking. Avoid sharing payment details, passwords, or medical records. Chat access lasts up to seven days.</p>

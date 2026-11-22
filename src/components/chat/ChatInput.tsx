@@ -1,6 +1,7 @@
-import { useState, KeyboardEvent } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 interface ChatInputProps {
@@ -9,61 +10,56 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
-export function ChatInput({ onSend, disabled = false, placeholder = 'Type your message...' }: ChatInputProps) {
+export function ChatInput({ onSend, disabled = false, placeholder = 'Type your message…' }: ChatInputProps) {
+  const inputId = useId();
+  const lock = useRef(false);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  const handleSend = async () => {
-    if (!message.trim() || sending || disabled) return;
-
+  async function handleSend() {
+    const body = message.trim();
+    if (!body || lock.current || disabled) return;
+    lock.current = true;
     setSending(true);
+    setFailed(false);
     try {
-      await onSend(message.trim());
+      await onSend(body);
       setMessage('');
-    } catch (error) {
-      console.error('Failed to send message:', error);
+    } catch {
+      setFailed(true);
     } finally {
+      lock.current = false;
       setSending(false);
     }
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+  }
 
   return (
-    <div className="p-4 border-t bg-background">
-      <div className="flex gap-2 items-end">
-        <Textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled || sending}
-          className="min-h-[44px] max-h-[120px] resize-none"
-          rows={1}
-        />
-        <Button
-          onClick={handleSend}
-          disabled={!message.trim() || sending || disabled}
-          size="icon"
-          className="h-11 w-11 flex-shrink-0"
-        >
-          {sending ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Send className="h-5 w-5" />
-          )}
+    <form className="space-y-2 rounded-xl border bg-card p-3 sm:p-4" onSubmit={event => {
+      event.preventDefault();
+      void handleSend();
+    }}>
+      <Label htmlFor={inputId}>Message</Label>
+      <div className="flex items-end gap-2">
+        <Textarea id={inputId} value={message} onChange={event => setMessage(event.target.value)}
+          onKeyDown={event => {
+            if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+            event.preventDefault();
+            void handleSend();
+          }}
+          placeholder={placeholder} disabled={disabled || sending}
+          className="min-h-11 max-h-32 min-w-0 resize-y" rows={2} />
+        <Button type="submit" aria-label={sending ? 'Sending message' : 'Send message'}
+          disabled={!message.trim() || sending || disabled} size="icon" className="shrink-0">
+          {sending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
         </Button>
       </div>
-      {disabled && (
-        <p className="text-xs text-muted-foreground mt-2">
-          Chat is currently unavailable.
-        </p>
+      {failed && <p role="alert" className="text-sm text-destructive">Could not confirm the message was sent. Your draft is still here.</p>}
+      {disabled ? (
+        <p className="text-xs text-muted-foreground">Messages can’t be sent right now.</p>
+      ) : (
+        <p className="hidden text-xs text-muted-foreground sm:block">Enter to send · Shift + Enter for a new line</p>
       )}
-    </div>
+    </form>
   );
 }

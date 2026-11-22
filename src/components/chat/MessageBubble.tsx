@@ -1,6 +1,5 @@
-import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { MessageItem } from './MessageTranscript';
 
 interface Message {
   id: string;
@@ -23,46 +22,18 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ message, isOwn }: MessageBubbleProps) {
-  const senderName = message.sender
-    ? `${message.sender.first_name} ${message.sender.last_name}`
-    : 'Unknown';
-
-  const initials = message.sender
-    ? `${message.sender.first_name[0]}${message.sender.last_name[0]}`.toUpperCase()
-    : 'U';
+  const name = [message.sender?.first_name, message.sender?.last_name].filter(Boolean).join(' ');
 
   return (
-    <div
-      className={cn('flex gap-3 max-w-[85%]', isOwn ? 'ml-auto flex-row-reverse' : '')}
-    >
-      {/* Avatar */}
-      <Avatar className="h-8 w-8 flex-shrink-0">
-        <AvatarImage src={message.sender?.avatar_url || undefined} alt={senderName} />
-        <AvatarFallback className={cn(
-          'text-xs font-semibold',
-          isOwn ? 'bg-primary text-primary-foreground' : 'bg-muted'
-        )}>
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-
-      {/* Message Content */}
-      <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
-        <span className="text-xs text-muted-foreground mb-1">{senderName}</span>
-        <div
-          className={cn(
-            'rounded-2xl px-4 py-2 break-words',
-            isOwn
-              ? 'bg-primary text-primary-foreground rounded-br-md'
-              : 'bg-muted rounded-bl-md'
-          )}
-        >
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-        </div>
-        <span className="text-xs text-muted-foreground mt-1">
-          {format(new Date(message.created_at), 'h:mm a')}
-        </span>
-      </div>
-    </div>
+    <MessageItem sender={isOwn ? 'You' : name || 'Participant'} body={message.content}
+      sentAt={message.created_at} own={isOwn}
+      avatar={(
+        <Avatar className="size-7 shrink-0 sm:size-8" aria-hidden="true">
+          <AvatarImage src={message.sender?.avatar_url || undefined} alt="" />
+          <AvatarFallback className="text-xs">
+            {name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'P'}
+          </AvatarFallback>
+        </Avatar>
+      )} />
   );
 }

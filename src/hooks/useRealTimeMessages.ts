@@ -21,6 +21,7 @@ interface UseRealTimeMessagesReturn {
   messages: Message[];
   loading: boolean;
   error: Error | null;
+  refetch: () => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   markAsRead: () => Promise<void>;
 }
@@ -41,6 +42,7 @@ export function useRealTimeMessages(consultationId: string | undefined): UseReal
 
     try {
       setLoading(true);
+      setError(null);
       const { data, error: fetchError } = await supabase
         .from('messages')
         .select(`
@@ -148,6 +150,7 @@ export function useRealTimeMessages(consultationId: string | undefined): UseReal
     messages,
     loading,
     error,
+    refetch: fetchMessages,
     sendMessage,
     markAsRead,
   };
