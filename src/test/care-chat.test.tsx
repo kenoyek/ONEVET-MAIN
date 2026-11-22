@@ -167,3 +167,21 @@ it('marks the latest team reply viewed only when the chat tab is visible', async
     state.mockRestore();
   }
 });
+
+it('requires confirmation to take over and only enables replies once assigned', async () => {
+  const assign = vi.fn().mockResolvedValue({
+    closed: false, owner_id: 'me', owned_by_me: true, messages: [],
+  });
+  render(<QueryClientProvider client={new QueryClient()}>
+    <CareChatThread queryKey={['assigned-chat']}
+      load={async () => ({ closed: false, owner_id: 'teammate', owned_by_me: false, messages: [] })}
+      send={vi.fn()} close={vi.fn()} assign={assign} />
+  </QueryClientProvider>);
+  fireEvent.click(await screen.findByRole('button', { name: 'Take over chat' }));
+  expect(screen.queryByLabelText('Reply')).not.toBeInTheDocument();
+  expect(assign).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm takeover' }));
+  await screen.findByLabelText('Reply');
+  expect(assign).toHaveBeenCalledExactlyOnceWith('teammate', false);
+  expect(screen.getByRole('button', { name: 'Release chat' })).toBeInTheDocument();
+});

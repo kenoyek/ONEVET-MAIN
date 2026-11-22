@@ -5,6 +5,8 @@ export type CareChatBookingCategory = typeof careSearchCategories[number][0];
 
 export type CareChat = {
   closed: boolean;
+  owner_id?: string | null;
+  owned_by_me?: boolean;
   messages: {
     id: number;
     sender: 'visitor' | 'team';
@@ -95,4 +97,12 @@ export async function hasCareChatReply(key: string, after: number) {
   if (error) throw error;
   if (typeof data !== 'boolean') throw Error('Chat reply status could not be confirmed');
   return data;
+}
+
+export async function assignCareChat(id: string, expectedOwner: string | null, release: boolean) {
+  const { data, error } = await supabase.rpc('care_chat_assign', {
+    chat_id: id, expected_owner: expectedOwner, release_chat: release,
+  });
+  if (error) throw error;
+  return data as CareChat | null;
 }

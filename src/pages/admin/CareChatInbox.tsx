@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth-context';
 import {
-  careChatWaitingKey, listCareChats, staffCareChat, type CareChatInboxCursor, type CareChatInboxFilter,
+  assignCareChat, careChatWaitingKey, listCareChats, staffCareChat, type CareChatInboxCursor, type CareChatInboxFilter,
 } from '@/lib/services/care-chat-service';
 
 export default function CareChatInbox() {
@@ -100,6 +100,7 @@ function Inbox({ userId }: { userId: string }) {
               load={() => staffCareChat(selected)}
               send={message => staffCareChat(selected, message)}
               close={() => staffCareChat(selected, undefined, true)}
+              assign={(owner, release) => assignCareChat(selected, owner, release)}
               onChange={() => {
                 void cache.invalidateQueries({ queryKey: inboxKey });
                 void cache.invalidateQueries({ queryKey: careChatWaitingKey(userId) });

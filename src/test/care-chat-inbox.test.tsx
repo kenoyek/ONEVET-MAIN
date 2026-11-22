@@ -10,6 +10,7 @@ vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => null }));
 vi.mock('@/components/chat/CareChatAvailability', () => ({ StaffChatAvailability: () => null }));
 vi.mock('@/lib/services/care-chat-service', () => ({
   careChatWaitingKey: (id: string) => ['care-chat', 'waiting', id],
+  assignCareChat: vi.fn(),
   listCareChats: vi.fn(),
   staffCareChat: vi.fn(),
 }));

@@ -12,17 +12,19 @@ type Props = {
   load: () => Promise<CareChat | null>;
   send: (message: CareChatSend) => Promise<CareChat | null>;
   close?: () => Promise<CareChat | null>;
+  assign?: (expectedOwner: string | null, release: boolean) => Promise<CareChat | null>;
   onChange?: () => void;
   onReplyViewed?: (id: number) => void;
 };
 
-export function CareChatThread({ queryKey, load, send, close, onChange, onReplyViewed }: Props) {
+export function CareChatThread({ queryKey, load, send, close, assign, onChange, onReplyViewed }: Props) {
   const inputId = useId();
   const bookingId = useId();
   const cache = useQueryClient();
   const [draft, setDraft] = useState('');
   const [bookingCategory, setBookingCategory] = useState<CareChatBookingCategory | ''>('');
   const [confirmClose, setConfirmClose] = useState(false);
+  const [confirmTakeover, setConfirmTakeover] = useState<string | null>(null);
   const retry = useRef<CareChatSend | null>(null);
   const lock = useRef(false);
   const thread = useQuery({ queryKey, queryFn: load, refetchInterval: 5000, retry: false });
@@ -42,33 +44,44 @@ export function CareChatThread({ queryKey, load, send, close, onChange, onReplyV
     return () => document.removeEventListener('visibilitychange', viewReply);
   }, [latestReply, onReplyViewed, thread.isSuccess]);
 
+  const owner = thread.data?.owner_id ?? null;
+  const ownedByMe = thread.data?.owned_by_me === true;
+  const heldByTeammate = !!owner && !ownedByMe;
+  type ThreadAction = CareChatSend | { owner: string | null; release: boolean };
+
   const action = useMutation({
-    mutationFn: async (message?: CareChatSend) => {
-      const result = message ? await send(message) : await close?.();
+    mutationFn: async (update?: ThreadAction) => {
+      const result = update
+        ? 'release' in update ? await assign?.(update.owner, update.release) : await send(update)
+        : await close?.();
       if (!result) throw Error('The conversation has expired.');
       return result;
     },
-    onSuccess: async (result, message) => {
+    onSuccess: async (result, update) => {
       await cache.cancelQueries({ queryKey, exact: true });
       cache.setQueryData(queryKey, result);
-      if (message) {
+      if (update && 'message_key' in update) {
         setDraft('');
         setBookingCategory('');
         retry.current = null;
       }
       setConfirmClose(false);
+      setConfirmTakeover(null);
       onChange?.();
+    },
+    onError: error => {
+      if ('code' in error && error.code === '55006') void thread.refetch();
     },
     onSettled: () => { lock.current = false; },
   });
 
-  function perform(message?: CareChatSend) {
+  function perform(update?: ThreadAction) {
     if (lock.current) return;
     lock.current = true;
-    action.mutate(message);
+    action.mutate(update);
   }
 
-  const canSend = thread.isSuccess && !thread.data?.closed && (!close || !!thread.data);
+  const canSend = thread.isSuccess && !thread.data?.closed && !heldByTeammate && (!close || !!thread.data);
   const code = action.error && 'code' in action.error ? action.error.code : undefined;
 
   return (
@@ -97,6 +110,23 @@ export function CareChatThread({ queryKey, load, send, close, onChange, onReplyV
         </ol>
       )}
       {thread.data?.closed && <p role="status">This chat is closed.</p>}
+      {assign && thread.isSuccess && thread.data && !thread.data.closed && (
+        <div className="space-y-2 rounded-lg border p-3">
+          <p role="status">{ownedByMe ? 'Assigned to you.' : heldByTeammate ? 'Assigned to another staff member.' : 'Unassigned chat.'}</p>
+          {heldByTeammate && confirmTakeover === owner ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <p>Take over this conversation?</p>
+              <Button size="sm" disabled={action.isPending} onClick={() => perform({ owner, release: false })}>Confirm takeover</Button>
+              <Button size="sm" variant="ghost" disabled={action.isPending} onClick={() => setConfirmTakeover(null)}>Cancel</Button>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" disabled={action.isPending} onClick={() => {
+              if (heldByTeammate) setConfirmTakeover(owner);
+              else perform({ owner, release: ownedByMe });
+            }}>{ownedByMe ? 'Release chat' : heldByTeammate ? 'Take over chat' : 'Take chat'}</Button>
+          )}
+        </div>
+      )}
       {canSend && (
         <form className="space-y-3" onSubmit={event => {
           event.preventDefault();
@@ -144,6 +174,7 @@ export function CareChatThread({ queryKey, load, send, close, onChange, onReplyV
       {action.isError && <p role="alert" className="text-destructive">
         {code === '54000' ? 'Chat is busy. Wait a minute and try again.'
           : code === '54001' ? 'This chat has reached its message limit.'
+          : code === '55006' ? 'Chat ownership changed. Check the assignment and try again.'
           : 'Could not confirm the update. Try again.'}
       </p>}
     </div>

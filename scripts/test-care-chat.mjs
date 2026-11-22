@@ -36,6 +36,9 @@ try {
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122080000_care_chat_booking_links.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122090000_care_chat_guest_reply_alert.sql', import.meta.url), 'utf8'));
   await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122100000_care_chat_inbox_filters.sql', import.meta.url), 'utf8'));
+  await db.exec(fs.readFileSync(new URL('../supabase/migrations/20261122110000_care_chat_ownership.sql', import.meta.url), 'utf8'));
+  const changeOwner = (id, expected, release = false) =>
+    get('SELECT care_chat_assign($1,$2,$3) AS result', [id, expected, release]);
   const inboxPage = (status, updatedAt = null, id = null) =>
     get('SELECT care_chat_inbox_page($1,$2,$3) AS result', [status, updatedAt, id]);
   const replyPending = (key, after) => get('SELECT care_chat_reply_pending($1,$2) AS result', [key, after]);
@@ -72,12 +75,15 @@ try {
   assert.deepEqual(await inboxPage('waiting'), [thread]);
   assert.equal(thread.awaiting_reply, true);
   assert.notEqual(thread.id, guest);
+  assert.equal((await get('SELECT care_chat_staff($1) AS result', [thread.id])).owner_id, null);
   const replyId = crypto.randomUUID();
   const staffReply = category => get('SELECT care_chat_staff($1,$2,$3,false,$4) AS result',
     [thread.id, replyId, 'Browse grooming services here.', category]);
   await assert.rejects(() => staffReply('https://example.com'));
   const replied = await staffReply('grooming');
   assert.equal(replied.messages.at(-1).sender, 'team');
+  assert.equal(replied.owner_id, admin);
+  assert.equal(replied.owned_by_me, true);
   assert.equal(replied.messages.at(-1).booking_category, 'grooming');
   assert.deepEqual(await staffReply('grooming'), replied);
   await assert.rejects(() => staffReply('training'));
@@ -88,8 +94,19 @@ try {
   await assert.rejects(() => inboxPage('waiting', null, thread.id));
   assert.equal((await get('SELECT care_chat_inbox() AS result'))[0].awaiting_reply, false);
 
+  await as(secondAdmin);
+  assert.equal((await get('SELECT care_chat_staff($1) AS result', [thread.id])).owned_by_me, false);
+  await assert.rejects(() => get('SELECT care_chat_staff($1,$2,$3) AS result', [thread.id, crypto.randomUUID(), 'Duplicate staff reply']));
+  await assert.rejects(() => get('SELECT care_chat_staff($1,close_chat=>true) AS result', [thread.id]));
+  await assert.rejects(() => changeOwner(thread.id, null));
+  assert.equal((await changeOwner(thread.id, admin)).owner_id, secondAdmin);
+  await as(admin);
+  await assert.rejects(() => changeOwner(thread.id, secondAdmin, true));
+  await as(secondAdmin);
+  assert.equal((await changeOwner(thread.id, secondAdmin, true)).owner_id, null);
   await as(null, 'anon');
-  assert.deepEqual(await guestRead(guest), replied);
+  assert.deepEqual(await guestRead(guest), { closed: replied.closed, messages: replied.messages });
+  await assert.rejects(() => changeOwner(thread.id, null));
   const lastReply = replied.messages.at(-1).id;
   assert.equal(await replyPending(guest, 0), true);
   assert.equal(await replyPending(guest, lastReply), false);
