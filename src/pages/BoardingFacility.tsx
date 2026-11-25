@@ -39,7 +39,11 @@ export default function BoardingFacility() {
         description={listing ? `Contact ${listing.name} in ${listing.city}, ${listing.state} about pet boarding.` : 'Browse approved pet boarding facilities in Nigeria.'} />
       <Navbar />
       <main id="main-content" tabIndex={-1} className="container-wide max-w-4xl space-y-6 pb-20 pt-28">
-        <Link to={{ pathname: '/boarding', search }} className="text-sm text-primary underline">Back to boarding directory</Link>
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          <Link to={{ pathname: '/boarding', search }} className="text-primary underline">Back to boarding directory</Link>
+          {savedFacility && <Link to={{ pathname: '/boarding', search, hash: '#saved-facilities' }}
+            className="text-primary underline">Back to saved facilities</Link>}
+        </div>
         {savedIndex >= 0 && saved.length > 1 && (
           <nav aria-label="Saved facility navigation" className="space-y-2 rounded-lg border bg-card p-3">
             <p className="text-sm text-muted-foreground">Saved facility {savedIndex + 1} of {saved.length}</p>

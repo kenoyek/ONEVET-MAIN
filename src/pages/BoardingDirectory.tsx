@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Bookmark, MapPin } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
@@ -21,6 +21,14 @@ export default function BoardingDirectory() {
   const { saved, update, updateNote, updateContacted, storageError } = useBoardingShortlist();
   const [awaitingOutreachOnly, setAwaitingOutreachOnly] = useState(false);
   const visibleSaved = awaitingOutreachOnly ? saved.filter(item => !item.contacted) : saved;
+  const { hash, key } = useLocation();
+  const shortlist = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (hash !== '#saved-facilities' || !shortlist.current) return;
+    shortlist.current.open = true;
+    shortlist.current.querySelector('summary')?.focus();
+  }, [hash, key]);
+
   const [params, setParams] = useSearchParams();
   const city = (params.get('city') ?? '').trim().slice(0, 80);
   const state = (params.get('state') ?? '').trim().slice(0, 80);
@@ -64,8 +72,8 @@ export default function BoardingDirectory() {
         <Link to="/services" className="text-sm text-primary underline">Back to care services</Link>
         <PageHeading size="display" title="Pet boarding directory"
           description="Browse approved facilities and contact them directly to ask about dates, rates, and requirements for your pet’s stay." />
-        <details className="rounded-xl border bg-card p-4">
-          <summary className="cursor-pointer font-semibold">Saved facilities ({saved.length})</summary>
+        <details id="saved-facilities" ref={shortlist} className="scroll-mt-28 rounded-xl border bg-card p-4">
+          <summary className="scroll-mt-28 cursor-pointer font-semibold">Saved facilities ({saved.length})</summary>
           <p className="my-3 text-sm text-muted-foreground">Your shortlist is saved in this browser.</p>
           {saved.length > 0 && (
             <label className="mb-3 flex items-center gap-2 text-sm">

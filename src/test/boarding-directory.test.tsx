@@ -202,8 +202,12 @@ it('saves a facility on its public page and removes it from the directory shortl
   fireEvent.change(screen.getByLabelText('Note for Garden Boarding'), { target: { value: 'Follow up on Friday' } });
   fireEvent.click(screen.getByRole('button', { name: 'Save note' }));
   expect(screen.getByText('Note saved.')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('link', { name: 'Back to boarding directory' }));
-  fireEvent.click(await screen.findByText('Saved facilities (1)'));
+  const backToSaved = screen.getByRole('link', { name: 'Back to saved facilities' });
+  expect(backToSaved).toHaveAttribute('href', '/boarding#saved-facilities');
+  fireEvent.click(backToSaved);
+  const summary = await screen.findByText('Saved facilities (1)');
+  expect(summary.closest('details')).toHaveAttribute('open');
+  expect(summary).toHaveFocus();
   expect(screen.getByRole('link', { name: 'Garden Boarding' })).toHaveAttribute('href', '/boarding/garden');
   expect(screen.getByRole('checkbox', { name: 'Contacted Garden Boarding' })).toBeChecked();
   fireEvent.click(screen.getByText('Edit note'));
