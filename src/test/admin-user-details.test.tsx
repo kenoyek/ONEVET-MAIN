@@ -37,7 +37,7 @@ it('opens the selected profile from View Details and uses the auth ID to load ro
   }));
 
   render(<QueryClientProvider client={new QueryClient()}>
-    <MemoryRouter initialEntries={['/admin/users']}>
+    <MemoryRouter initialEntries={[{ pathname: '/admin/users', state: { roleFilter: 'pet_owner' } }]}>
       <Routes>
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/users/:profileId" element={<ProtectedRoute allowedRoles={['admin']}><AdminUserDetails /></ProtectedRoute>} />
@@ -45,6 +45,8 @@ it('opens the selected profile from View Details and uses the auth ID to load ro
     </MemoryRouter>
   </QueryClientProvider>);
 
+  await screen.findByText('Ada Okafor');
+  fireEvent.change(screen.getByPlaceholderText('Search by name or email...'), { target: { value: 'ada@example' } });
   fireEvent.keyDown(await screen.findByRole('button', { name: 'Actions for Ada Okafor' }), { key: 'ArrowDown' });
   const details = await screen.findByRole('menuitem', { name: 'View Details' });
   expect(details).toHaveAttribute('href', `/admin/users/${profile.id}`);
@@ -54,4 +56,7 @@ it('opens the selected profile from View Details and uses the auth ID to load ro
   expect(screen.getByRole('link', { name: 'Back to users' })).toHaveAttribute('href', '/admin/users');
   expect(profileById).toHaveBeenCalledWith('id', profile.id);
   expect(rolesByUser).toHaveBeenCalledWith('user_id', profile.user_id);
+  fireEvent.click(screen.getByRole('link', { name: 'Back to users' }));
+  expect(await screen.findByPlaceholderText('Search by name or email...')).toHaveValue('ada@example');
+  expect(screen.getByRole('combobox')).toHaveTextContent('Pet Owners');
 });

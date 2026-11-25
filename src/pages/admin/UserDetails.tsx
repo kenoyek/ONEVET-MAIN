@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ const joinedDate = new Intl.DateTimeFormat('en-NG', { dateStyle: 'medium', timeZ
 
 export default function AdminUserDetails() {
   const { profileId = '' } = useParams();
+  const { state } = useLocation();
   const { user } = useAuth();
   const validId = profileIdPattern.test(profileId);
   const details = useQuery({
@@ -35,7 +36,7 @@ export default function AdminUserDetails() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main id="main-content" tabIndex={-1} className="container-wide max-w-3xl space-y-6 pb-20 pt-28">
-        <Link to="/admin/users" className="text-sm text-primary underline">Back to users</Link>
+        <Link to="/admin/users" state={state} className="text-sm text-primary underline">Back to users</Link>
         <PageHeading size="workspace" title="User details" />
         {!validId || (details.isSuccess && !account) ? (
           <p role="status">User profile not found.</p>

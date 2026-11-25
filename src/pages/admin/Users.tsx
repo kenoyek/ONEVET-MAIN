@@ -1,6 +1,6 @@
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import {
@@ -66,11 +66,22 @@ interface UserProfile {
   location: string | null;
 }
 
+const roleFilters = ['all', 'admin', 'veterinarian', 'service_provider', 'pet_owner'];
+
 export default function AdminUsers() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { searchQuery: savedSearch, roleFilter: savedRole } = location.state ?? {};
+  const searchQuery = typeof savedSearch === 'string' ? savedSearch : '';
+  const roleFilter = roleFilters.includes(savedRole) ? savedRole : 'all';
+
+  function updateFilters(nextSearch: string, nextRole: string) {
+    navigate({ pathname: location.pathname, search: location.search }, {
+      replace: true, state: { searchQuery: nextSearch, roleFilter: nextRole },
+    });
+  }
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [error, setError] = useState<string | null>(null);
 
   // Dialog states
@@ -251,11 +262,11 @@ export default function AdminUsers() {
                   <Input
                     placeholder="Search by name or email..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => updateFilters(e.target.value, roleFilter)}
                     className="pl-9"
                   />
                 </div>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <Select value={roleFilter} onValueChange={value => updateFilters(searchQuery, value)}>
                   <SelectTrigger className="w-[180px]">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="All Roles" />
@@ -359,7 +370,7 @@ export default function AdminUsers() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                  <Link to={`/admin/users/${user.id}`}>
+                                  <Link to={`/admin/users/${user.id}`} state={{ searchQuery, roleFilter }}>
                                     <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
                                     View Details
                                   </Link>
