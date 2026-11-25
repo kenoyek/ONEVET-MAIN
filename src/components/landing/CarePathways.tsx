@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, House, Search, MessageCircle, FileText, TriangleAlert, Plus } from 'lucide-react';
+import { ArrowUpRight, House, Search, CalendarPlus, CalendarCheck, TriangleAlert, Plus } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import farmImage from '@/assets/marketing/welcome-farm-760.webp';
 import petImage from '@/assets/marketing/welcome-pets-760.webp';
 
 const steps = [
-  { icon: Search, title: 'Find your care.', text: 'Explore services and provider profiles. Check their expertise, listed fees and availability.' },
-  { icon: MessageCircle, title: 'Share their story.', text: 'Sign in, describe your concern and request the care that fits your animal’s needs.' },
-  { icon: FileText, title: 'Keep it connected.', text: 'Return to your appointments, conversations and animal profiles, all in your workspace.' },
+  { icon: Search, title: 'Choose a provider', text: 'Browse services and compare provider expertise, location, and listed fees.' },
+  { icon: CalendarPlus, title: 'Request a visit', text: 'Sign in, select your animal and an available time, and tell the provider what you need.' },
+  { icon: CalendarCheck, title: 'Wait for confirmation', text: 'Your request stays pending until the provider confirms. Check My bookings for updates and messages.' },
 ];
 const questions = [
   ['How are providers reviewed?', 'Providers submit organization details and supporting documents for review. Approved providers can publish eligible services or boarding listings. Confirm availability, fees, and any special requirements directly with the provider.'],
@@ -60,7 +60,21 @@ export function CarePathways() {
         </Link>
       </div>
     </section>
-    <section className="welcome-steps" aria-labelledby="steps-heading"><div className="container-wide"><div className="welcome-section-heading"><div><p className="welcome-kicker">A simpler way forward</p><h2 id="steps-heading">From “what now?”<br /><em>to a next step.</em></h2></div><p>You don’t have to have all the answers.<br />Start with what you know about your animal.</p></div><ol className="welcome-steps-grid">{steps.map(({icon:Icon,title,text},i)=><li key={title}><div className="welcome-step-top"><span>0{i+1}</span><Icon size={25} strokeWidth={1.4} aria-hidden="true" /></div><h3>{title}</h3><p>{text}</p></li>)}</ol></div></section>
+    <section className="welcome-steps" aria-labelledby="steps-heading">
+      <div className="container-wide">
+        <div className="welcome-section-heading">
+          <h2 id="steps-heading">How to request <em>an appointment</em></h2>
+        </div>
+        <ol className="welcome-steps-grid" role="list">
+          {steps.map(({ icon: Icon, title, text }) => (
+            <li key={title}>
+              <span className="welcome-step-icon"><Icon size={23} strokeWidth={1.6} aria-hidden="true" /></span>
+              <div><h3>{title}</h3><p>{text}</p></div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
     <section className="container-wide welcome-section welcome-faq" aria-labelledby="welcome-faq-heading"><div><p className="welcome-kicker">A little reassurance</p><h2 id="welcome-faq-heading">Good questions.<br /><em>Clearer answers.</em></h2><p className="welcome-section-description">Know what to expect, so you can choose your next step with confidence.</p><Link className="welcome-text-link" to="/pricing">Review pricing and plans <ArrowUpRight size={17} aria-hidden="true" /></Link></div><Accordion type="single" collapsible className="welcome-accordion">{questions.map(([q,a])=><AccordionItem value={q!} key={q}><AccordionTrigger className="text-left gap-4 py-6 text-base">{q}</AccordionTrigger><AccordionContent className="text-muted-foreground leading-relaxed pb-6">{a}</AccordionContent></AccordionItem>)}</Accordion></section>
     <section className="container-wide welcome-urgent"><div><TriangleAlert size={22} strokeWidth={1.6} aria-hidden="true" /><div><h2>An emergency needs in-person care.</h2><p>If your animal is in immediate distress, contact a nearby veterinary clinic. Don’t wait for an online reply.</p></div><Link to="/urgent-care" className="welcome-text-link">Urgent care guidance <ArrowUpRight size={17} aria-hidden="true" /></Link></div></section>
     <section className="container-wide welcome-professionals" aria-labelledby="professional-heading"><div><div><p className="welcome-kicker"><Plus size={15} aria-hidden="true" /> For veterinary professionals</p><h2 id="professional-heading">Your expertise.<br /><em>A little more reach.</em></h2><p>Connect with animal owners and bring your care to more lives. Start a provider application for review.</p></div><Link className="welcome-button welcome-button-primary" to="/auth?mode=signup&role=veterinarian">Apply to join 1Vet <span><ArrowUpRight size={19} aria-hidden="true" /></span></Link></div></section>

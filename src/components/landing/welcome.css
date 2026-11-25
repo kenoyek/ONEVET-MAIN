@@ -59,14 +59,13 @@
 .welcome-path-boarding .welcome-path-copy { min-width: 0; align-items: center; padding: 0; }
 .welcome-path-boarding .welcome-arrow-circle { background: var(--welcome-card); }
 .welcome-path-boarding p { max-width: none; }
-.welcome-steps { background: #173d32; color: #f5f6ed; padding: 76px 0 80px; }
-.welcome-steps .welcome-kicker { color: #c4d3bd; }
-.welcome-steps .welcome-section-heading > p { color: #c4d3bd; }
-.welcome-steps-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 50px; margin-top: 48px; }
-.welcome-step-top { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid #547164; padding-top: 23px; margin-bottom: 33px; color: #d6e4b9; }
-.welcome-step-top > span { font-size: 13px; letter-spacing: .1em; }
-.welcome-steps-grid h3 { font-size: 23px; font-weight: 500; letter-spacing: -.03em; }
-.welcome-steps-grid p { font-size: 13px; line-height: 1.85; color: #c4d3bd; margin-top: 14px; max-width: 310px; }
+.welcome-steps { background: #173d32; color: #f5f6ed; padding: clamp(48px, 6vw, 80px) 0; }
+.welcome-home .welcome-steps h2 { margin-top: 0; }
+.welcome-steps-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 3vw, 36px); }
+.welcome-steps-grid li { display: flex; flex-direction: column; gap: 16px; padding: 22px 0 0; border-top: 1px solid #c4d3bd40; }
+.welcome-step-icon { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; background: #dce9b4; color: #173d32; }
+.welcome-steps-grid h3 { font-size: clamp(20px, 2vw, 25px); font-weight: 500; letter-spacing: -.03em; }
+.welcome-steps-grid p { margin-top: 8px; max-width: 36ch; color: #d3dfcf; font-size: 14px; line-height: 1.65; }
 .welcome-faq { display: grid; grid-template-columns: 1fr 1.2fr; gap: 90px; }
 .welcome-section-description { font-size: 14px; line-height: 1.8; color: var(--welcome-soft); max-width: 300px; margin: 22px 0 14px; }
 .welcome-accordion { border-top: 1px solid var(--welcome-line); }
@@ -111,11 +110,8 @@
   .welcome-path-boarding > .welcome-arrow-circle { display: none; }
   .welcome-path-copy h3 { font-size: 25px; }
   .welcome-path-copy p { font-size: 13px; }
-  .welcome-steps { padding: 58px 0; }
-  .welcome-steps-grid { grid-template-columns: 1fr; gap: 34px; margin-top: 32px; }
-  .welcome-step-top { padding-top: 18px; margin-bottom: 20px; }
-  .welcome-steps-grid h3 { font-size: 23px; }
-  .welcome-steps-grid p { max-width: none; }
+  .welcome-steps-grid { grid-template-columns: 1fr; gap: 18px; }
+  .welcome-steps-grid li { flex-direction: row; padding-top: 18px; }
   .welcome-faq { grid-template-columns: 1fr; gap: 28px; }
   .welcome-urgent { padding-bottom: 38px; }
   .welcome-urgent > div { display: grid; grid-template-columns: 22px 1fr; gap: 10px 14px; align-items: start; }
