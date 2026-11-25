@@ -446,14 +446,16 @@ function ProfileEditor() {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">License Documentation</Label>
+                  <section aria-labelledby="license-documentation-heading" className="space-y-3">
+                    <h3 id="license-documentation-heading" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      Licence documentation
+                    </h3>
                     {profile?.license_url ? (
-                      <div className="p-6 rounded-3xl border border-primary/20 bg-primary/5 shadow-soft">
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
-                          <div className="flex flex-col sm:flex-row items-center gap-4">
-                            <div className="p-3 rounded-2xl bg-primary text-primary-foreground shadow-sm">
-                              <FileText className="h-8 w-8" />
+                      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex min-w-0 items-start gap-3">
+                            <div className="shrink-0 rounded-xl bg-primary/10 p-3 text-primary">
+                              <FileText className="size-5" aria-hidden="true" />
                             </div>
                             <div>
                               <p className="font-bold text-foreground">Saved licence document</p>
@@ -470,39 +472,33 @@ function ProfileEditor() {
                             size="lg"
                             onClick={() => licenseInputRef.current?.click()}
                             disabled={isUploadingLicense || isSaving}
-                            className="rounded-full font-bold px-8 border-2"
+                            type="button"
+                            className="w-full shrink-0 rounded-full sm:w-auto"
                           >
                             {isUploadingLicense ? (
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             ) : (
-                              'Replace File'
+                              'Replace document'
                             )}
                           </Button>
                         </div>
                       </div>
                     ) : (
-                      <button type="button" disabled={isUploadingLicense || isSaving} aria-label="Upload veterinary license"
+                      <button type="button" disabled={isUploadingLicense || isSaving} aria-labelledby="license-upload-action"
                         onClick={() => licenseInputRef.current?.click()}
-                        className="p-12 rounded-[2rem] border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer text-center group"
+                        aria-describedby="license-upload-formats"
+                        className="flex min-h-24 w-full items-center gap-4 rounded-2xl border border-dashed border-muted-foreground/40 bg-muted/20 p-4 text-left transition-colors hover:border-primary hover:bg-primary/5 disabled:opacity-60 sm:p-5"
                       >
-                        {isUploadingLicense ? (
-                          <div className="flex flex-col items-center gap-3">
-                            <Loader2 className="h-12 w-12 text-primary animate-spin" />
-                            <p className="font-semibold text-sm uppercase tracking-widest text-primary">Uploading...</p>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center gap-4">
-                            <div className="p-5 rounded-[2rem] bg-muted/50 text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-soft group-hover:shadow-sm group-hover:-translate-y-1">
-                              <Upload className="h-10 w-10" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-lg tracking-tight">Upload Digital License</p>
-                              <p className="text-sm text-muted-foreground font-medium">
-                                PDF, JPG or PNG · up to 10 MB
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                        <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+                          {isUploadingLicense ? <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+                            : <Upload className="size-5" aria-hidden="true" />}
+                        </span>
+                        <span className="min-w-0">
+                          <span id="license-upload-action" className="block font-semibold">{isUploadingLicense ? 'Uploading…' : 'Upload licence document'}</span>
+                          <span id="license-upload-formats" className="mt-0.5 block text-sm text-muted-foreground">
+                            PDF, JPG or PNG · up to 10 MB
+                          </span>
+                        </span>
                       </button>
                     )}
                     {isUploadingLicense && <p role="status" className="text-sm text-muted-foreground">Saving your licence document. Please keep this page open.</p>}
@@ -515,7 +511,7 @@ function ProfileEditor() {
                       onChange={handleLicenseUpload}
                       className="hidden"
                     />
-                  </div>
+                  </section>
                 </CardContent>
               </Card>
             )}
@@ -559,7 +555,7 @@ function ProfileEditor() {
             {saveNotice?<p role="status" className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">{saveNotice}</p>:profileDirty.current&&!isSaving?<p role="status" className="text-sm text-muted-foreground">You have unsaved profile changes.</p>:null}
             {/* Save Button */}
             <div className="flex justify-center sm:justify-end pt-4">
-              <Button onClick={handleSaveProfile} disabled={isSaving || isUploadingLicense} size="xl" className="rounded-full font-semibold px-12 shadow-sm hover:scale-105 transition-all">
+              <Button onClick={handleSaveProfile} disabled={isSaving || isUploadingLicense} size="xl" className="w-full rounded-full px-8 font-semibold shadow-sm sm:w-auto">
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />
