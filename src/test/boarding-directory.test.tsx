@@ -118,16 +118,20 @@ it('opens a facility directly and keeps the city filter in the return link', asy
   fireEvent.change(departure, { target: { value: '2099-01-10' } });
   fireEvent.change(pets, { target: { value: '1 dog & 1 cat' } });
   fireEvent.click(prepare);
-  expect(screen.getByRole('alert')).toHaveTextContent('departure date after arrival');
+  expect(departure).toHaveAttribute('min', '2099-01-11');
+  expect(departure).toBeInvalid();
   expect(screen.queryByRole('link', { name: 'Open email draft' })).toBeNull();
 
+  fireEvent.change(departure, { target: { value: '2099-01-11' } });
+  expect(screen.getByText('1 night')).toBeInTheDocument();
   fireEvent.change(departure, { target: { value: '2099-01-12' } });
+  expect(screen.getByText('2 nights')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('checkbox', { name: 'Vaccinations and records' }));
   fireEvent.click(prepare);
   const draft = new URL(screen.getByRole('link', { name: 'Open email draft' }).getAttribute('href')!);
   expect(draft.pathname).toBe('boarding@example.invalid');
   expect(draft.searchParams.get('subject')).toBe('Boarding inquiry for Garden Boarding');
-  expect(draft.searchParams.get('body')).toContain('Arrival: 2099-01-10\r\nDeparture: 2099-01-12\r\nPets: 1 dog & 1 cat');
+  expect(draft.searchParams.get('body')).toContain('Arrival: 2099-01-10\r\nDeparture: 2099-01-12\r\nStay length: 2 nights\r\nPets: 1 dog & 1 cat');
 
   expect(draft.searchParams.get('body')).toContain('What vaccinations and records do you require?');
   expect(draft.searchParams.get('body')).not.toContain('drop-off and pick-up hours');

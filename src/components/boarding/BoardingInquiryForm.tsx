@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
+const dayInMilliseconds = 86_400_000;
 const boardingDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Africa/Lagos' });
 
 const inquiryTopics = [
@@ -46,20 +47,27 @@ function BoardingInquiryDraft({ email, draft }: { email: string; draft: InquiryD
 
 export function BoardingInquiryForm({ name, email }: { name: string; email: string }) {
   const [arrival, setArrival] = useState('');
+  const [departure, setDeparture] = useState('');
   const [draft, setDraft] = useState<InquiryDraft | null>(null);
   const [error, setError] = useState('');
   const today = boardingDate.format(new Date());
+  const arrivalDay = Date.parse(arrival + 'T00:00:00Z');
+  const departureDay = Date.parse(departure + 'T00:00:00Z');
+  const firstDeparture = new Date(Math.max(Date.parse(today), arrivalDay || 0) + dayInMilliseconds)
+    .toISOString().split('T')[0];
+  const nights = (departureDay - arrivalDay) / dayInMilliseconds;
+  const validStay = arrivalDay >= Date.parse(today) && nights > 0;
+  const stayLength = `${nights} ${nights === 1 ? 'night' : 'nights'}`;
 
   function prepareDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const departure = String(data.get('departure'));
     const pets = String(data.get('pets')).trim();
     const notes = String(data.get('notes')).trim();
     const topics = data.getAll('topics');
     const questions = inquiryTopics.filter(({ value }) => topics.includes(value)).map(({ question }) => `- ${question}`);
 
-    if (arrival < boardingDate.format(new Date()) || departure <= arrival) {
+    if (!(arrivalDay >= Date.parse(boardingDate.format(new Date())) && nights > 0)) {
       setError('Choose an arrival date from today onward and a departure date after arrival.');
       return;
     }
@@ -76,6 +84,7 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
       '',
       `Arrival: ${arrival}`,
       `Departure: ${departure}`,
+      `Stay length: ${stayLength}`,
       `Pets: ${pets}`,
       ...(notes ? [`Additional details: ${notes}`] : []),
       ...(questions.length ? ['', 'Questions about the stay:', ...questions] : []),
@@ -93,14 +102,16 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="boarding-arrival">Arrival date</Label>
-          <Input id="boarding-arrival" name="arrival" type="date" required min={today}
+          <Input id="boarding-arrival" name="arrival" type="date" required min={today} max="9999-12-30"
             value={arrival} onChange={(event) => setArrival(event.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="boarding-departure">Departure date</Label>
-          <Input id="boarding-departure" name="departure" type="date" required min={arrival || today} />
+          <Input id="boarding-departure" name="departure" type="date" required min={firstDeparture} max="9999-12-31"
+            value={departure} onChange={(event) => setDeparture(event.target.value)} />
         </div>
       </div>
+      <p role="status" className="text-sm text-muted-foreground">{validStay ? stayLength : ''}</p>
       <div className="space-y-2">
         <Label htmlFor="boarding-pets">Pets</Label>
         <Input id="boarding-pets" name="pets" required maxLength={160} placeholder="e.g. 2 dogs, one small and one medium" />
