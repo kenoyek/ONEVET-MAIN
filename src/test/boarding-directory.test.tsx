@@ -194,9 +194,14 @@ it('saves a facility on its public page and removes it from the directory shortl
   </QueryClientProvider>);
   fireEvent.click(await screen.findByRole('button', { name: 'Save to shortlist' }));
   expect(screen.getByRole('button', { name: 'Remove from shortlist' })).toBeInTheDocument();
+  const contacted = screen.getByRole('checkbox', { name: 'I’ve contacted this facility' });
+  expect(contacted).not.toBeChecked();
+  fireEvent.click(contacted);
+  expect(contacted).toBeChecked();
   fireEvent.click(screen.getByRole('link', { name: 'Back to boarding directory' }));
   fireEvent.click(await screen.findByText('Saved facilities (1)'));
   expect(screen.getByRole('link', { name: 'Garden Boarding' })).toHaveAttribute('href', '/boarding/garden');
+  expect(screen.getByRole('checkbox', { name: 'Contacted Garden Boarding' })).toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Remove Garden Boarding from shortlist' }));
   expect(screen.getByText('Saved facilities (0)')).toBeInTheDocument();
 });

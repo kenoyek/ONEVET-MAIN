@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { getBoardingFacility } from '@/lib/services/boarding-directory';
 
 export default function BoardingFacility() {
-  const { saved, update, storageError } = useBoardingShortlist();
+  const { saved, update, updateContacted, storageError } = useBoardingShortlist();
   const { slug = '' } = useParams();
   const { search } = useLocation();
   const facility = useQuery({
@@ -27,7 +27,7 @@ export default function BoardingFacility() {
     api: '1',
     query: [listing.name, listing.city, listing.state, 'Nigeria'].join(', '),
   })}` : undefined;
-  const isSaved = saved.some(item => item.slug === listing?.slug);
+  const savedFacility = saved.find(item => item.slug === listing?.slug);
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,8 +58,8 @@ export default function BoardingFacility() {
               </a>
             </div>
             <div className="flex flex-wrap items-start gap-2">
-              <Button variant="outline" size="sm" type="button" onClick={() => update(listing, !isSaved)}>
-                {isSaved ? 'Remove from shortlist' : 'Save to shortlist'}
+              <Button variant="outline" size="sm" type="button" onClick={() => update(listing, !savedFacility)}>
+                {savedFacility ? 'Remove from shortlist' : 'Save to shortlist'}
               </Button>
               <BoardingShareLink key={listing.slug} slug={listing.slug} />
             </div>
@@ -75,6 +75,13 @@ export default function BoardingFacility() {
               <p className="text-sm text-muted-foreground">Contact the facility to confirm its address, available dates, rates, and what your pet needs to bring.</p>
               <BoardingInquiryForm key={listing.slug} name={listing.name} email={listing.email} />
               <BoardingEmailLink name={listing.name} email={listing.email} />
+              {savedFacility && (
+                <label className="flex w-fit items-center gap-2 text-sm">
+                  <input type="checkbox" className="size-4 accent-primary" checked={savedFacility.contacted === true}
+                    onChange={event => updateContacted(listing.slug, event.target.checked)} />
+                  I’ve contacted this facility
+                </label>
+              )}
             </section>
           </>
         )}
