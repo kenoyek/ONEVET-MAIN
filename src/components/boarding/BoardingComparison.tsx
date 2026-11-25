@@ -32,6 +32,7 @@ function ComparisonCard({ facility, search }: { facility: SavedFacility; search:
             aria-label={`Open ${listing.data.name} for inquiries`}>Open facility for inquiries</Link>
         </>
       ) : <p className="text-sm">This listing is unavailable.</p>)}
+      <p className="text-sm text-muted-foreground">{facility.contacted ? 'Contacted' : 'Awaiting outreach'}</p>
       {facility.note && (
         <div className="border-t pt-2 text-sm">
           <p className="font-medium">Your note</p>

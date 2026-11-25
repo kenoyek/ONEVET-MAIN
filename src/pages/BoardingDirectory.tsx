@@ -18,7 +18,7 @@ import { boardingRegistrationPath } from '@/lib/registration-intent';
 import { listBoardingFacilities } from '@/lib/services/boarding-directory';
 
 export default function BoardingDirectory() {
-  const { saved, update, updateNote, storageError } = useBoardingShortlist();
+  const { saved, update, updateNote, updateContacted, storageError } = useBoardingShortlist();
   const [params, setParams] = useSearchParams();
   const city = (params.get('city') ?? '').trim().slice(0, 80);
   const state = (params.get('state') ?? '').trim().slice(0, 80);
@@ -74,6 +74,12 @@ export default function BoardingDirectory() {
                   }}>{item.name}</Link>
                   <Button size="sm" variant="ghost" type="button" aria-label={`Remove ${item.name} from shortlist`}
                     onClick={() => update(item, false)}>Remove</Button>
+                  <label className="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" className="size-4 accent-primary" checked={item.contacted === true}
+                      aria-label={`Contacted ${item.name}`}
+                      onChange={event => updateContacted(item.slug, event.target.checked)} />
+                    Contacted
+                  </label>
                   <BoardingShortlistNote facility={item} onSave={note => updateNote(item.slug, note)} />
                 </li>
               ))}

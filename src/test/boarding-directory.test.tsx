@@ -237,7 +237,7 @@ it('shares saved facility names and public links when clipboard access is blocke
   const datesKey = 'onevet.boarding-stay-dates';
   sessionStorage.setItem(datesKey, JSON.stringify({ arrival: '2099-01-10', departure: '2099-01-12' }));
   localStorage.setItem(key, JSON.stringify([
-    { slug: 'garden', name: 'Garden Boarding', note: 'Private quote' },
+    { slug: 'garden', name: 'Garden Boarding', note: 'Private quote', contacted: true },
     { slug: 'park', name: 'Park Boarding' },
   ]));
   vi.mocked(listBoardingFacilities).mockResolvedValueOnce({ facilities: [], hasMore: false });
@@ -340,7 +340,13 @@ it('compares current public listings and handles a withdrawn facility', async ()
     fireEvent.change(savedItem.getByLabelText('Note for Garden Boarding'), { target: { value: 'Ask about weekend rates' } });
     fireEvent.click(savedItem.getByRole('button', { name: 'Save note' }));
     expect(screen.getByText('Note saved.')).toBeInTheDocument();
-    expect(localStorage.getItem(key)).toContain('Ask about weekend rates');
+    const contacted = savedItem.getByRole('checkbox', { name: 'Contacted Garden Boarding' });
+    expect(contacted).not.toBeChecked();
+    fireEvent.click(contacted);
+    expect(contacted).toBeChecked();
+    expect(JSON.parse(localStorage.getItem(key) ?? '[]')[0]).toMatchObject({
+      note: 'Ask about weekend rates', contacted: true,
+    });
     fireEvent.click(screen.getByText('Compare saved facilities'));
     const compare = screen.getByRole('button', { name: 'Compare selected' });
     expect(compare).toBeDisabled();
@@ -350,6 +356,10 @@ it('compares current public listings and handles a withdrawn facility', async ()
     const comparison = within(screen.getByRole('region', { name: 'Boarding comparison' }));
     expect(await comparison.findByText('Overnight facilities')).toBeInTheDocument();
     expect(comparison.getByText('Ask about weekend rates')).toBeInTheDocument();
+    expect(comparison.getByText('Contacted')).toBeInTheDocument();
+    fireEvent.click(contacted);
+    expect(contacted).not.toBeChecked();
+    expect(comparison.queryByText('Contacted')).not.toBeInTheDocument();
     expect(await comparison.findByText('This listing is unavailable.')).toBeInTheDocument();
     expect(comparison.getByRole('link', { name: 'Open Garden Boarding for inquiries' }))
       .toHaveAttribute('href', '/boarding/garden');
