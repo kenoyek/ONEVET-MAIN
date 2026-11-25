@@ -1,13 +1,22 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { expect, it, vi } from 'vitest';
+import { afterEach, expect, it, vi } from 'vitest';
 import NotificationComposer from '@/pages/admin/NotificationComposer';
 
 const { rpc, from, range } = vi.hoisted(() => ({ rpc: vi.fn(), from: vi.fn(), range: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc, from } }));
 vi.mock('@/lib/auth-context', () => ({ useAuth: () => ({ user: { id: 'admin-fixture' } }) }));
 vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => null }));
+
+const storageKey = 'onevet.notification-draft.admin-fixture';
+afterEach(() => sessionStorage.removeItem(storageKey));
+
+function mountComposer() {
+  return render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter><NotificationComposer /></MemoryRouter>
+  </QueryClientProvider>);
+}
 
 it('previews a broadcast before sending and reuses its request ID on retry', async () => {
   const query = { select: vi.fn(), eq: vi.fn(), order: vi.fn(), range };
@@ -23,20 +32,27 @@ it('previews a broadcast before sending and reuses its request ID on retry', asy
   });
   rpc.mockResolvedValueOnce({ data: null, error: { message: 'Connection lost' } })
     .mockResolvedValueOnce({ data: 3, error: null });
-  render(<QueryClientProvider client={new QueryClient()}>
-    <MemoryRouter><NotificationComposer /></MemoryRouter>
-  </QueryClientProvider>);
+  let composer = mountComposer();
 
   await screen.findByText('No notifications have been sent yet.');
   fireEvent.change(screen.getByLabelText('Title'), { target: { value: '  Service update  ' } });
   fireEvent.change(screen.getByLabelText('Message'), { target: { value: '  New hours this weekend.  ' } });
+  composer.unmount();
+  composer = mountComposer();
+  expect(screen.getByLabelText('Title')).toHaveValue('  Service update  ');
+  expect(screen.getByLabelText('Message')).toHaveValue('  New hours this weekend.  ');
   fireEvent.click(screen.getByRole('button', { name: 'Review notification' }));
-  expect(screen.getByText('New hours this weekend.')).toBeInTheDocument();
+  expect(within(screen.getByRole('region', { name: 'Review notification' })).getByText('New hours this weekend.')).toBeInTheDocument();
   expect(rpc).not.toHaveBeenCalled();
 
   fireEvent.click(screen.getByRole('button', { name: 'Send to all active accounts' }));
+  await screen.findByRole('button', { name: 'Retry send' });
+  composer.unmount();
+  mountComposer();
+  expect(rpc).toHaveBeenCalledTimes(1);
   fireEvent.click(await screen.findByRole('button', { name: 'Retry send' }));
   await screen.findByText('Notification sent to 3 accounts.');
+  expect(sessionStorage.getItem(storageKey)).toBeNull();
   expect(rpc).toHaveBeenCalledTimes(2);
   expect(rpc).toHaveBeenCalledWith('send_admin_notification', {
     request_id: expect.any(String), notification_title: 'Service update',

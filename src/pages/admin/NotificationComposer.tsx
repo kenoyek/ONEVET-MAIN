@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { NotificationHistory } from '@/components/admin/NotificationHistory';
@@ -13,17 +13,52 @@ import { supabase } from '@/integrations/supabase/client';
 
 type Broadcast = { id: string; title: string; message: string };
 
+type StoredDraft = { title: string; message: string; pendingId?: string };
+
+function readDraft(key: string): StoredDraft {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(key) ?? 'null');
+    if (typeof value?.title === 'string' && typeof value.message === 'string') {
+      const pendingId = typeof value.pendingId === 'string' && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value.pendingId)
+        ? value.pendingId : undefined;
+      return { title: value.title, message: value.message, pendingId };
+    }
+  } catch {
+    // The composer still works if browser storage is unavailable.
+  }
+  return { title: '', message: '' };
+}
+
+function storeDraft(key: string, value: StoredDraft) {
+  try {
+    if (value.title || value.message) sessionStorage.setItem(key, JSON.stringify(value));
+    else sessionStorage.removeItem(key);
+  } catch {
+    // Keep the current draft available in memory.
+  }
+}
+
 export default function NotificationComposer() {
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [draft, setDraft] = useState<Broadcast | null>(null);
+  const adminId = useAuth().user?.id;
+  return adminId ? <Composer key={adminId} adminId={adminId} /> : null;
+}
+
+function Composer({ adminId }: { adminId: string }) {
+  const storageKey = `onevet.notification-draft.${adminId}`;
+  const [stored] = useState(() => readDraft(storageKey));
+  const [title, setTitle] = useState(stored.title);
+  const [message, setMessage] = useState(stored.message);
+  const [draft, setDraft] = useState<Broadcast | null>(() => stored.pendingId
+    ? { id: stored.pendingId, title: stored.title, message: stored.message } : null);
   const [sending, setSending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(Boolean(stored.pendingId));
   const [sentCount, setSentCount] = useState<number | null>(null);
   const sendingLock = useRef(false);
   const titleInput = useRef<HTMLInputElement>(null);
   const cache = useQueryClient();
-  const adminId = useAuth().user?.id;
+  useEffect(() => {
+    if (!draft) storeDraft(storageKey, { title, message });
+  }, [storageKey, title, message, draft]);
 
   const reuseDisabled = Boolean(draft || title || message);
 
@@ -47,11 +82,13 @@ export default function NotificationComposer() {
     sendingLock.current = true;
     setSending(true);
     setFailed(false);
+    storeDraft(storageKey, { title: draft.title, message: draft.message, pendingId: draft.id });
     try {
       const { data, error } = await supabase.rpc('send_admin_notification', {
         request_id: draft.id, notification_title: draft.title, notification_message: draft.message,
       });
       if (error || typeof data !== 'number') throw new Error('Broadcast outcome unavailable');
+      storeDraft(storageKey, { title: '', message: '' });
       setSentCount(data);
       setDraft(null);
       setTitle('');
@@ -99,11 +136,11 @@ export default function NotificationComposer() {
               <Textarea id="notification-message" required maxLength={1000} rows={6}
                 value={message} onChange={event => setMessage(event.target.value)} />
             </div>
+            <p className="text-sm text-muted-foreground">Drafts are kept in this browser tab.</p>
             <Button type="submit" disabled={!title.trim() || !message.trim()}>Review notification</Button>
           </form>
         )}
-        {adminId && <NotificationHistory key={adminId} adminId={adminId}
-          reuseDisabled={reuseDisabled} onReuse={reuseNotification} />}
+        <NotificationHistory adminId={adminId} reuseDisabled={reuseDisabled} onReuse={reuseNotification} />
       </main>
     </div>
   );
