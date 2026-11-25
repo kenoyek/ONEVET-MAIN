@@ -6,6 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 
 const boardingDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Africa/Lagos' });
 
+const inquiryTopics = [
+  { value: 'vaccinations', label: 'Vaccinations and records', question: 'What vaccinations and records do you require?' },
+  { value: 'care', label: 'Feeding and medication', question: 'Can you accommodate special feeding routines or administer medication?' },
+  { value: 'handoff', label: 'Drop-off and pick-up', question: 'What are your drop-off and pick-up hours?' },
+];
+
 type InquiryDraft = { subject: string; body: string };
 
 function BoardingInquiryDraft({ email, draft }: { email: string; draft: InquiryDraft }) {
@@ -50,6 +56,8 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
     const departure = String(data.get('departure'));
     const pets = String(data.get('pets')).trim();
     const notes = String(data.get('notes')).trim();
+    const topics = data.getAll('topics');
+    const questions = inquiryTopics.filter(({ value }) => topics.includes(value)).map(({ question }) => `- ${question}`);
 
     if (arrival < boardingDate.format(new Date()) || departure <= arrival) {
       setError('Choose an arrival date from today onward and a departure date after arrival.');
@@ -70,6 +78,7 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
       `Departure: ${departure}`,
       `Pets: ${pets}`,
       ...(notes ? [`Additional details: ${notes}`] : []),
+      ...(questions.length ? ['', 'Questions about the stay:', ...questions] : []),
       '',
       'Thank you!',
     ].join('\r\n');
@@ -96,6 +105,15 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
         <Label htmlFor="boarding-pets">Pets</Label>
         <Input id="boarding-pets" name="pets" required maxLength={160} placeholder="e.g. 2 dogs, one small and one medium" />
       </div>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium">Questions to include (optional)</legend>
+        {inquiryTopics.map(({ value, label }) => (
+          <label key={value} className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="topics" value={value} className="size-4 accent-primary" />
+            {label}
+          </label>
+        ))}
+      </fieldset>
       <div className="space-y-2">
         <Label htmlFor="boarding-notes">Additional details (optional)</Label>
         <Textarea id="boarding-notes" name="notes" maxLength={400} rows={3} placeholder="Feeding needs or questions for the facility" />

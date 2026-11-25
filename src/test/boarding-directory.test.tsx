@@ -122,12 +122,15 @@ it('opens a facility directly and keeps the city filter in the return link', asy
   expect(screen.queryByRole('link', { name: 'Open email draft' })).toBeNull();
 
   fireEvent.change(departure, { target: { value: '2099-01-12' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Vaccinations and records' }));
   fireEvent.click(prepare);
   const draft = new URL(screen.getByRole('link', { name: 'Open email draft' }).getAttribute('href')!);
   expect(draft.pathname).toBe('boarding@example.invalid');
   expect(draft.searchParams.get('subject')).toBe('Boarding inquiry for Garden Boarding');
   expect(draft.searchParams.get('body')).toContain('Arrival: 2099-01-10\r\nDeparture: 2099-01-12\r\nPets: 1 dog & 1 cat');
 
+  expect(draft.searchParams.get('body')).toContain('What vaccinations and records do you require?');
+  expect(draft.searchParams.get('body')).not.toContain('drop-off and pick-up hours');
   const copy = screen.getByRole('button', { name: 'Copy inquiry' });
   expect((screen.getByLabelText('Inquiry details') as HTMLTextAreaElement).value)
     .toContain('To: boarding@example.invalid\nSubject: Boarding inquiry for Garden Boarding');
