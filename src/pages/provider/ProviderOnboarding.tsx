@@ -1,5 +1,5 @@
 import { PageHeading } from '@/components/layout/PageHeading';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,15 @@ import { emptyProviderDraft, providerDraftService } from '@/lib/services/provide
 export default function ProviderOnboarding() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const isBoardingRegistration = params.get('category') === 'boarding_facility';
+  const signupCategory = isBoardingRegistration ? 'boarding_facility' : profile?.vendor_type;
   const cache = useQueryClient();
   const organizations = useQuery({ queryKey: ['provider-drafts', user?.id], queryFn: () => providerDraftService.list(user!.id), enabled: !!user });
   return <div className="min-h-screen bg-background"><Navbar />
     <main id="main-content" tabIndex={-1} className="container-wide pt-32 pb-20 max-w-4xl">
       <p className="eyebrow mb-4">Veterinary & service partners</p>
-      <PageHeading size="workspace" className="mb-4" title={<> Register your organization </>}/>
+      <PageHeading size="workspace" className="mb-4" title={isBoardingRegistration ? 'Register your boarding facility' : 'Register your organization'}/>
       <p className="text-muted-foreground mb-8">Save your business details as a private draft. Registration does not grant professional approval or publish your business. After saving, attach documents and submit your organization for review. Approved organizations can publish services and accept booking requests where those features are available for their category. Owners can also invite a team.</p>
       <Button asChild variant="outline" className="mb-6"><Link to="/provider/invitations">Team invitations and workspaces</Link></Button>
       <section className="care-path mb-8" aria-labelledby="your-organizations">
@@ -25,7 +28,7 @@ export default function ProviderOnboarding() {
       </section>
       <section className="care-path"><h2 className="text-xl mb-2">Organization and primary location</h2>
         <p className="text-sm text-muted-foreground mb-6">Currently supporting Nigeria · Africa/Lagos (WAT) · NGN. Enter the actual address of your primary location.</p>
-        <ProviderDraftForm key={user?.id} initial={emptyProviderDraft(user?.email, profile?.vendor_type)} onSave={async input => {
+        <ProviderDraftForm key={`${user?.id}-${isBoardingRegistration}`} initial={emptyProviderDraft(user?.email, signupCategory)} onSave={async input => {
           try {
             const saved = await providerDraftService.save(input);
             navigate(`/provider/organization/${saved.slug}`);

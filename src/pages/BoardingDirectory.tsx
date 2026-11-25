@@ -10,6 +10,7 @@ import { SEO } from '@/components/shared/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { boardingRegistrationPath } from '@/lib/registration-intent';
 import { listBoardingFacilities } from '@/lib/services/boarding-directory';
 
 export default function BoardingDirectory() {
@@ -102,6 +103,13 @@ export default function BoardingDirectory() {
           {listings.isSuccess && listings.data.hasMore && last && <Button variant="outline"
             disabled={listings.isFetching} onClick={() => setPagination({ city, state, pages: [...pages, last.slug] })}>Next page</Button>}
         </div>
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-5" aria-labelledby="boarding-operator-heading">
+          <div className="space-y-1">
+            <h2 id="boarding-operator-heading" className="text-lg font-semibold">Run a boarding facility?</h2>
+            <p className="text-sm text-muted-foreground">Register your facility and submit it for review. Once approved, you can choose to publish your listing here.</p>
+          </div>
+          <Button asChild variant="outline"><Link to={boardingRegistrationPath}>Register your boarding facility</Link></Button>
+        </section>
       </main>
       <Footer />
     </div>

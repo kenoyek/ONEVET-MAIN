@@ -27,6 +27,8 @@ it('searches by city and shows a direct boarding inquiry link', async () => {
     }], hasMore: false });
   mount(<BoardingDirectory />);
   await screen.findByText('No boarding facilities are listed yet.');
+  expect(screen.getByRole('link', { name: 'Register your boarding facility' }))
+    .toHaveAttribute('href', '/provider/register?category=boarding_facility');
   fireEvent.change(screen.getByLabelText('City'), { target: { value: ' Ibadan ' } });
   fireEvent.click(screen.getByRole('button', { name: 'Find facilities' }));
   expect(await screen.findByRole('link', { name: 'Email Garden Boarding' }))

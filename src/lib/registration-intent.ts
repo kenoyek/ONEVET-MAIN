@@ -1,3 +1,5 @@
+export const boardingRegistrationPath = '/provider/register?category=boarding_facility';
+
 export function registrationIntent(role: string | null) {
   const value = (role || '').trim().toLowerCase();
   const categories: Record<string, string> = {

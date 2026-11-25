@@ -27,7 +27,10 @@ const Auth = () => {
   const { user, role, roles, loading, passwordRecovery, permissionsError } = useAuth();
   const mode = authMode(searchParams.get('mode'));
   const fromProviderRegistration = /^\/provider\/register\/?$/i.test(returnPath?.split(/[?#]/)[0] ?? '');
-  const intent = registrationIntent(searchParams.get('role') ?? (fromProviderRegistration ? 'provider' : null));
+  const boardingRegistration = fromProviderRegistration && returnPath &&
+    new URL(returnPath, window.location.origin).searchParams.get('category') === 'boarding_facility';
+  const defaultRole = boardingRegistration ? 'boarding_facility' : fromProviderRegistration ? 'provider' : null;
+  const intent = registrationIntent(searchParams.get('role') ?? defaultRole);
   const selectedRole = intent.audience;
 
   const isProviderFlow = selectedRole === 'provider';
@@ -36,7 +39,7 @@ const Auth = () => {
   function chooseAudience(audience: SelectedRole) {
     const params = new URLSearchParams(searchParams);
     if (audience) {
-      params.set('role', audience === 'provider' ? 'provider' : 'pet_owner');
+      params.set('role', audience === 'provider' ? defaultRole ?? 'provider' : 'pet_owner');
     } else if (fromProviderRegistration) {
       params.set('role', 'choose');
     } else {

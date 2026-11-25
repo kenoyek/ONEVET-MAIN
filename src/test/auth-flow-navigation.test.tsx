@@ -5,7 +5,7 @@ const mock=vi.hoisted(()=>({user:null as null|{id:string},role:null as string|nu
 vi.mock('@/lib/auth-context',()=>({useAuth:()=>mock}));
 vi.mock('@/components/auth/SignInForm',()=>({SignInForm:({onForgotPassword}:{onForgotPassword:()=>void})=><button onClick={onForgotPassword}>Forgot password?</button>}));
 vi.mock('@/components/auth/SignUpForm',()=>({SignUpForm:()=> <p>Owner registration form</p>}));
-vi.mock('@/components/auth/ProviderSignUpForm',()=>({ProviderSignUpForm:()=> <p>Provider registration form</p>}));
+vi.mock('@/components/auth/ProviderSignUpForm',()=>({ProviderSignUpForm:({initialCategory}:{initialCategory?:string})=> <p>Provider registration form{initialCategory && ` for ${initialCategory}`}</p>}));
 vi.mock('@/components/auth/PasswordResetForm',()=>({PasswordResetForm:()=> <p>Recovery request form</p>}));
 vi.mock('@/components/auth/NewPasswordForm',()=>({NewPasswordForm:()=> <p>New password form</p>}));
 import Auth from '@/pages/Auth';
@@ -42,4 +42,23 @@ it('restores the account type chooser when navigating back from a signup form', 
   fireEvent.click(screen.getByRole('button',{name:'Browser back'}));
   await screen.findByRole('button',{name:/Professional Provider/});
   expect(screen.queryByText('Provider registration form')).not.toBeInTheDocument();
+});
+
+it('preselects boarding signup and returns operators to their registration form', async () => {
+  const view = render(<MemoryRouter initialEntries={[{
+    pathname: '/auth',
+    search: '?mode=signup',
+    state: { from: { pathname: '/provider/register', search: '?category=boarding_facility' } },
+  }]}><Routes>
+    <Route path="/auth" element={<Auth />} />
+    <Route path="/provider/register" element={<Destination />} />
+  </Routes></MemoryRouter>);
+  await screen.findByText('Provider registration form for Boarding Facility');
+  mock.user = { id: 'boarding-operator' };
+  mock.role = 'service_provider';
+  view.rerender(<MemoryRouter><Routes>
+    <Route path="/auth" element={<Auth />} />
+    <Route path="/provider/register" element={<Destination />} />
+  </Routes></MemoryRouter>);
+  await screen.findByText('Destination: /provider/register?category=boarding_facility');
 });
