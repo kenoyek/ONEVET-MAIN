@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { veterinaryLicenseLink } from '@/lib/services/license-service';
 
-export function LicenseDocumentLink({ value, ownerUserId }: { value: string; ownerUserId: string }) {
+export function LicenseDocumentLink({ value, ownerUserId, onOpen }: { value: string; ownerUserId: string; onOpen?: () => void }) {
   const [url, setUrl] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +27,7 @@ export function LicenseDocumentLink({ value, ownerUserId }: { value: string; own
         {busy ? 'Preparing link…' : url ? 'Refresh document link' : 'Prepare document link'}
       </Button>
       {url && (
-        <a className="block text-sm text-primary underline" href={url} target="_blank" rel="noopener noreferrer">
+        <a className="block text-sm text-primary underline" href={url} target="_blank" rel="noopener noreferrer" onClick={onOpen}>
           Open licence document <span className="sr-only">(opens in a new tab)</span>
         </a>
       )}

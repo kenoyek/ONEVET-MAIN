@@ -12,13 +12,15 @@ export function VetReviewDialog({ application, approve, onClose, onConfirm }: {
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }) {
+  const [openedDocument, setOpenedDocument] = useState(false);
+  const canAcknowledge = !approve || openedDocument;
   const [reviewed, setReviewed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const lock = useRef(false);
   const name = [application.first_name, application.last_name].filter(Boolean).join(' ') || 'this applicant';
   async function confirm() {
-    if (lock.current || !reviewed) return;
+    if (lock.current || !canAcknowledge || !reviewed) return;
     lock.current = true; setBusy(true); setError('');
     try { await onConfirm(); onClose(); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'The decision could not be saved. Try again.'); }
@@ -36,16 +38,20 @@ export function VetReviewDialog({ application, approve, onClose, onConfirm }: {
         <p className="break-words font-semibold">{name}</p>
         {application.email && <p className="break-all text-sm text-muted-foreground">{application.email}</p>}
         <p className="mt-3 break-all text-sm">Licence number: <strong>{application.license_number}</strong></p>
-        {application.license_url && <LicenseDocumentLink value={application.license_url} ownerUserId={application.user_id} />}
+        {application.license_url && (
+          <LicenseDocumentLink value={application.license_url} ownerUserId={application.user_id}
+            onOpen={() => setOpenedDocument(true)} />
+        )}
+        {approve && !openedDocument && <p className="mt-2 text-sm text-muted-foreground">Open the licence document to continue with approval.</p>}
       </div>
       <div className="flex items-start gap-3">
-        <Checkbox id="vet-review-confirmed" checked={reviewed} disabled={busy} onCheckedChange={value => setReviewed(value === true)} />
+        <Checkbox id="vet-review-confirmed" checked={reviewed} disabled={busy || !canAcknowledge} onCheckedChange={value => setReviewed(value === true)} />
         <Label htmlFor="vet-review-confirmed" className="leading-relaxed">I have reviewed this applicant’s licence number and document.</Label>
       </div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button variant="outline" disabled={busy} onClick={onClose}>Cancel review</Button>
-        <Button variant={approve ? 'default' : 'destructive'} disabled={busy || !reviewed} onClick={() => void confirm()}>
+        <Button variant={approve ? 'default' : 'destructive'} disabled={busy || !canAcknowledge || !reviewed} onClick={() => void confirm()}>
           {busy ? 'Saving decision…' : approve ? 'Confirm approval' : 'Confirm rejection'}
         </Button>
       </div>

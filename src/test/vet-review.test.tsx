@@ -2,7 +2,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { VetReviewDialog } from '@/components/onboarding/VetReviewDialog';
 import type { PendingVet } from '@/lib/services/admin-vet-summary-service';
-vi.mock('@/components/onboarding/LicenseDocumentLink', () => ({ LicenseDocumentLink: () => <button>View licence document</button> }));
+const { link } = vi.hoisted(() => ({ link: vi.fn() }));
+vi.mock('@/lib/services/license-service', () => ({ veterinaryLicenseLink: link }));
 const application: PendingVet = { id: 'profile', user_id: 'f0000000-0000-4000-8000-000000000001', first_name: 'Ada', last_name: 'Vet', email: 'ada@example.invalid', license_number: 'VCN-123', license_url: 'f0000000-0000-4000-8000-000000000001/licence.pdf', created_at: '2026-11-18', vendor_type: 'veterinarian' };
 afterEach(cleanup);
 describe('vet review confirmation', () => {
@@ -28,8 +29,20 @@ describe('vet review confirmation', () => {
   it('blocks repeat decisions and dismissal while a decision is saving', async () => {
     let resolve!: () => void;
     const confirm = vi.fn(() => new Promise<void>(done => { resolve = done; })), close = vi.fn();
+    link.mockRejectedValueOnce(new Error('Unavailable')).mockResolvedValueOnce('https://example.invalid/signed-document');
     render(<VetReviewDialog application={application} approve onConfirm={confirm} onClose={close} />);
-    fireEvent.click(screen.getByRole('checkbox')); fireEvent.click(screen.getByRole('button', { name: 'Confirm approval' }));
+    const checkbox = screen.getByRole('checkbox');
+    expect(checkbox).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare document link' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('could not be opened');
+    expect(checkbox).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare document link' }));
+    const document = await screen.findByRole('link', { name: /Open licence document/ });
+    expect(document).toHaveAttribute('href', 'https://example.invalid/signed-document');
+    expect(checkbox).toBeDisabled();
+    fireEvent.click(document);
+    expect(checkbox).toBeEnabled();
+    fireEvent.click(checkbox); fireEvent.click(screen.getByRole('button', { name: 'Confirm approval' }));
     expect(screen.getByRole('button', { name: 'Saving decision…' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel review' })).toBeDisabled();
     fireEvent.keyDown(screen.getByRole('alertdialog'), { key: 'Escape' }); expect(close).not.toHaveBeenCalled();
