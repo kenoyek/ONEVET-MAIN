@@ -48,6 +48,8 @@ sql.append(check(f"exists(select 1 from storage.objects where bucket_id='license
 sql.append(f"update profiles set license_verified=true,verification_status='approved' where user_id='{uid}' and verification_status='pending' and license_url='{fresh}' and license_number='FIXTURE-ONLY';")
 sql.append(check(f"public.is_verified_veterinarian('{uid}')", 'admin approval enables verified veterinarian status'))
 sql.append(check(f"exists(select 1 from audit_logs where user_id='{admin}' and action='profile_verification_changed')", 'admin decision is recorded'))
+sql.append(f"select set_config('request.jwt.claim.sub','{uid}',true);")
+sql.append(check(f"(select count(*)=1 from notifications where user_id='{uid}' and title='Veterinary licence approved' and link='/profile' and not is_read)", 'applicant receives one unread decision notification'))
 sql.append("reset role; rollback; select 'passed_and_rolled_back' as verification;")
 result = m.request('/database/query', {'query':'\n'.join(sql)})
 assert result == [{'verification':'passed_and_rolled_back'}], 'Unexpected response'

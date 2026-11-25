@@ -35,7 +35,8 @@ done
  supabase/migrations/20261125020000_boarding_facility_directory.sql \
  supabase/migrations/20261125030000_boarding_facility_profiles.sql \
  supabase/migrations/20261125040000_boarding_state_filter.sql \
- supabase/migrations/20261125050000_admin_notification_broadcasts.sql
+ supabase/migrations/20261125050000_admin_notification_broadcasts.sql \
+ supabase/migrations/20261125060000_vet_license_decision_notifications.sql
  echo 'BEGIN;'
  cat supabase/tests/core-security.sql \
  supabase/tests/provider-drafts.sql \
