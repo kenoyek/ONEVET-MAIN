@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
+import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
 import { Footer } from '@/components/layout/Footer';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -14,6 +15,7 @@ import { boardingRegistrationPath } from '@/lib/registration-intent';
 import { listBoardingFacilities } from '@/lib/services/boarding-directory';
 
 export default function BoardingDirectory() {
+  const { saved, update, storageError } = useBoardingShortlist();
   const [params, setParams] = useSearchParams();
   const city = (params.get('city') ?? '').trim().slice(0, 80);
   const state = (params.get('state') ?? '').trim().slice(0, 80);
@@ -57,6 +59,24 @@ export default function BoardingDirectory() {
         <Link to="/services" className="text-sm text-primary underline">Back to care services</Link>
         <PageHeading size="display" title="Pet boarding directory"
           description="Browse approved facilities and contact them directly to ask about dates, rates, and requirements for your pet’s stay." />
+        <details className="rounded-xl border bg-card p-4">
+          <summary className="cursor-pointer font-semibold">Saved facilities ({saved.length})</summary>
+          <p className="my-3 text-sm text-muted-foreground">Your shortlist is saved in this browser.</p>
+          {saved.length ? (
+            <ul className="space-y-2">
+              {saved.map(item => (
+                <li key={item.slug} className="flex flex-wrap items-center gap-2">
+                  <Link className="break-words text-primary underline" to={{
+                    pathname: `/boarding/${encodeURIComponent(item.slug)}`, search: params.toString(),
+                  }}>{item.name}</Link>
+                  <Button size="sm" variant="ghost" type="button" aria-label={`Remove ${item.name} from shortlist`}
+                    onClick={() => update(item, false)}>Remove</Button>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="text-sm">Open a facility page to save it here.</p>}
+          {storageError && <p role="alert" className="mt-2 text-sm text-destructive">Could not update your shortlist. Check your browser storage settings.</p>}
+        </details>
         <form className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-4" onSubmit={event => {
           event.preventDefault();
           searchLocation(draftCity, draftState);

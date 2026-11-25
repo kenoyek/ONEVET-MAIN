@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { MapPin } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
 import { BoardingInquiryForm } from '@/components/boarding/BoardingInquiryForm';
 import { BoardingShareLink } from '@/components/boarding/BoardingShareLink';
@@ -12,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { getBoardingFacility } from '@/lib/services/boarding-directory';
 
 export default function BoardingFacility() {
+  const { saved, update, storageError } = useBoardingShortlist();
   const { slug = '' } = useParams();
   const { search } = useLocation();
   const facility = useQuery({
@@ -21,6 +23,7 @@ export default function BoardingFacility() {
     gcTime: 0,
   });
   const listing = facility.isSuccess ? facility.data : null;
+  const isSaved = saved.some(item => item.slug === listing?.slug);
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,7 +46,13 @@ export default function BoardingFacility() {
             <p className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="size-5 shrink-0" aria-hidden="true" />{listing.city}, {listing.state}
             </p>
-            <BoardingShareLink key={listing.slug} slug={listing.slug} />
+            <div className="flex flex-wrap items-start gap-2">
+              <Button variant="outline" size="sm" type="button" onClick={() => update(listing, !isSaved)}>
+                {isSaved ? 'Remove from shortlist' : 'Save to shortlist'}
+              </Button>
+              <BoardingShareLink key={listing.slug} slug={listing.slug} />
+            </div>
+            {storageError && <p role="alert" className="text-sm text-destructive">Could not update your shortlist. Check your browser storage settings.</p>}
             {listing.description && (
               <section className="space-y-3 rounded-xl border bg-card p-5">
                 <h2 className="text-xl font-semibold">About this facility</h2>

@@ -154,3 +154,26 @@ it('shows an unavailable listing without offering a contact link', async () => {
   await screen.findByRole('heading', { name: 'Listing unavailable' });
   expect(screen.queryByRole('link', { name: /Email facility/ })).not.toBeInTheDocument();
 });
+
+it('saves a facility on its public page and removes it from the directory shortlist', async () => {
+  vi.mocked(getBoardingFacility).mockResolvedValueOnce({
+    name: 'Garden Boarding', slug: 'garden', description: '',
+    email: 'boarding@example.invalid', city: 'Ibadan', state: 'Oyo',
+  });
+  vi.mocked(listBoardingFacilities).mockResolvedValueOnce({ facilities: [], hasMore: false });
+  render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter initialEntries={['/boarding/garden']}>
+      <Routes>
+        <Route path="/boarding/:slug" element={<BoardingFacility />} />
+        <Route path="/boarding" element={<BoardingDirectory />} />
+      </Routes>
+    </MemoryRouter>
+  </QueryClientProvider>);
+  fireEvent.click(await screen.findByRole('button', { name: 'Save to shortlist' }));
+  expect(screen.getByRole('button', { name: 'Remove from shortlist' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('link', { name: 'Back to boarding directory' }));
+  fireEvent.click(await screen.findByText('Saved facilities (1)'));
+  expect(screen.getByRole('link', { name: 'Garden Boarding' })).toHaveAttribute('href', '/boarding/garden');
+  fireEvent.click(screen.getByRole('button', { name: 'Remove Garden Boarding from shortlist' }));
+  expect(screen.getByText('Saved facilities (0)')).toBeInTheDocument();
+});
