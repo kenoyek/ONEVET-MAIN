@@ -21,8 +21,19 @@ export default function NotificationComposer() {
   const [failed, setFailed] = useState(false);
   const [sentCount, setSentCount] = useState<number | null>(null);
   const sendingLock = useRef(false);
+  const titleInput = useRef<HTMLInputElement>(null);
   const cache = useQueryClient();
   const adminId = useAuth().user?.id;
+
+  const reuseDisabled = Boolean(draft || title || message);
+
+  function reuseNotification(previousTitle: string, previousMessage: string) {
+    if (reuseDisabled) return;
+    setTitle(previousTitle);
+    setMessage(previousMessage);
+    setSentCount(null);
+    titleInput.current?.focus();
+  }
 
   function review(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -81,7 +92,7 @@ export default function NotificationComposer() {
           <form onSubmit={review} className="space-y-4 rounded-xl border bg-card p-5">
             <div className="space-y-2">
               <Label htmlFor="notification-title">Title</Label>
-              <Input id="notification-title" required maxLength={100} value={title} onChange={event => setTitle(event.target.value)} />
+              <Input ref={titleInput} id="notification-title" required maxLength={100} value={title} onChange={event => setTitle(event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="notification-message">Message</Label>
@@ -91,7 +102,8 @@ export default function NotificationComposer() {
             <Button type="submit" disabled={!title.trim() || !message.trim()}>Review notification</Button>
           </form>
         )}
-        {adminId && <NotificationHistory key={adminId} adminId={adminId} />}
+        {adminId && <NotificationHistory key={adminId} adminId={adminId}
+          reuseDisabled={reuseDisabled} onReuse={reuseNotification} />}
       </main>
     </div>
   );

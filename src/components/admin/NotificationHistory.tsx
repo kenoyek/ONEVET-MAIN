@@ -8,7 +8,11 @@ const sentDate = new Intl.DateTimeFormat('en-NG', {
   dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Lagos',
 });
 
-export function NotificationHistory({ adminId }: { adminId: string }) {
+export function NotificationHistory({ adminId, reuseDisabled, onReuse }: {
+  adminId: string;
+  reuseDisabled: boolean;
+  onReuse: (title: string, message: string) => void;
+}) {
   const [page, setPage] = useState(0);
   const history = useQuery({
     queryKey: ['admin-notification-history', adminId, page],
@@ -31,6 +35,9 @@ export function NotificationHistory({ adminId }: { adminId: string }) {
   return (
     <section className="space-y-4 rounded-xl border bg-card p-5" aria-labelledby="notification-history">
       <h2 id="notification-history" className="text-lg font-semibold">Sent notifications</h2>
+      {reuseDisabled && history.data?.entries.length ? (
+        <p className="text-sm text-muted-foreground">Finish or clear your current draft before reusing a sent notification.</p>
+      ) : null}
       {history.isPending && <p role="status" className="text-sm">Loading sent notifications…</p>}
       {history.isError && (
         <div className="space-y-2">
@@ -43,13 +50,19 @@ export function NotificationHistory({ adminId }: { adminId: string }) {
           <ul className="divide-y">
             {history.data.entries.map(({ id, created_at, details }) => {
               const fields = details && typeof details === 'object' && !Array.isArray(details) ? details : {};
+              const title = typeof fields.title === 'string' ? fields.title : '';
+              const message = typeof fields.message === 'string' ? fields.message : '';
               return (
                 <li key={id} className="py-3 [overflow-wrap:anywhere]">
                   <details>
                     <summary className="cursor-pointer rounded-sm font-medium">
-                      {typeof fields.title === 'string' ? fields.title : 'Notification'}
+                      {title || 'Notification'}
                     </summary>
-                    {typeof fields.message === 'string' && <p className="mt-2 whitespace-pre-wrap text-sm">{fields.message}</p>}
+                    {message && <p className="mt-2 whitespace-pre-wrap text-sm">{message}</p>}
+                    {title && message && (
+                      <Button type="button" variant="outline" size="sm" className="mt-3" disabled={reuseDisabled}
+                        onClick={() => onReuse(title, message)}>Use as draft</Button>
+                    )}
                   </details>
                   <div className="mt-1 flex flex-wrap gap-x-4 text-sm text-muted-foreground">
                     <time dateTime={created_at}>{sentDate.format(new Date(created_at))} WAT</time>

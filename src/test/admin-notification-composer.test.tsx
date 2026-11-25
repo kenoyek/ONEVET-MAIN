@@ -46,6 +46,17 @@ it('previews a broadcast before sending and reuses its request ID on retry', asy
   expect(await screen.findByText('3 recipients')).toBeInTheDocument();
   fireEvent.click(screen.getByText('Service update'));
   expect(screen.getByText('New hours this weekend.')).toBeVisible();
+  const reuse = screen.getByRole('button', { name: 'Use as draft' });
+  fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Keep this draft' } });
+  expect(reuse).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Title'), { target: { value: '' } });
+  fireEvent.click(reuse);
+  expect(screen.getByLabelText('Title')).toHaveValue('Service update');
+  expect(screen.getByLabelText('Title')).toHaveFocus();
+  expect(screen.getByLabelText('Message')).toHaveValue('New hours this weekend.');
+  fireEvent.click(screen.getByRole('button', { name: 'Review notification' }));
+  expect(screen.getByRole('button', { name: 'Send to all active accounts' })).toBeEnabled();
+  expect(rpc).toHaveBeenCalledTimes(2);
   expect(query.eq).toHaveBeenCalledWith('action', 'notification_broadcast_sent');
   expect(range).toHaveBeenCalledWith(0, 10);
 });
