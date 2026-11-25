@@ -1,3 +1,4 @@
+import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import {z} from 'zod';
 import {providerIdentifier} from '@/lib/provider-identifier';
 import { useRef, useState } from 'react';
@@ -50,16 +51,20 @@ export function ProviderDraftForm({ initial, email, editing = false, onSave }: P
         {([
           ['name', 'Organization name', 120, 2], ['slug', 'Organization identifier', 80, 3],
           ['email', 'Business email', 254, 3], ['phone', 'Business phone (optional)', 40, 0],
-          ['state', 'State / region', 80, 2], ['city', 'City / town', 80, 2],
+          ['state', 'State or FCT', 80, 2], ['city', 'City / town', 80, 2],
           ['address', 'Street address', 300, 5], ['primary_location_name', 'Branch name (optional)', 120, 0],
           ['website', 'Website (optional, https://)', 300, 0],
         ] as const).map(([key, label, max, min]) => <div className="space-y-2" key={key}>
           <Label htmlFor={`provider-${key}`}>{label}</Label>
-          <Input id={`provider-${key}`} value={form[key]} required={min > 0} minLength={min || undefined} maxLength={max}
+          {key === 'state' ? (
+            <NigeriaStatePicker id="provider-state" value={form.state} required
+              aria-invalid={!!fieldErrors.state} aria-describedby={fieldErrors.state ? 'provider-state-error' : undefined}
+              onChange={event => field('state', event.target.value)} />
+          ) : <Input id={`provider-${key}`} value={form[key]} required={min > 0} minLength={min || undefined} maxLength={max}
             aria-invalid={!!fieldErrors[key]} aria-describedby={fieldErrors[key]?`provider-${key}-error`:key==='slug'?'provider-slug-help':undefined}
             type={key === 'email' ? 'email' : key === 'website' ? 'url' : key==='phone'?'tel':'text'} disabled={editing && key === 'slug'}
             pattern={key === 'slug' ? '[a-z0-9]+(-[a-z0-9]+)*' : undefined}
-            onChange={event => field(key, event.target.value)} />
+            onChange={event => field(key, event.target.value)} />}
           {fieldErrors[key]&&<p id={`provider-${key}-error`} className="text-xs text-destructive">{fieldErrors[key]}</p>}
           {key === 'slug' && <p id="provider-slug-help" className="text-xs text-muted-foreground">Suggested from your organization name. You can change it before saving; availability is checked when you save. It stays fixed afterward.</p>}
         </div>)}

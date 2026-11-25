@@ -1,3 +1,4 @@
+import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import type { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -96,8 +97,8 @@ export function FarmForm({
           <Input {...register('city')} aria-invalid={!!errors.city} />
         </label>
         <label className="block space-y-2 text-sm font-medium">
-          <span>State</span>
-          <Input {...register('state')} aria-invalid={!!errors.state} />
+          <span>State or FCT</span>
+          <NigeriaStatePicker {...register('state')} required aria-invalid={!!errors.state} />
         </label>
       </div>
       <FormErrors messages={Object.values(errors).map((e) => e.message)} />

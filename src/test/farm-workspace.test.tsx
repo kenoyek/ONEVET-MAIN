@@ -133,7 +133,7 @@ describe('Customer farm workspace', () => {
       ['Farm name', 'Fixture Farm'],
       ['Service location', 'Fixture location'],
       ['City or local area', 'Test city'],
-      ['State', 'Test state'],
+      ['State or FCT', 'Oyo'],
     ])
       fireEvent.change(screen.getByLabelText(label!), { target: { value } });
     fireEvent.click(screen.getByRole('button', { name: 'Save farm' }));
@@ -192,14 +192,14 @@ describe('Customer farm workspace', () => {
   it('creates a farm and group before returning to the selected appointment',async()=>{
     renderPage('/farms?'+new URLSearchParams({returnTo:'/booking/new?service_id=service-one&date=2026-11-11&start=time-one'}));
     await screen.findByText('Start with your farm.');fireEvent.click(screen.getByRole('button',{name:'Add your first farm'}));
-    for(const [label,value] of [['Farm name','Booking Farm'],['Service location','Main road'],['City or local area','Ibadan'],['State','Oyo']] as const)fireEvent.change(screen.getByLabelText(label),{target:{value}});
+    for(const [label,value] of [['Farm name','Booking Farm'],['Service location','Main road'],['City or local area','Ibadan'],['State or FCT','Oyo']] as const)fireEvent.change(screen.getByLabelText(label),{target:{value}});
     fireEvent.click(screen.getByRole('button',{name:'Save farm'}));await screen.findByRole('heading',{name:'Booking Farm'});
     fireEvent.click(await screen.findByRole('button',{name:'Add animal group'}));fireEvent.change(screen.getByLabelText('Group name'),{target:{value:'Layer flock'}});fireEvent.click(screen.getByRole('button',{name:'Save animal group'}));
     expect(await screen.findByText(/Booking restored/)).toHaveTextContent('animal=farm_group%3A'+batchId);expect(screen.getByText(/Booking restored/)).toHaveTextContent('start=time-one');
   });
   it('retains entered details and the same record ID after a failed farm save',async()=>{
     vi.mocked(livestockService.registerFarm).mockRejectedValueOnce(new Error('offline'));renderPage();await screen.findByText('Start with your farm.');fireEvent.click(screen.getByRole('button',{name:'Add your first farm'}));
-    for(const [label,value] of [['Farm name','Retry Farm'],['Service location','Main road'],['City or local area','Ibadan'],['State','Oyo']] as const)fireEvent.change(screen.getByLabelText(label),{target:{value}});
+    for(const [label,value] of [['Farm name','Retry Farm'],['Service location','Main road'],['City or local area','Ibadan'],['State or FCT','Oyo']] as const)fireEvent.change(screen.getByLabelText(label),{target:{value}});
     const form=screen.getByLabelText('Farm name').closest('form')!;fireEvent.submit(form);fireEvent.submit(form);await screen.findByRole('alert');expect(livestockService.registerFarm).toHaveBeenCalledTimes(1);expect(screen.getByLabelText('Farm name')).toHaveValue('Retry Farm');
     fireEvent.click(screen.getByRole('button',{name:'Save farm'}));await screen.findByRole('link',{name:/Retry Farm/});expect(vi.mocked(livestockService.registerFarm).mock.calls[0]?.[1]).toBe(vi.mocked(livestockService.registerFarm).mock.calls[1]?.[1]);
   });

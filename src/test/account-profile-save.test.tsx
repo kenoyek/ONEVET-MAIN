@@ -33,3 +33,21 @@ it('does not save contact text containing letters even when it has enough digits
  fireEvent.click(screen.getByRole('button',{name:'Save profile'}));expect(screen.getByRole('alert')).toHaveTextContent('valid contact phone');expect(mock.update).not.toHaveBeenCalled();
  expect(screen.getByLabelText('Phone Number')).toHaveValue('Call 07052398371');
 });
+
+it('preserves a legacy location and saves a newly selected Nigerian state', async () => {
+  Object.assign(mock.profile, { location: 'Ibadan, Oyo State' });
+  mock.single.mockResolvedValue({ data: { id: 'profile-a' }, error: null });
+  render(view());
+  const picker = screen.getByRole('combobox', { name: 'State or FCT' });
+  expect(picker).toHaveValue('Ibadan, Oyo State');
+  expect(screen.getAllByRole('option')).toHaveLength(39);
+  expect(screen.getByRole('option', { name: 'Federal Capital Territory (FCT)' })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
+  expect(mock.update).toHaveBeenLastCalledWith(expect.objectContaining({ location: 'Ibadan, Oyo State' }));
+  await screen.findByText('Your profile changes have been saved.');
+  fireEvent.change(picker, { target: { value: 'Zamfara' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save profile' }));
+  expect(mock.update).toHaveBeenLastCalledWith(expect.objectContaining({ location: 'Zamfara' }));
+  await screen.findByText('Your profile changes have been saved.');
+});

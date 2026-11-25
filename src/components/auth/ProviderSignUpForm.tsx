@@ -1,3 +1,4 @@
+import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import {RegistrationConfirmation} from './RegistrationConfirmation';
 import {authErrorMessage} from '@/lib/auth-feedback';
 import { useRef, useState } from 'react';
@@ -247,9 +248,9 @@ export function ProviderSignUpForm({onSignIn, initialCategory = ''}:{onSignIn?:(
             name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-medium text-foreground">City and state</FormLabel>
+                <FormLabel className="text-sm font-medium text-foreground">State or FCT</FormLabel>
                 <FormControl>
-                  <Input placeholder="City, State" className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all" {...field} />
+                  <NigeriaStatePicker className="bg-muted/30 border-border/50 focus:bg-background transition-colors" {...field} />
                 </FormControl>
                 <FormMessage className="font-bold text-xs" />
               </FormItem>

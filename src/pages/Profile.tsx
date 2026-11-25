@@ -1,3 +1,4 @@
+import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import { validContactPhone } from '@/lib/contact-phone';
 import { vetOnboardingStatus } from '@/lib/vet-onboarding';
 import { LicenseDocumentLink } from '@/components/onboarding/LicenseDocumentLink';
@@ -91,7 +92,7 @@ function ProfileEditor() {
     }
   }, [profile,user?.id]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setSaveNotice('');setSaveError('');
     profileDirty.current = true; profileRevision.current++;
@@ -360,13 +361,12 @@ function ProfileEditor() {
                     <p id="profile-phone-format" className="text-xs leading-relaxed text-muted-foreground">Use 7–15 digits without letters or extensions. A leading + and common phone separators are accepted.</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="location" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">Location</Label>
-                    <Input
+                    <Label htmlFor="location" className="text-xs font-semibold uppercase tracking-widest text-muted-foreground ml-1">State or FCT</Label>
+                    <NigeriaStatePicker
                       id="location"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      placeholder="Lagos, Nigeria"
                       className="rounded-xl bg-muted/30 border-border/50 focus:bg-background transition-all"
                     />
                   </div>
