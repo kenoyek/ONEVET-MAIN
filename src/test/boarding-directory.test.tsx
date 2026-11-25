@@ -104,6 +104,23 @@ it('opens a facility directly and keeps the city filter in the return link', asy
   expect(draft.searchParams.get('subject')).toBe('Boarding inquiry for Garden Boarding');
   expect(draft.searchParams.get('body')).toContain('Arrival: 2099-01-10\r\nDeparture: 2099-01-12\r\nPets: 1 dog & 1 cat');
 
+  const copy = screen.getByRole('button', { name: 'Copy inquiry' });
+  expect((screen.getByLabelText('Inquiry details') as HTMLTextAreaElement).value)
+    .toContain('To: boarding@example.invalid\nSubject: Boarding inquiry for Garden Boarding');
+  const originalClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+  const writeText = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('Permission denied'));
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+  try {
+    fireEvent.click(copy);
+    await screen.findByText('Inquiry copied. Paste the details into a new email.');
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('Pets: 1 dog & 1 cat'));
+    fireEvent.click(copy);
+    await screen.findByText('Select and copy the inquiry details below.');
+  } finally {
+    if (originalClipboard) Object.defineProperty(navigator, 'clipboard', originalClipboard);
+    else Reflect.deleteProperty(navigator, 'clipboard');
+  }
+
   fireEvent.change(pets, { target: { value: '1 dog' } });
   expect(screen.queryByRole('link', { name: 'Open email draft' })).toBeNull();
 });
