@@ -19,6 +19,8 @@ import { listBoardingFacilities } from '@/lib/services/boarding-directory';
 
 export default function BoardingDirectory() {
   const { saved, update, updateNote, updateContacted, storageError } = useBoardingShortlist();
+  const [awaitingOutreachOnly, setAwaitingOutreachOnly] = useState(false);
+  const visibleSaved = awaitingOutreachOnly ? saved.filter(item => !item.contacted) : saved;
   const [params, setParams] = useSearchParams();
   const city = (params.get('city') ?? '').trim().slice(0, 80);
   const state = (params.get('state') ?? '').trim().slice(0, 80);
@@ -65,9 +67,16 @@ export default function BoardingDirectory() {
         <details className="rounded-xl border bg-card p-4">
           <summary className="cursor-pointer font-semibold">Saved facilities ({saved.length})</summary>
           <p className="my-3 text-sm text-muted-foreground">Your shortlist is saved in this browser.</p>
-          {saved.length ? (
+          {saved.length > 0 && (
+            <label className="mb-3 flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={awaitingOutreachOnly} className="size-4 accent-primary"
+                onChange={event => setAwaitingOutreachOnly(event.target.checked)} />
+              Show only facilities I haven’t contacted
+            </label>
+          )}
+          {visibleSaved.length ? (
             <ul className="space-y-2">
-              {saved.map(item => (
+              {visibleSaved.map(item => (
                 <li key={item.slug} className="flex flex-wrap items-center gap-2">
                   <Link className="break-words text-primary underline" to={{
                     pathname: `/boarding/${encodeURIComponent(item.slug)}`, search: params.toString(),
@@ -84,7 +93,11 @@ export default function BoardingDirectory() {
                 </li>
               ))}
             </ul>
-          ) : <p className="text-sm">Save a facility from the results to find it here.</p>}
+          ) : (
+            <p role="status" className="text-sm">
+              {saved.length ? 'You’ve contacted every saved facility.' : 'Save a facility from the results to find it here.'}
+            </p>
+          )}
           {saved.length > 0 && <BoardingShortlistShare facilities={saved} />}
           {saved.length >= 2 && <BoardingComparison facilities={saved} search={params.toString()} />}
         </details>

@@ -367,3 +367,29 @@ it('compares current public listings and handles a withdrawn facility', async ()
     localStorage.removeItem(key);
   }
 });
+
+
+it('filters the shortlist to facilities still awaiting outreach', async () => {
+  const key = 'onevet.boarding-shortlist';
+  localStorage.setItem(key, JSON.stringify([
+    { slug: 'garden', name: 'Garden Boarding', contacted: true },
+    { slug: 'park', name: 'Park Boarding' },
+  ]));
+  vi.mocked(listBoardingFacilities).mockResolvedValueOnce({ facilities: [], hasMore: false });
+  try {
+    mount(<BoardingDirectory />);
+    fireEvent.click(screen.getByText('Saved facilities (2)'));
+    const filter = screen.getByRole('checkbox', { name: /Show only facilities/ });
+    fireEvent.click(filter);
+    expect(screen.queryByRole('link', { name: 'Garden Boarding' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Contacted Park Boarding' }));
+    expect(screen.getByText('You’ve contacted every saved facility.')).toBeInTheDocument();
+    expect(screen.getByText('Saved facilities (2)')).toBeInTheDocument();
+    fireEvent.click(filter);
+    expect(screen.getByRole('link', { name: 'Garden Boarding' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Park Boarding' })).toBeInTheDocument();
+    await screen.findByText('No boarding facilities are listed yet.');
+  } finally {
+    localStorage.removeItem(key);
+  }
+});
