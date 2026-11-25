@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, MapPin } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
+import { BoardingShortlistNote } from '@/components/boarding/BoardingShortlistNote';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
 import { BoardingInquiryForm } from '@/components/boarding/BoardingInquiryForm';
 import { BoardingShareLink } from '@/components/boarding/BoardingShareLink';
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { getBoardingFacility } from '@/lib/services/boarding-directory';
 
 export default function BoardingFacility() {
-  const { saved, update, updateContacted, storageError } = useBoardingShortlist();
+  const { saved, update, updateContacted, updateNote, storageError } = useBoardingShortlist();
   const { slug = '' } = useParams();
   const { search } = useLocation();
   const facility = useQuery({
@@ -83,6 +84,8 @@ export default function BoardingFacility() {
                 </label>
               )}
             </section>
+            {savedFacility && <BoardingShortlistNote key={savedFacility.slug} facility={savedFacility}
+              onSave={note => updateNote(savedFacility.slug, note)} />}
           </>
         )}
       </main>

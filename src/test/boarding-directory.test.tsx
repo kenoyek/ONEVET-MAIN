@@ -198,10 +198,16 @@ it('saves a facility on its public page and removes it from the directory shortl
   expect(contacted).not.toBeChecked();
   fireEvent.click(contacted);
   expect(contacted).toBeChecked();
+  fireEvent.click(screen.getByText('Add note'));
+  fireEvent.change(screen.getByLabelText('Note for Garden Boarding'), { target: { value: 'Follow up on Friday' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save note' }));
+  expect(screen.getByText('Note saved.')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('link', { name: 'Back to boarding directory' }));
   fireEvent.click(await screen.findByText('Saved facilities (1)'));
   expect(screen.getByRole('link', { name: 'Garden Boarding' })).toHaveAttribute('href', '/boarding/garden');
   expect(screen.getByRole('checkbox', { name: 'Contacted Garden Boarding' })).toBeChecked();
+  fireEvent.click(screen.getByText('Edit note'));
+  expect(screen.getByLabelText('Note for Garden Boarding')).toHaveValue('Follow up on Friday');
   fireEvent.click(screen.getByRole('button', { name: 'Remove Garden Boarding from shortlist' }));
   expect(screen.getByText('Saved facilities (0)')).toBeInTheDocument();
 });
