@@ -28,7 +28,10 @@ export default function BoardingFacility() {
     api: '1',
     query: [listing.name, listing.city, listing.state, 'Nigeria'].join(', '),
   })}` : undefined;
-  const savedFacility = saved.find(item => item.slug === listing?.slug);
+  const savedIndex = saved.findIndex(item => item.slug === slug);
+  const savedFacility = saved[savedIndex];
+  const previous = saved[savedIndex - 1];
+  const next = saved[savedIndex + 1];
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,6 +40,21 @@ export default function BoardingFacility() {
       <Navbar />
       <main id="main-content" tabIndex={-1} className="container-wide max-w-4xl space-y-6 pb-20 pt-28">
         <Link to={{ pathname: '/boarding', search }} className="text-sm text-primary underline">Back to boarding directory</Link>
+        {savedIndex >= 0 && saved.length > 1 && (
+          <nav aria-label="Saved facility navigation" className="space-y-2 rounded-lg border bg-card p-3">
+            <p className="text-sm text-muted-foreground">Saved facility {savedIndex + 1} of {saved.length}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              {previous && <Link className="break-words text-primary underline"
+                to={{ pathname: `/boarding/${encodeURIComponent(previous.slug)}`, search }}>
+                Previous: {previous.name}
+              </Link>}
+              {next && <Link className="break-words text-primary underline"
+                to={{ pathname: `/boarding/${encodeURIComponent(next.slug)}`, search }}>
+                Next: {next.name}
+              </Link>}
+            </div>
+          </nav>
+        )}
         {facility.isPending && <p role="status">Loading facility…</p>}
         {facility.isError && (
           <div className="rounded-xl border bg-card p-5">

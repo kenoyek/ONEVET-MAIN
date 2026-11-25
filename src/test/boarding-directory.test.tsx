@@ -404,3 +404,29 @@ it('filters the shortlist to facilities still awaiting outreach', async () => {
     localStorage.removeItem(key);
   }
 });
+
+it('navigates between saved facilities and preserves the directory search', async () => {
+  const key = 'onevet.boarding-shortlist';
+  localStorage.setItem(key, JSON.stringify([
+    { slug: 'garden', name: 'Garden Boarding' }, { slug: 'park', name: 'Park Boarding' },
+  ]));
+  vi.mocked(getBoardingFacility).mockResolvedValueOnce(null).mockResolvedValueOnce({
+    name: 'Park Boarding', slug: 'park', description: '',
+    email: 'boarding@example.invalid', city: 'Ibadan', state: 'Oyo',
+  });
+  try {
+    render(<QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={['/boarding/garden?city=Ibadan']}>
+        <Routes><Route path="/boarding/:slug" element={<BoardingFacility />} /></Routes>
+      </MemoryRouter>
+    </QueryClientProvider>);
+    await screen.findByRole('heading', { name: 'Listing unavailable' });
+    fireEvent.click(screen.getByRole('link', { name: 'Next: Park Boarding' }));
+    await screen.findByRole('heading', { name: 'Park Boarding' });
+    expect(screen.getByText('Saved facility 2 of 2')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Previous: Garden Boarding' }))
+      .toHaveAttribute('href', '/boarding/garden?city=Ibadan');
+  } finally {
+    localStorage.removeItem(key);
+  }
+});
