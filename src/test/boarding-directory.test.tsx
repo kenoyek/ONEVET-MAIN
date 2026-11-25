@@ -105,6 +105,11 @@ it('opens a facility directly and keeps the city filter in the return link', asy
   expect(screen.getByRole('link', { name: 'Back to boarding directory' })).toHaveAttribute('href', '/boarding?city=Ibadan');
   expect(screen.getByRole('link', { name: 'Email Garden Boarding' })).toHaveAttribute('href', 'mailto:boarding@example.invalid');
   expect(getBoardingFacility).toHaveBeenLastCalledWith('garden');
+  const maps = screen.getByRole('link', { name: /Search Google Maps/ });
+  const mapUrl = new URL(maps.getAttribute('href')!);
+  expect(mapUrl.origin + mapUrl.pathname).toBe('https://www.google.com/maps/search/');
+  expect(mapUrl.searchParams.get('query')).toBe('Garden Boarding, Ibadan, Oyo, Nigeria');
+  expect(maps).toHaveAttribute('rel', 'noopener noreferrer');
   const arrival = screen.getByLabelText('Arrival date');
   const departure = screen.getByLabelText('Departure date');
   const pets = screen.getByLabelText('Pets');
@@ -160,6 +165,7 @@ it('shows an unavailable listing without offering a contact link', async () => {
     </MemoryRouter>
   </QueryClientProvider>);
   await screen.findByRole('heading', { name: 'Listing unavailable' });
+  expect(screen.queryByRole('link', { name: /Search Google Maps/ })).not.toBeInTheDocument();
   expect(screen.queryByRole('link', { name: /Email facility/ })).not.toBeInTheDocument();
 });
 

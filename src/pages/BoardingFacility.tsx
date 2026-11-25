@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { MapPin } from 'lucide-react';
+import { ArrowUpRight, MapPin } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
@@ -23,6 +23,10 @@ export default function BoardingFacility() {
     gcTime: 0,
   });
   const listing = facility.isSuccess ? facility.data : null;
+  const mapUrl = listing ? `https://www.google.com/maps/search/?${new URLSearchParams({
+    api: '1',
+    query: [listing.name, listing.city, listing.state, 'Nigeria'].join(', '),
+  })}` : undefined;
   const isSaved = saved.some(item => item.slug === listing?.slug);
 
   return (
@@ -43,9 +47,16 @@ export default function BoardingFacility() {
         {listing && (
           <>
             <PageHeading size="display" eyebrow="Pet boarding" title={listing.name} />
-            <p className="flex items-center gap-2 text-muted-foreground">
-              <MapPin className="size-5 shrink-0" aria-hidden="true" />{listing.city}, {listing.state}
-            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="size-5 shrink-0" aria-hidden="true" />{listing.city}, {listing.state}
+              </p>
+              <a href={mapUrl} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-sm font-medium text-primary underline underline-offset-4">
+                Search Google Maps <ArrowUpRight className="size-4" aria-hidden="true" />
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+            </div>
             <div className="flex flex-wrap items-start gap-2">
               <Button variant="outline" size="sm" type="button" onClick={() => update(listing, !isSaved)}>
                 {isSaved ? 'Remove from shortlist' : 'Save to shortlist'}
@@ -61,7 +72,7 @@ export default function BoardingFacility() {
             )}
             <section className="space-y-3 rounded-xl border bg-card p-5">
               <h2 className="text-xl font-semibold">Ask about a stay</h2>
-              <p className="text-sm text-muted-foreground">Contact the facility directly to confirm dates, rates, and what your pet needs to bring.</p>
+              <p className="text-sm text-muted-foreground">Contact the facility to confirm its address, available dates, rates, and what your pet needs to bring.</p>
               <BoardingInquiryForm key={listing.slug} name={listing.name} email={listing.email} />
               <BoardingEmailLink name={listing.name} email={listing.email} />
             </section>
