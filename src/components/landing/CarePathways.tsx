@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, PawPrint, Sprout, Search, MessageCircle, FileText, TriangleAlert, Plus } from 'lucide-react';
+import { ArrowUpRight, House, Search, MessageCircle, FileText, TriangleAlert, Plus } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import farmImage from '@/assets/marketing/welcome-farm-760.webp';
 import petImage from '@/assets/marketing/welcome-pets-760.webp';
@@ -20,12 +20,45 @@ const questions = [
 export function CarePathways() {
   return <>
     <section id="care-pathways" className="container-wide welcome-section welcome-pathways" aria-labelledby="pathways-heading">
-      <div className="welcome-section-heading"><div><p className="welcome-kicker">Different animals. The same care.</p><h2 id="pathways-heading">Their world.<br /><em>Your kind of care.</em></h2></div><p>From a familiar face at home to a whole farm depending on you. Start with the animals in your life.</p></div>
-      <div className="welcome-path-grid">
-        <Link to="/pet-care" className="welcome-path-card group"><div className="welcome-path-image"><img src={petImage} alt="" loading="lazy" decoding="async" width="760" height="570" /><span className="welcome-image-label"><PawPrint size={16} aria-hidden="true" /> For pet owners</span></div><div className="welcome-path-copy"><div><h3>Better care for every paw.</h3><p>Everyday wellbeing, new concerns and a health story that stays with them.</p></div><span className="welcome-arrow-circle"><ArrowUpRight size={23} aria-hidden="true" /></span></div><span className="welcome-path-link">Explore pet care <ArrowUpRight size={16} aria-hidden="true" /></span></Link>
-        <Link to="/farm-care" className="welcome-path-card group"><div className="welcome-path-image"><img src={farmImage} alt="" loading="lazy" decoding="async" width="760" height="570" /><span className="welcome-image-label"><Sprout size={16} aria-hidden="true" /> For farmers</span></div><div className="welcome-path-copy"><div><h3>Healthy animals.<br />Stronger livelihoods.</h3><p>Veterinary guidance and records for the animals your farm depends on.</p></div><span className="welcome-arrow-circle"><ArrowUpRight size={23} aria-hidden="true" /></span></div><span className="welcome-path-link">Explore farm care <ArrowUpRight size={16} aria-hidden="true" /></span></Link>
+      <div className="welcome-section-heading">
+        <h2 id="pathways-heading">Care for life at home <em>and on the farm.</em></h2>
       </div>
-      <Link to="/boarding" className="welcome-text-link mt-6">Find pet boarding <ArrowUpRight size={17} aria-hidden="true" /></Link>
+      <div className="welcome-path-grid">
+        <Link to="/pet-care" className="welcome-path-card" aria-labelledby="pet-path-title">
+          <div className="welcome-path-image">
+            <img src={petImage} alt="" loading="lazy" decoding="async" width="760" height="570" />
+          </div>
+          <div className="welcome-path-copy">
+            <div>
+              <h3 id="pet-path-title">Pet care</h3>
+              <p>Find help for everyday concerns and keep your pet’s health records together.</p>
+            </div>
+            <span className="welcome-arrow-circle"><ArrowUpRight size={22} aria-hidden="true" /></span>
+          </div>
+        </Link>
+        <Link to="/farm-care" className="welcome-path-card" aria-labelledby="farm-path-title">
+          <div className="welcome-path-image">
+            <img src={farmImage} alt="" loading="lazy" decoding="async" width="760" height="570" />
+          </div>
+          <div className="welcome-path-copy">
+            <div>
+              <h3 id="farm-path-title">Farm &amp; livestock care</h3>
+              <p>Find veterinary guidance for farm animals and manage herd, flock, or pond records.</p>
+            </div>
+            <span className="welcome-arrow-circle"><ArrowUpRight size={22} aria-hidden="true" /></span>
+          </div>
+        </Link>
+        <Link to="/boarding" className="welcome-path-card welcome-path-boarding" aria-labelledby="boarding-path-title">
+          <span className="welcome-arrow-circle"><House size={22} aria-hidden="true" /></span>
+          <div className="welcome-path-copy">
+            <div>
+              <h3 id="boarding-path-title">Pet boarding</h3>
+              <p>Browse approved facilities and ask about stays, rates, and requirements.</p>
+            </div>
+            <span className="welcome-arrow-circle"><ArrowUpRight size={22} aria-hidden="true" /></span>
+          </div>
+        </Link>
+      </div>
     </section>
     <section className="welcome-steps" aria-labelledby="steps-heading"><div className="container-wide"><div className="welcome-section-heading"><div><p className="welcome-kicker">A simpler way forward</p><h2 id="steps-heading">From “what now?”<br /><em>to a next step.</em></h2></div><p>You don’t have to have all the answers.<br />Start with what you know about your animal.</p></div><ol className="welcome-steps-grid">{steps.map(({icon:Icon,title,text},i)=><li key={title}><div className="welcome-step-top"><span>0{i+1}</span><Icon size={25} strokeWidth={1.4} aria-hidden="true" /></div><h3>{title}</h3><p>{text}</p></li>)}</ol></div></section>
     <section className="container-wide welcome-section welcome-faq" aria-labelledby="welcome-faq-heading"><div><p className="welcome-kicker">A little reassurance</p><h2 id="welcome-faq-heading">Good questions.<br /><em>Clearer answers.</em></h2><p className="welcome-section-description">Know what to expect, so you can choose your next step with confidence.</p><Link className="welcome-text-link" to="/pricing">Review pricing and plans <ArrowUpRight size={17} aria-hidden="true" /></Link></div><Accordion type="single" collapsible className="welcome-accordion">{questions.map(([q,a])=><AccordionItem value={q!} key={q}><AccordionTrigger className="text-left gap-4 py-6 text-base">{q}</AccordionTrigger><AccordionContent className="text-muted-foreground leading-relaxed pb-6">{a}</AccordionContent></AccordionItem>)}</Accordion></section>

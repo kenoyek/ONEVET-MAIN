@@ -38,11 +38,12 @@ describe('Public care journeys', () => {
       screen.getByRole('link', { name: /Find a veterinarian/i }),
     ).toHaveAttribute('href', '/find-a-vet');
     expect(
-      screen.getByRole('link', { name: /Better care for every paw/i }),
+      screen.getByRole('link', { name: 'Pet care' }),
     ).toHaveAttribute('href', '/pet-care');
     expect(
-      screen.getByRole('link', { name: /Healthy animals/i }),
+      screen.getByRole('link', { name: 'Farm & livestock care' }),
     ).toHaveAttribute('href', '/farm-care');
+    expect(screen.getByRole('link', { name: 'Pet boarding' })).toHaveAttribute('href', '/boarding');
     expect(container.textContent).not.toMatch(
       /500\+|50k\+|instant availability guaranteed/i,
     );

@@ -44,18 +44,21 @@
 .welcome-home .welcome-section-heading h2, .welcome-faq h2, .welcome-professionals h2 { font-size: clamp(35px, 3.3vw, 50px); font-weight: 500; letter-spacing: -.045em; line-height: 1.17; margin-top: 17px; }
 .welcome-section-heading > p { max-width: 340px; color: var(--welcome-soft); font-size: 14px; line-height: 1.8; padding-bottom: 4px; }
 .welcome-pathways { scroll-margin-top: 95px; }
+.welcome-home .welcome-pathways h2 { max-width: 21ch; margin-top: 0; }
 .welcome-path-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
-.welcome-path-card { display: flex; flex-direction: column; min-width: 0; padding: 12px 12px 24px; border: 1px solid var(--welcome-line); border-radius: 21px; background: var(--welcome-card); transition: border-color .2s, box-shadow .2s; }
+.welcome-path-card { display: flex; flex-direction: column; min-width: 0; padding: 0 0 24px; overflow: hidden; border: 1px solid var(--welcome-line); border-radius: 21px; background: var(--welcome-card); transition: border-color .2s, box-shadow .2s; }
 .welcome-path-card:hover { border-color: #82967b; box-shadow: 0 12px 30px #173d320a; }
-.welcome-path-image { position: relative; overflow: hidden; aspect-ratio: 1.9; border-radius: 12px; background: var(--welcome-sage); }
+.welcome-path-image { position: relative; overflow: hidden; aspect-ratio: 1.9; background: var(--welcome-sage); }
 .welcome-path-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
 .welcome-path-card:hover img { transform: scale(1.025); }
-.welcome-image-label { position: absolute; top: 16px; left: 16px; display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; background: #fffef9f2; color: #173d32; border-radius: 999px; font-size: 11px; font-weight: 500; }
-.welcome-path-copy { display: flex; justify-content: space-between; gap: 20px; padding: 25px 15px 0; flex: 1; }
+.welcome-path-copy { display: flex; justify-content: space-between; gap: 20px; padding: 24px 24px 0; flex: 1; }
 .welcome-path-copy h3 { font-size: clamp(23px, 2.1vw, 31px); letter-spacing: -.04em; font-weight: 500; line-height: 1.25; }
-.welcome-path-copy p { margin-top: 13px; max-width: 340px; color: var(--welcome-soft); font-size: 14px; line-height: 1.75; }
+.welcome-path-copy p { margin-top: 8px; max-width: 44ch; color: var(--welcome-soft); font-size: 14px; line-height: 1.75; }
 .welcome-arrow-circle { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--welcome-sage); flex-shrink: 0; }
-.welcome-path-link { display: inline-flex; align-items: center; gap: 9px; padding: 24px 15px 0; font-size: 12px; font-weight: 600; }
+.welcome-path-boarding { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 16px; padding: 20px 24px; background: var(--welcome-sage); }
+.welcome-path-boarding .welcome-path-copy { min-width: 0; align-items: center; padding: 0; }
+.welcome-path-boarding .welcome-arrow-circle { background: var(--welcome-card); }
+.welcome-path-boarding p { max-width: none; }
 .welcome-steps { background: #173d32; color: #f5f6ed; padding: 76px 0 80px; }
 .welcome-steps .welcome-kicker { color: #c4d3bd; }
 .welcome-steps .welcome-section-heading > p { color: #c4d3bd; }
@@ -103,10 +106,11 @@
   .welcome-home .welcome-section-heading h2, .welcome-faq h2, .welcome-professionals h2 { font-size: 37px; margin-top: 14px; }
   .welcome-section-heading > p { font-size: 13px; }
   .welcome-path-grid { grid-template-columns: 1fr; gap: 22px; }
-  .welcome-path-copy { padding: 23px 10px 0; gap: 12px; }
+  .welcome-path-copy { padding: 18px 16px 0; gap: 12px; }
+  .welcome-path-boarding { gap: 10px; padding: 16px; }
+  .welcome-path-boarding > .welcome-arrow-circle { display: none; }
   .welcome-path-copy h3 { font-size: 25px; }
   .welcome-path-copy p { font-size: 13px; }
-  .welcome-path-link { padding-left: 10px; }
   .welcome-steps { padding: 58px 0; }
   .welcome-steps-grid { grid-template-columns: 1fr; gap: 34px; margin-top: 32px; }
   .welcome-step-top { padding-top: 18px; margin-bottom: 20px; }
