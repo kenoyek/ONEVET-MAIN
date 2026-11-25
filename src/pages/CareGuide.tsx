@@ -137,7 +137,10 @@ export default function CareGuide() {
               title={urgent?title:services?<>The next step in <em>animal care.</em></>:farm?<>Healthy animals.<br/><em>Stronger livelihoods.</em></>:<>Better care<br/><em>for every paw.</em></>}
               description={description}/>
             {!urgent&&!services&&<div className="flex flex-wrap gap-3 mt-7"><Button asChild><Link to="/find-a-vet">Find veterinary care<ArrowRight size={16} aria-hidden="true"/></Link></Button><Button asChild variant="outline"><Link to={farm?(isFeatureEnabled('customer_farms_enabled')?'/farms':'/contact'):'/pets/new'}>{farm?(isFeatureEnabled('customer_farms_enabled')?'Start your farm records':'Ask about farm records'):'Add your first pet'}</Link></Button></div>}
-            {!urgent&&<Button asChild variant="outline" className="mt-4"><Link to="/care-chat">Chat with our care team</Link></Button>}
+            {!urgent && <div className="mt-4 flex flex-wrap gap-3">
+              <Button asChild variant="outline"><Link to="/care-chat">Chat with our care team</Link></Button>
+              {!farm && !services && <Button asChild variant="outline"><Link to="/boarding">Find pet boarding</Link></Button>}
+            </div>}
             </div>
             {!urgent&&<img className="public-intro-image" src={farm?farmCareImage:petCareImage} alt={farm?'Veterinary care for farm animals':'An owner spending time with her pets'} width="760" height="570" decoding="async"/>}
           </div>

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Mail, MapPin } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -12,10 +12,25 @@ import { Label } from '@/components/ui/label';
 import { listBoardingFacilities } from '@/lib/services/boarding-directory';
 
 export default function BoardingDirectory() {
-  const [draft, setDraft] = useState('');
-  const [city, setCity] = useState('');
-  const [pages, setPages] = useState<string[]>([]);
+  const [params, setParams] = useSearchParams();
+  const city = (params.get('city') ?? '').trim().slice(0, 80);
+  const [draft, setDraft] = useState(city);
+  const [pagination, setPagination] = useState<{ city: string; pages: string[] }>({ city, pages: [] });
+  const pages = pagination.city === city ? pagination.pages : [];
   const cursor = pages.at(-1);
+
+  useEffect(() => setDraft(city), [city]);
+
+  function searchCity(value: string) {
+    const nextCity = value.trim().slice(0, 80);
+    setDraft(nextCity);
+    setPagination({ city: nextCity, pages: [] });
+    if (nextCity === city) return;
+    const next = new URLSearchParams(params);
+    if (nextCity) next.set('city', nextCity);
+    else next.delete('city');
+    setParams(next);
+  }
   const listings = useQuery({
     queryKey: ['boarding-directory', city, cursor],
     queryFn: () => listBoardingFacilities(city, cursor),
@@ -33,8 +48,7 @@ export default function BoardingDirectory() {
           description="Browse approved facilities and contact them directly to ask about dates, rates, and requirements for your pet’s stay." />
         <form className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-4" onSubmit={event => {
           event.preventDefault();
-          setCity(draft.trim());
-          setPages([]);
+          searchCity(draft);
         }}>
           <div className="min-w-44 flex-1 space-y-1">
             <Label htmlFor="boarding-city">City</Label>
@@ -42,12 +56,9 @@ export default function BoardingDirectory() {
               onChange={event => setDraft(event.target.value)} />
           </div>
           <Button type="submit">Find facilities</Button>
-          {(city || draft) && <Button type="button" variant="outline" onClick={() => {
-            setDraft('');
-            setCity('');
-            setPages([]);
-          }}>Clear city</Button>}
+          {(city || draft) && <Button type="button" variant="outline" onClick={() => searchCity('')}>Clear city</Button>}
         </form>
+        {city && <p className="text-sm text-muted-foreground">Boarding facilities in <span className="font-semibold [overflow-wrap:anywhere]">{city}</span></p>}
         {listings.isPending && <p role="status">Loading boarding facilities…</p>}
         {listings.isError && <div><p role="alert">Could not load the boarding directory.</p>
           <Button variant="link" onClick={() => void listings.refetch()}>Retry directory</Button></div>}
@@ -69,9 +80,9 @@ export default function BoardingDirectory() {
             ))}
           </ul>)}
         <div className="flex flex-wrap gap-2">
-          {cursor && <Button variant="outline" onClick={() => setPages(previous => previous.slice(0, -1))}>Previous page</Button>}
+          {cursor && <Button variant="outline" onClick={() => setPagination({ city, pages: pages.slice(0, -1) })}>Previous page</Button>}
           {listings.isSuccess && listings.data.hasMore && last && <Button variant="outline"
-            disabled={listings.isFetching} onClick={() => setPages(previous => [...previous, last.slug])}>Next page</Button>}
+            disabled={listings.isFetching} onClick={() => setPagination({ city, pages: [...pages, last.slug] })}>Next page</Button>}
         </div>
       </main>
       <Footer />

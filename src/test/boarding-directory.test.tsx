@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import BoardingDirectory from '@/pages/BoardingDirectory';
 import { BoardingListingPanel } from '@/components/provider/BoardingListingPanel';
@@ -44,4 +44,28 @@ it('requires publication consent and acknowledges the confirmed change', async (
   fireEvent.click(publish);
   await vi.waitFor(() => expect(onChange).toHaveBeenCalledExactlyOnceWith(true));
   expect(setBoardingListing).toHaveBeenCalledExactlyOnceWith('facility', true);
+});
+
+it('restores the city search from a link and when the browser goes back', async () => {
+  function NavigationProbe() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    return <><p>{location.search || 'No parameters'}</p><button onClick={() => navigate(-1)}>Browser back</button></>;
+  }
+
+  vi.mocked(listBoardingFacilities).mockResolvedValue({ facilities: [], hasMore: false });
+  render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter initialEntries={['/boarding?city=Ibadan']}>
+      <NavigationProbe /><BoardingDirectory />
+    </MemoryRouter>
+  </QueryClientProvider>);
+  await screen.findByText('No listed boarding facilities match this city.');
+  expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
+  expect(listBoardingFacilities).toHaveBeenLastCalledWith('Ibadan', undefined);
+  fireEvent.change(screen.getByLabelText('City'), { target: { value: ' Lagos ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Find facilities' }));
+  await screen.findByText('?city=Lagos');
+  fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
+  await screen.findByText('?city=Ibadan');
+  expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
 });
