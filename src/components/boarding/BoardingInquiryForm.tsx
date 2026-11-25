@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react';
+import { readStayDates, todayInLagos, writeStayDates, type StayDates } from './boardingStayDates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 const dayInMilliseconds = 86_400_000;
-const boardingDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Africa/Lagos' });
 
 const inquiryTopics = [
   { value: 'vaccinations', label: 'Vaccinations and records', question: 'What vaccinations and records do you require?' },
@@ -45,24 +45,6 @@ function BoardingInquiryDraft({ email, draft }: { email: string; draft: InquiryD
   );
 }
 
-type StayDates = { arrival: string; departure: string };
-const stayDatesKey = 'onevet.boarding-stay-dates';
-
-function readStayDates(): StayDates | null {
-  try {
-    const dates = JSON.parse(sessionStorage.getItem(stayDatesKey) ?? 'null');
-    const isoDate = /^\d{4}-\d{2}-\d{2}$/;
-    if (typeof dates?.arrival !== 'string' || typeof dates.departure !== 'string'
-      || !isoDate.test(dates.arrival) || !isoDate.test(dates.departure)
-      || dates.arrival < boardingDate.format(new Date()) || dates.departure <= dates.arrival) {
-      return null;
-    }
-    return { arrival: dates.arrival, departure: dates.departure };
-  } catch {
-    return null;
-  }
-}
-
 export function BoardingInquiryForm({ name, email }: { name: string; email: string }) {
   const [remembered, setRemembered] = useState(readStayDates);
   const [arrival, setArrival] = useState(remembered?.arrival ?? '');
@@ -70,7 +52,7 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
   const [datesNotice, setDatesNotice] = useState(remembered ? 'Using dates remembered in this tab.' : '');
   const [draft, setDraft] = useState<InquiryDraft | null>(null);
   const [error, setError] = useState('');
-  const today = boardingDate.format(new Date());
+  const today = todayInLagos();
   const arrivalDay = Date.parse(arrival + 'T00:00:00Z');
   const departureDay = Date.parse(departure + 'T00:00:00Z');
   const firstDeparture = new Date(Math.max(Date.parse(today), arrivalDay || 0) + dayInMilliseconds)
@@ -81,8 +63,7 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
 
   function rememberDates(dates: StayDates | null) {
     try {
-      if (dates) sessionStorage.setItem(stayDatesKey, JSON.stringify(dates));
-      else sessionStorage.removeItem(stayDatesKey);
+      writeStayDates(dates);
       setRemembered(dates);
       setDatesNotice(dates ? 'Dates remembered for other facility pages in this tab.' : 'Remembered dates cleared.');
     } catch {
@@ -98,7 +79,7 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
     const topics = data.getAll('topics');
     const questions = inquiryTopics.filter(({ value }) => topics.includes(value)).map(({ question }) => `- ${question}`);
 
-    if (!(arrivalDay >= Date.parse(boardingDate.format(new Date())) && nights > 0)) {
+    if (!(arrivalDay >= Date.parse(todayInLagos()) && nights > 0)) {
       setError('Choose an arrival date from today onward and a departure date after arrival.');
       return;
     }

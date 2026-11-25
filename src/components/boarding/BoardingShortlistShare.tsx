@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { readStayDates } from './boardingStayDates';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,10 +9,13 @@ export function BoardingShortlistShare({ facilities }: {
   facilities: Pick<BoardingListing, 'slug' | 'name'>[];
 }) {
   const [result, setResult] = useState<{ text: string; copied: boolean }>();
+  const [includeDates, setIncludeDates] = useState(false);
+  const dates = readStayDates();
   const links = facilities.map(({ name, slug }) =>
     `${name}\n${new URL(`/boarding/${encodeURIComponent(slug)}`, window.location.origin).href}`,
   );
-  const text = ['Pet boarding shortlist', ...links].join('\n\n');
+  const stay = includeDates && dates ? [`Arrival: ${dates.arrival}\nDeparture: ${dates.departure}`] : [];
+  const text = ['Pet boarding shortlist', ...stay, ...links].join('\n\n');
   const currentResult = result?.text === text ? result : undefined;
 
   async function copyShortlist() {
@@ -25,6 +29,13 @@ export function BoardingShortlistShare({ facilities }: {
 
   return (
     <div className="mt-3 space-y-2">
+      {dates && (
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={includeDates} onChange={event => setIncludeDates(event.target.checked)}
+            className="size-4 accent-primary" />
+          Include stay dates ({dates.arrival} to {dates.departure})
+        </label>
+      )}
       <Button type="button" size="sm" variant="outline" onClick={() => void copyShortlist()}>
         Copy shortlist
       </Button>

@@ -233,6 +233,8 @@ it('refreshes the open directory when another tab changes or clears the shortlis
 
 it('shares saved facility names and public links when clipboard access is blocked', async () => {
   const key = 'onevet.boarding-shortlist';
+  const datesKey = 'onevet.boarding-stay-dates';
+  sessionStorage.setItem(datesKey, JSON.stringify({ arrival: '2099-01-10', departure: '2099-01-12' }));
   localStorage.setItem(key, JSON.stringify([
     { slug: 'garden', name: 'Garden Boarding' },
     { slug: 'park', name: 'Park Boarding' },
@@ -253,8 +255,14 @@ it('shares saved facility names and public links when clipboard access is blocke
     ].join('\n\n');
     expect(await screen.findByLabelText('Shortlist to share')).toHaveValue(expected);
     expect(writeText).toHaveBeenCalledWith(expected);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Include stay dates/ }));
+    expect(screen.queryByLabelText('Shortlist to share')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy shortlist' }));
+    expect(await screen.findByLabelText('Shortlist to share'))
+      .toHaveValue(expected.replace('Pet boarding shortlist', 'Pet boarding shortlist\n\nArrival: 2099-01-10\nDeparture: 2099-01-12'));
   } finally {
     localStorage.removeItem(key);
+    sessionStorage.removeItem(datesKey);
     if (originalClipboard) Object.defineProperty(navigator, 'clipboard', originalClipboard);
     else Reflect.deleteProperty(navigator, 'clipboard');
   }
