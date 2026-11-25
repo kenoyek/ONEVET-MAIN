@@ -118,8 +118,11 @@ it('opens a facility directly and keeps the city filter in the return link', asy
   const copy = screen.getByRole('button', { name: 'Copy inquiry' });
   expect((screen.getByLabelText('Inquiry details') as HTMLTextAreaElement).value)
     .toContain('To: boarding@example.invalid\nSubject: Boarding inquiry for Garden Boarding');
+  const share = screen.getByRole('button', { name: 'Copy facility link' });
+  const facilityUrl = new URL('/boarding/garden', window.location.origin).href;
   const originalClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
-  const writeText = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('Permission denied'));
+  const writeText = vi.fn().mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('Permission denied'))
+    .mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('Permission denied'));
   Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
   try {
     fireEvent.click(copy);
@@ -127,6 +130,11 @@ it('opens a facility directly and keeps the city filter in the return link', asy
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('Pets: 1 dog & 1 cat'));
     fireEvent.click(copy);
     await screen.findByText('Select and copy the inquiry details below.');
+    fireEvent.click(share);
+    await screen.findByText('Facility link copied.');
+    expect(writeText).toHaveBeenLastCalledWith(facilityUrl);
+    fireEvent.click(share);
+    expect(await screen.findByLabelText('Facility link')).toHaveValue(facilityUrl);
   } finally {
     if (originalClipboard) Object.defineProperty(navigator, 'clipboard', originalClipboard);
     else Reflect.deleteProperty(navigator, 'clipboard');

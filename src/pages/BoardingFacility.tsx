@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
 import { BoardingInquiryForm } from '@/components/boarding/BoardingInquiryForm';
+import { BoardingShareLink } from '@/components/boarding/BoardingShareLink';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -42,6 +43,7 @@ export default function BoardingFacility() {
             <p className="flex items-center gap-2 text-muted-foreground">
               <MapPin className="size-5 shrink-0" aria-hidden="true" />{listing.city}, {listing.state}
             </p>
+            <BoardingShareLink key={listing.slug} slug={listing.slug} />
             {listing.description && (
               <section className="space-y-3 rounded-xl border bg-card p-5">
                 <h2 className="text-xl font-semibold">About this facility</h2>
