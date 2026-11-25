@@ -5,6 +5,7 @@ import { Bookmark, MapPin } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
+import { BoardingShortlistNote } from '@/components/boarding/BoardingShortlistNote';
 import { BoardingComparison } from '@/components/boarding/BoardingComparison';
 import { BoardingShortlistShare } from '@/components/boarding/BoardingShortlistShare';
 import { Footer } from '@/components/layout/Footer';
@@ -17,7 +18,7 @@ import { boardingRegistrationPath } from '@/lib/registration-intent';
 import { listBoardingFacilities } from '@/lib/services/boarding-directory';
 
 export default function BoardingDirectory() {
-  const { saved, update, storageError } = useBoardingShortlist();
+  const { saved, update, updateNote, storageError } = useBoardingShortlist();
   const [params, setParams] = useSearchParams();
   const city = (params.get('city') ?? '').trim().slice(0, 80);
   const state = (params.get('state') ?? '').trim().slice(0, 80);
@@ -73,6 +74,7 @@ export default function BoardingDirectory() {
                   }}>{item.name}</Link>
                   <Button size="sm" variant="ghost" type="button" aria-label={`Remove ${item.name} from shortlist`}
                     onClick={() => update(item, false)}>Remove</Button>
+                  <BoardingShortlistNote facility={item} onSave={note => updateNote(item.slug, note)} />
                 </li>
               ))}
             </ul>

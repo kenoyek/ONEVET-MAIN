@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { BoardingListing } from '@/lib/services/boarding-directory';
 
-type SavedFacility = Pick<BoardingListing, 'slug' | 'name'>;
+export type SavedFacility = Pick<BoardingListing, 'slug' | 'name'> & { note?: string };
+export const shortlistNoteLimit = 300;
 const storageKey = 'onevet.boarding-shortlist';
 
 function readShortlist(): SavedFacility[] {
@@ -10,7 +11,9 @@ function readShortlist(): SavedFacility[] {
     return Array.isArray(saved) ? saved.filter(item =>
       typeof item?.slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.slug)
       && item.slug.length <= 80 && typeof item.name === 'string',
-    ) : [];
+    ).map(({ slug, name, note }) => ({
+      slug, name, note: typeof note === 'string' ? note.slice(0, shortlistNoteLimit) : undefined,
+    })) : [];
   } catch {
     return [];
   }
@@ -31,18 +34,37 @@ export function useBoardingShortlist() {
     return () => window.removeEventListener('storage', syncShortlist);
   }, []);
 
-  function update({ slug, name }: SavedFacility, keep: boolean) {
-    const current = readShortlist();
-    const remaining = current.filter(item => item.slug !== slug);
-    const next = keep ? [...remaining, { slug, name }] : remaining;
+  function persist(next: SavedFacility[]) {
     try {
       localStorage.setItem(storageKey, JSON.stringify(next));
       setSaved(next);
       setStorageError(false);
+      return true;
     } catch {
       setStorageError(true);
+      return false;
     }
   }
 
-  return { saved, update, storageError };
+  function update({ slug, name }: SavedFacility, keep: boolean) {
+    const current = readShortlist();
+    if (keep && current.some(item => item.slug === slug)) {
+      setSaved(current);
+      return;
+    }
+    persist(keep ? [...current, { slug, name }] : current.filter(item => item.slug !== slug));
+  }
+
+  function updateNote(slug: string, note: string) {
+    const current = readShortlist();
+    if (!current.some(item => item.slug === slug)) {
+      setSaved(current);
+      return false;
+    }
+    return persist(current.map(item => item.slug === slug
+      ? { ...item, note: note.trim().slice(0, shortlistNoteLimit) || undefined }
+      : item));
+  }
+
+  return { saved, update, updateNote, storageError };
 }

@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { getBoardingFacility, type BoardingListing } from '@/lib/services/boarding-directory';
-
-type SavedFacility = Pick<BoardingListing, 'slug' | 'name'>;
+import type { SavedFacility } from './useBoardingShortlist';
+import { getBoardingFacility } from '@/lib/services/boarding-directory';
 
 function ComparisonCard({ facility, search }: { facility: SavedFacility; search: string }) {
   const listing = useQuery({
@@ -33,6 +32,12 @@ function ComparisonCard({ facility, search }: { facility: SavedFacility; search:
             aria-label={`Open ${listing.data.name} for inquiries`}>Open facility for inquiries</Link>
         </>
       ) : <p className="text-sm">This listing is unavailable.</p>)}
+      {facility.note && (
+        <div className="border-t pt-2 text-sm">
+          <p className="font-medium">Your note</p>
+          <p className="whitespace-pre-wrap">{facility.note}</p>
+        </div>
+      )}
     </article>
   );
 }

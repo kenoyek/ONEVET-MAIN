@@ -237,7 +237,7 @@ it('shares saved facility names and public links when clipboard access is blocke
   const datesKey = 'onevet.boarding-stay-dates';
   sessionStorage.setItem(datesKey, JSON.stringify({ arrival: '2099-01-10', departure: '2099-01-12' }));
   localStorage.setItem(key, JSON.stringify([
-    { slug: 'garden', name: 'Garden Boarding' },
+    { slug: 'garden', name: 'Garden Boarding', note: 'Private quote' },
     { slug: 'park', name: 'Park Boarding' },
   ]));
   vi.mocked(listBoardingFacilities).mockResolvedValueOnce({ facilities: [], hasMore: false });
@@ -335,6 +335,12 @@ it('compares current public listings and handles a withdrawn facility', async ()
   try {
     mount(<BoardingDirectory />);
     fireEvent.click(screen.getByText('Saved facilities (2)'));
+    const savedItem = within(screen.getByRole('button', { name: 'Remove Garden Boarding from shortlist' }).closest('li')!);
+    fireEvent.click(savedItem.getByText('Add note'));
+    fireEvent.change(savedItem.getByLabelText('Note for Garden Boarding'), { target: { value: 'Ask about weekend rates' } });
+    fireEvent.click(savedItem.getByRole('button', { name: 'Save note' }));
+    expect(screen.getByText('Note saved.')).toBeInTheDocument();
+    expect(localStorage.getItem(key)).toContain('Ask about weekend rates');
     fireEvent.click(screen.getByText('Compare saved facilities'));
     const compare = screen.getByRole('button', { name: 'Compare selected' });
     expect(compare).toBeDisabled();
@@ -343,6 +349,7 @@ it('compares current public listings and handles a withdrawn facility', async ()
     fireEvent.click(compare);
     const comparison = within(screen.getByRole('region', { name: 'Boarding comparison' }));
     expect(await comparison.findByText('Overnight facilities')).toBeInTheDocument();
+    expect(comparison.getByText('Ask about weekend rates')).toBeInTheDocument();
     expect(await comparison.findByText('This listing is unavailable.')).toBeInTheDocument();
     expect(comparison.getByRole('link', { name: 'Open Garden Boarding for inquiries' }))
       .toHaveAttribute('href', '/boarding/garden');
