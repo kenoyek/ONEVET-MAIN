@@ -1,6 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { NotificationHistory } from '@/components/admin/NotificationHistory';
+import { useAuth } from '@/lib/auth-context';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Button } from '@/components/ui/button';
@@ -20,6 +22,7 @@ export default function NotificationComposer() {
   const [sentCount, setSentCount] = useState<number | null>(null);
   const sendingLock = useRef(false);
   const cache = useQueryClient();
+  const adminId = useAuth().user?.id;
 
   function review(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +46,7 @@ export default function NotificationComposer() {
       setTitle('');
       setMessage('');
       void cache.invalidateQueries({ queryKey: ['notifications'] });
+      void cache.invalidateQueries({ queryKey: ['admin-notification-history', adminId] });
     } catch {
       setFailed(true);
     } finally {
@@ -87,6 +91,7 @@ export default function NotificationComposer() {
             <Button type="submit" disabled={!title.trim() || !message.trim()}>Review notification</Button>
           </form>
         )}
+        {adminId && <NotificationHistory key={adminId} adminId={adminId} />}
       </main>
     </div>
   );
