@@ -2,18 +2,18 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { setBoardingListing } from '@/lib/services/boarding-directory';
+import { setBoardingListing, type BoardingListing } from '@/lib/services/boarding-directory';
 
 export function BoardingListingPanel({
-  id, slug, approved, published, email, onChange,
+  id, listing, approved, published, onChange,
 }: {
   id: string;
-  slug: string;
+  listing: BoardingListing;
   approved: boolean;
   published: boolean;
-  email: string;
   onChange: (published: boolean) => void;
 }) {
+  const { name, slug, description, city, state, email } = listing;
   const [consent, setConsent] = useState(false);
   const cache = useQueryClient();
   const save = useMutation({
@@ -31,10 +31,19 @@ export function BoardingListingPanel({
       <p className="text-sm text-muted-foreground">Publish your facility name, description, city, state, and business email for boarding inquiries.</p>
       {(!approved || published) && <p role="status">{!approved ? 'Your facility needs current approval to appear in the directory.' : 'Publishing is enabled while your approval and evidence remain current.'}</p>}
       {approved && !published && (
-        <label className="flex items-start gap-2 text-sm">
-          <input type="checkbox" checked={consent} disabled={save.isPending} onChange={event => setConsent(event.target.checked)} />
-          I agree to show {email} and my facility details in the public directory.
-        </label>
+        <>
+          <section aria-labelledby="boarding-preview-title" className="space-y-3 rounded-lg border bg-background p-4">
+            <h3 id="boarding-preview-title" className="text-sm font-semibold">Public listing preview</h3>
+            <p className="break-words text-lg font-semibold">{name}</p>
+            <p className="break-words text-sm text-muted-foreground">{city}, {state}</p>
+            {description && <p className="whitespace-pre-wrap break-words text-sm">{description}</p>}
+            <p className="break-words text-sm"><span className="font-medium">Business email</span> {email}</p>
+          </section>
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" checked={consent} disabled={save.isPending} onChange={event => setConsent(event.target.checked)} />
+            I agree to show these facility details and business email in the public directory.
+          </label>
+        </>
       )}
       <div className="flex flex-wrap gap-2">
         {published || approved ? <Button disabled={save.isPending || (!published && !consent)}

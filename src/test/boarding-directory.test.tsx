@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import BoardingFacility from '@/pages/BoardingFacility';
@@ -40,8 +40,14 @@ it('searches by city and shows a direct boarding inquiry link', async () => {
 it('requires publication consent and acknowledges the confirmed change', async () => {
   const onChange = vi.fn();
   vi.mocked(setBoardingListing).mockResolvedValueOnce(undefined);
-  mount(<BoardingListingPanel id="facility" slug="garden" approved published={false}
-    email="boarding@example.invalid" onChange={onChange} />);
+  mount(<BoardingListingPanel id="facility" approved published={false} onChange={onChange}
+    listing={{ name: 'Garden Boarding', slug: 'garden', description: 'Overnight facilities',
+      email: 'boarding@example.invalid', city: 'Ibadan', state: 'Oyo' }} />);
+  const preview = within(screen.getByRole('region', { name: 'Public listing preview' }));
+  expect(preview.getByText('Garden Boarding')).toBeInTheDocument();
+  expect(preview.getByText('Ibadan, Oyo')).toBeInTheDocument();
+  expect(preview.getByText('Overnight facilities')).toBeInTheDocument();
+  expect(preview.getByText(/boarding@example.invalid/)).toBeInTheDocument();
   const publish = screen.getByRole('button', { name: 'Publish listing' });
   expect(publish).toBeDisabled();
   fireEvent.click(screen.getByRole('checkbox', { name: /I agree/ }));
