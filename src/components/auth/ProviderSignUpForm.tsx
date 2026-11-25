@@ -3,7 +3,7 @@ import {authErrorMessage} from '@/lib/auth-feedback';
 import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2, Stethoscope, Store, Scissors, Home } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Stethoscope, Store, Scissors, Home, Building2, FlaskConical, Pill, PawPrint, Truck } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { providerSignUpSchema, type ProviderSignUpValues } from '@/lib/validation';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +41,7 @@ const roleOptions: { value: ProviderRole; label: string; description: string; ic
   {
     value: 'service_provider',
     label: 'Boarding Facility',
-    description: 'Provide pet boarding and sitting',
+    description: 'Create a provider account. Boarding organization registration is not yet available.',
     icon: <Home className="h-5 w-5" />,
   },
   {
@@ -49,6 +49,36 @@ const roleOptions: { value: ProviderRole; label: string; description: string; ic
     label: 'Vendor Store',
     description: 'Sell pet food, accessories, and supplies',
     icon: <Store className="h-5 w-5" />,
+  },
+  {
+    value: 'veterinarian',
+    label: 'Veterinary Clinic',
+    description: 'Apply as the veterinarian responsible for the clinic',
+    icon: <Building2 className="h-5 w-5" />,
+  },
+  {
+    value: 'service_provider',
+    label: 'Diagnostic Laboratory',
+    description: 'Register an animal diagnostic laboratory',
+    icon: <FlaskConical className="h-5 w-5" />,
+  },
+  {
+    value: 'service_provider',
+    label: 'Veterinary Pharmacy',
+    description: 'Register a veterinary pharmacy',
+    icon: <Pill className="h-5 w-5" />,
+  },
+  {
+    value: 'service_provider',
+    label: 'Pet Trainer',
+    description: 'Offer pet training and behaviour services',
+    icon: <PawPrint className="h-5 w-5" />,
+  },
+  {
+    value: 'veterinarian',
+    label: 'Mobile Service Provider',
+    description: 'Apply as the veterinarian responsible for the mobile service',
+    icon: <Truck className="h-5 w-5" />,
   },
 ];
 
@@ -70,7 +100,7 @@ export function ProviderSignUpForm({onSignIn, initialCategory = ''}:{onSignIn?:(
       email: '',
       password: '',
       confirmPassword: '',
-      role: initialCategory === 'Veterinarian' ? 'veterinarian' : 'service_provider',
+      role: roleOptions.find(option => option.label === initialCategory)?.value ?? 'service_provider',
       businessName: '',
       location: '',
       licenseNumber: '',
@@ -78,6 +108,7 @@ export function ProviderSignUpForm({onSignIn, initialCategory = ''}:{onSignIn?:(
   });
 
   const watchRole = form.watch('role');
+  const selectedCategory = roleOptions.find(option => option.label === selectedLabel);
 
   const onSubmit = async (values: ProviderSignUpValues) => {
     if(!selectedLabel){form.setError('role',{message:'Choose a professional category.'});return;}
@@ -190,6 +221,7 @@ export function ProviderSignUpForm({onSignIn, initialCategory = ''}:{onSignIn?:(
                   ))}
                 </RadioGroup>
               </FormControl>
+              {selectedCategory && <FormDescription>{selectedCategory.description}</FormDescription>}
               <FormMessage className="font-bold text-xs" />
             </FormItem>
           )}

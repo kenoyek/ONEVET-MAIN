@@ -27,8 +27,22 @@ export const providerDraftSchema = z.object({
 }).strict();
 export type ProviderDraftInput = z.infer<typeof providerDraftSchema>;
 export type ProviderDraft = Database['public']['Tables']['provider_organizations']['Row'];
-export const emptyProviderDraft = (email = ''): ProviderDraftInput => ({
-  name: '', slug: '', provider_type: 'veterinary_clinic', description: '', email,
+const organizationTypeBySignup: Partial<Record<string, ProviderDraftInput['provider_type']>> = {
+  veterinarian: 'independent_veterinarian',
+  veterinary_clinic: 'veterinary_clinic',
+  groomer: 'grooming_business',
+  diagnostic_laboratory: 'diagnostic_laboratory',
+  veterinary_pharmacy: 'pharmacy',
+  vendor_store: 'pet_store',
+  pet_trainer: 'pet_trainer',
+  mobile_service_provider: 'mobile_service_provider',
+};
+
+export const emptyProviderDraft = (email = '', signupCategory?: string | null): ProviderDraftInput => ({
+  name: '', slug: '', description: '', email,
+  provider_type: signupCategory && Object.hasOwn(organizationTypeBySignup, signupCategory)
+    ? organizationTypeBySignup[signupCategory] ?? 'veterinary_clinic'
+    : 'veterinary_clinic',
   phone: '', website: '', state: '', city: '', address: '', primary_location_name: '',
 });
 

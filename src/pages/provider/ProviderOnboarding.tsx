@@ -5,10 +5,10 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Button } from '@/components/ui/button';
 import { ProviderDraftForm } from '@/components/provider/ProviderDraftForm';
 import { useAuth } from '@/lib/auth-context';
-import { providerDraftService } from '@/lib/services/provider-draft-service';
+import { emptyProviderDraft, providerDraftService } from '@/lib/services/provider-draft-service';
 
 export default function ProviderOnboarding() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const cache = useQueryClient();
   const organizations = useQuery({ queryKey: ['provider-drafts', user?.id], queryFn: () => providerDraftService.list(user!.id), enabled: !!user });
@@ -25,7 +25,7 @@ export default function ProviderOnboarding() {
       </section>
       <section className="care-path"><h2 className="text-xl mb-2">Organization and primary location</h2>
         <p className="text-sm text-muted-foreground mb-6">Currently supporting Nigeria · Africa/Lagos (WAT) · NGN. Enter the actual address of your primary location.</p>
-        <ProviderDraftForm key={user?.id} email={user?.email} onSave={async input => {
+        <ProviderDraftForm key={user?.id} initial={emptyProviderDraft(user?.email, profile?.vendor_type)} onSave={async input => {
           try {
             const saved = await providerDraftService.save(input);
             navigate(`/provider/organization/${saved.slug}`);

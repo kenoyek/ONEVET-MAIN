@@ -1,5 +1,5 @@
 import {fireEvent,render,screen,waitFor} from '@testing-library/react';
-import {MemoryRouter,Route,Routes,useLocation} from 'react-router-dom';
+import {MemoryRouter,Route,Routes,useLocation,useNavigate} from 'react-router-dom';
 import {beforeEach,describe,expect,it,vi} from 'vitest';
 const mock=vi.hoisted(()=>({user:null as null|{id:string},role:null as string|null,roles:[] as string[],loading:false,passwordRecovery:false,permissionsError:false}));
 vi.mock('@/lib/auth-context',()=>({useAuth:()=>mock}));
@@ -27,3 +27,19 @@ it('chooses the admin portal when an owner role is returned first',async()=>{moc
 it('uses the same portal priority on confirmation callbacks',async()=>{mock.user={id:'admin-a'};mock.role='pet_owner';mock.roles=['pet_owner','admin'];mount(true);await screen.findByText('Destination: /admin');});
 
 it('lets signed-in administrators explicitly request a password reset without redirecting them away',async()=>{mock.user={id:'admin-a'};mock.role='admin';mount(false,false,'?mode=recover');await screen.findByText('Recovery request form');expect(screen.queryByText(/Destination:/)).not.toBeInTheDocument();});
+
+
+it('restores the account type chooser when navigating back from a signup form', async () => {
+  function BackButton() {
+    const navigate = useNavigate();
+    return <button onClick={() => navigate(-1)}>Browser back</button>;
+  }
+  render(<MemoryRouter initialEntries={['/auth?mode=signup']}>
+    <Routes><Route path="/auth" element={<><BackButton/><Auth/></>}/></Routes>
+  </MemoryRouter>);
+  fireEvent.click(screen.getByRole('button',{name:/Professional Provider/}));
+  await screen.findByText('Provider registration form');
+  fireEvent.click(screen.getByRole('button',{name:'Browser back'}));
+  await screen.findByRole('button',{name:/Professional Provider/});
+  expect(screen.queryByText('Provider registration form')).not.toBeInTheDocument();
+});

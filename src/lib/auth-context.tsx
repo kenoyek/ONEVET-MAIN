@@ -30,6 +30,7 @@ export interface Profile {
   business_address: string | null;
   location: string | null;
   customer_type?: string | null;
+  vendor_type?: string | null;
 }
 
 interface AuthContextType {

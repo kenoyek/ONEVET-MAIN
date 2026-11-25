@@ -27,3 +27,19 @@ describe('Registration and recovery feedback',()=>{
  it('retains farm-client signup intent in the customer metadata',async()=>{mount(<SignUpForm initialCustomerType="farm_owner"/>);fill();fireEvent.click(screen.getByRole('button',{name:'Create account'}));await screen.findByText('Check your email to continue');expect(mock.signUp.mock.calls[0]?.[5]).toMatchObject({customerType:'farm_owner'});});
 
 });
+
+it.each([
+  ['Veterinary Clinic', 'veterinary_clinic', 'veterinarian'],
+  ['Mobile Service Provider', 'mobile_service_provider', 'veterinarian'],
+  ['Diagnostic Laboratory', 'diagnostic_laboratory', 'service_provider'],
+  ['Veterinary Pharmacy', 'veterinary_pharmacy', 'service_provider'],
+  ['Pet Trainer', 'pet_trainer', 'service_provider'],
+])('signs up a %s with the appropriate account role', async (category, vendorType, role) => {
+  mount(<ProviderSignUpForm initialCategory={category}/>);
+  fill(true);
+  expect(screen.getByRole('radio',{name:category})).toBeChecked();
+  fireEvent.click(screen.getByRole('button',{name:'Create provider account'}));
+  await screen.findByText('Check your email to continue');
+  expect(mock.signUp.mock.calls[0]?.[4]).toBe(role);
+  expect(mock.signUp.mock.calls[0]?.[5]).toMatchObject({vendorType});
+});

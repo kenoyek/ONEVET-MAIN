@@ -54,3 +54,16 @@ it('marks invalid fields, focuses the first error and never submits invalid data
  fireEvent.change(screen.getByLabelText('Organization name'),{target:{value:'Ada Clinic'}});
  expect(screen.getByLabelText('Organization name')).toHaveAttribute('aria-invalid','false');
 });
+
+it.each([
+  ['veterinarian', 'independent_veterinarian'],
+  ['veterinary_clinic', 'veterinary_clinic'],
+  ['mobile_service_provider', 'mobile_service_provider'],
+  ['groomer', 'grooming_business'],
+  ['diagnostic_laboratory', 'diagnostic_laboratory'],
+  ['veterinary_pharmacy', 'pharmacy'],
+  ['vendor_store', 'pet_store'],
+  ['pet_trainer', 'pet_trainer'],
+])('carries the %s signup category into organization setup', (signup, organization) => {
+  expect(emptyProviderDraft('provider@example.invalid', signup).provider_type).toBe(organization);
+});

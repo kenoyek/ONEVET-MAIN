@@ -23,6 +23,17 @@ def check(condition, label):
     checks.append(label)
     return "do $check$ begin if not (" + condition + ") then raise exception 'Onboarding check failed: " + label + "'; end if; end $check$;"
 records = [(owner, {'role':'pet_owner','customer_type':'pet_owner'}), (farmer, {'role':'pet_owner','customer_type':'farm_owner'}), (vet, {'role':'veterinarian','license_number':'FIXTURE-NOT-A-REAL-LICENSE','vendor_type':'veterinarian'}), (provider, {'role':'service_provider','vendor_type':'vendor_store','business_name':'Rollback fixture'}), (forged, {'role':'admin','license_verified':True})]
+for category, role in (
+    ('groomer', 'service_provider'),
+    ('boarding_facility', 'service_provider'),
+    ('veterinary_clinic', 'veterinarian'),
+    ('diagnostic_laboratory', 'service_provider'),
+    ('veterinary_pharmacy', 'service_provider'),
+    ('pet_trainer', 'service_provider'),
+    ('mobile_service_provider', 'veterinarian'),
+):
+    records.append((str(uuid.uuid4()), {'role': role, 'vendor_type': category, 'business_name': 'Rollback fixture'}))
+
 sql = ["begin; set local statement_timeout='30s';"]
 for index, (uid, metadata) in enumerate(records):
     email = f'onboarding-{index}+{suffix}@example.invalid'
@@ -31,8 +42,13 @@ for index, (uid, metadata) in enumerate(records):
     sql.append(check(f"(select count(*)=1 from profiles where user_id='{uid}' and is_active and not license_verified and not email_verified)", f'profile created safely {index}'))
     expected = metadata['role'] if metadata['role'] != 'admin' else 'pet_owner'
     sql.append(check(f"(select count(*)=1 from user_roles where user_id='{uid}' and role::text='{expected}')", f'database role {index}'))
+    if 'vendor_type' in metadata:
+        category = metadata['vendor_type']
+        sql.append(check(f"(select vendor_type='{category}' from profiles where user_id='{uid}')", f'provider category {category} retained'))
+    if expected == 'veterinarian':
+        sql.append(check(f"(select verification_status='pending' from profiles where user_id='{uid}')", f'veterinarian {index} pending review'))
+
 sql.append(check(f"(select customer_type='farm_owner' from profiles where user_id='{farmer}')", 'farmer preference retained'))
-sql.append(check(f"(select verification_status='pending' from profiles where user_id='{vet}')", 'new vet pending review'))
 sql.append(check(f"not exists(select 1 from user_roles where user_id='{forged}' and role::text='admin')", 'signup cannot grant admin'))
 sql.append(check("exists(select 1 from storage.buckets where id='licenses' and not public)", 'license bucket private'))
 sql.append(f"update profiles set license_verified=true,verification_status='approved',is_available=true where user_id='{vet}';")

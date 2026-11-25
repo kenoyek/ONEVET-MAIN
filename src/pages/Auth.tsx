@@ -1,7 +1,7 @@
 import { EmailConfirmationForm } from '@/components/auth/EmailConfirmationForm';
 import { registrationIntent } from '@/lib/registration-intent';
 import authImage from '@/assets/marketing/welcome-care-1100.webp';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Stethoscope, PawPrint, Briefcase, ArrowLeft, Loader2 } from 'lucide-react';
@@ -25,27 +25,32 @@ const Auth = () => {
   const returnPath = getAuthReturnPath(location.state);
   const [searchParams] = useSearchParams();
   const { user, role, roles, loading, passwordRecovery, permissionsError } = useAuth();
-  const [mode, setMode] = useState<AuthMode>(() => authMode(searchParams.get('mode')));
-  const intent = registrationIntent(searchParams.get('role') || (returnPath === '/provider/register' ? 'provider' : null));
-  const [selectedRole, setSelectedRole] = useState<SelectedRole>(()=>intent.audience);
+  const mode = authMode(searchParams.get('mode'));
+  const fromProviderRegistration = /^\/provider\/register\/?$/i.test(returnPath?.split(/[?#]/)[0] ?? '');
+  const intent = registrationIntent(searchParams.get('role') ?? (fromProviderRegistration ? 'provider' : null));
+  const selectedRole = intent.audience;
 
   const isProviderFlow = selectedRole === 'provider';
-  const accountToolMode = ['reset','forgot','confirm'].includes(mode) || ['reset','recover','confirm'].includes(searchParams.get('mode') || '');
-
-  useEffect(() => {
-    setMode(authMode(searchParams.get('mode')));
-    // If role=provider URL param, skip role selection
-    if (searchParams.has('role')) setSelectedRole(registrationIntent(searchParams.get('role')).audience);
-  }, [searchParams]);
+  const accountToolMode = mode === 'reset' || mode === 'forgot' || mode === 'confirm';
 
   function chooseAudience(audience: SelectedRole) {
     const params = new URLSearchParams(searchParams);
-    if (audience) params.set('role', audience === 'provider' ? 'provider' : 'pet_owner'); else params.delete('role');
-    setSelectedRole(audience);
-    navigate({ pathname: '/auth', search: params.toString() ? `?${params}` : '' }, { state: location.state });
+    if (audience) {
+      params.set('role', audience === 'provider' ? 'provider' : 'pet_owner');
+    } else if (fromProviderRegistration) {
+      params.set('role', 'choose');
+    } else {
+      params.delete('role');
+    }
+    navigate({ pathname: '/auth', search: params.toString() }, { state: location.state });
   }
 
-  function changeMode(next:AuthMode){const params=new URLSearchParams(searchParams);if(next==='signin')params.delete('mode');else params.set('mode',next==='forgot'?'recover':next);setMode(next);navigate({pathname:'/auth',search:params.toString()?`?${params}`:''},{state:location.state});}
+  function changeMode(next: AuthMode) {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'signin') params.delete('mode');
+    else params.set('mode', next === 'forgot' ? 'recover' : next);
+    navigate({ pathname: '/auth', search: params.toString() }, { state: location.state });
+  }
 
   // Wait for database permissions before choosing an account portal.
   // Return paths are preserved when switching between sign-in and registration.
@@ -202,7 +207,7 @@ const Auth = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="px-0 pb-0">
-                    <Tabs value={mode === 'signup' ? 'signup' : 'signin'} onValueChange={(v) => { changeMode(v as AuthMode); if (v === 'signin') setSelectedRole(null); }} className="w-full">
+                    <Tabs value={mode === 'signup' ? 'signup' : 'signin'} onValueChange={value => changeMode(value as AuthMode)} className="w-full">
                       <TabsList className="grid w-full grid-cols-2 mb-10 bg-muted/50 p-1.5 h-auto rounded-2xl">
                         <TabsTrigger value="signin" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">Sign in</TabsTrigger>
                         <TabsTrigger value="signup" className="rounded-xl font-bold py-2.5 data-[state=active]:shadow-soft">Create account</TabsTrigger>
