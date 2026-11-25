@@ -1,3 +1,4 @@
+import { BoardingShortlistShare } from '@/components/boarding/BoardingShortlistShare';
 import { BoardingInquiryForm } from '@/components/boarding/BoardingInquiryForm';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
@@ -290,5 +291,33 @@ it('reuses only stay dates in another inquiry in the same tab', () => {
     expect(screen.getByLabelText('Departure date')).toHaveValue('');
   } finally {
     sessionStorage.removeItem('onevet.boarding-stay-dates');
+  }
+});
+
+
+it('shares the shortlist through the device and keeps copying available', async () => {
+  const originalShare = Object.getOwnPropertyDescriptor(navigator, 'share');
+  const share = vi.fn().mockResolvedValueOnce(undefined)
+    .mockRejectedValueOnce(new DOMException('Cancelled', 'AbortError'))
+    .mockRejectedValueOnce(new Error('Unavailable'));
+  Object.defineProperty(navigator, 'share', { configurable: true, value: share });
+  try {
+    render(<BoardingShortlistShare facilities={[{ slug: 'garden', name: 'Garden Boarding' }]} />);
+    const button = screen.getByRole('button', { name: 'Share shortlist' });
+    fireEvent.click(button);
+    await screen.findByText('Shortlist shared with your selected app.');
+    expect(share).toHaveBeenCalledWith({
+      title: 'Pet boarding shortlist',
+      text: `Pet boarding shortlist\n\nGarden Boarding\n${window.location.origin}/boarding/garden`,
+    });
+
+    await act(async () => fireEvent.click(button));
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    fireEvent.click(button);
+    await screen.findByText('Could not open sharing. Copy the shortlist to share it.');
+    expect(screen.getByRole('button', { name: 'Copy shortlist' })).toBeEnabled();
+  } finally {
+    if (originalShare) Object.defineProperty(navigator, 'share', originalShare);
+    else Reflect.deleteProperty(navigator, 'share');
   }
 });
