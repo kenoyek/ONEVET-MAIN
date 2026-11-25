@@ -34,7 +34,8 @@ done
  supabase/migrations/20261125010000_enable_boarding_organization_registration.sql \
  supabase/migrations/20261125020000_boarding_facility_directory.sql \
  supabase/migrations/20261125030000_boarding_facility_profiles.sql \
- supabase/migrations/20261125040000_boarding_state_filter.sql
+ supabase/migrations/20261125040000_boarding_state_filter.sql \
+ supabase/migrations/20261125050000_admin_notification_broadcasts.sql
  echo 'BEGIN;'
  cat supabase/tests/core-security.sql \
  supabase/tests/provider-drafts.sql \
@@ -52,7 +53,8 @@ done
  supabase/tests/license-document-integrity.sql \
  supabase/tests/admin-shop-catalogue.sql \
  supabase/tests/platform-images.sql \
- supabase/tests/site-analytics.sql
+ supabase/tests/site-analytics.sql \
+ supabase/tests/admin-notification-broadcasts.sql
  echo 'ROLLBACK;'
 } | docker --host=unix:///var/run/docker.sock exec --interactive "$core_test_container" psql --username postgres --set ON_ERROR_STOP=1 --quiet
 python scripts/test-booking-concurrency.py "$core_test_container"

@@ -56,6 +56,7 @@ const Cart = lazyRoute(() => import("./pages/Cart"));
 const Checkout = lazyRoute(() => import("./pages/Checkout"));
 const About = lazyRoute(() => import("./pages/About"));
 const CareChat = lazyRoute(() => import("./pages/CareChat"));
+const NotificationComposer = lazyRoute(() => import("./pages/admin/NotificationComposer"));
 const AdminMessages = lazyRoute(() => import("./pages/admin/Messages"));
 const SupportInbox = lazyRoute(() => import("./pages/admin/SupportInbox"));
 const CareChatInbox = lazyRoute(() => import("./pages/admin/CareChatInbox"));
@@ -149,6 +150,7 @@ const App = () => (
                         <AdminSubscriptions />
                       </ProtectedRoute>
                     } />
+                    <Route path="/admin/notifications" element={<ProtectedRoute allowedRoles={['admin']}><NotificationComposer /></ProtectedRoute>} />
                     <Route path="/admin/messages" element={<ProtectedRoute allowedRoles={['admin']}><AdminMessages /></ProtectedRoute>} />
                     <Route path="/admin/support" element={<ProtectedRoute allowedRoles={['admin']}><SupportInbox /></ProtectedRoute>} />
                     <Route path="/admin/care-chat" element={<ProtectedRoute allowedRoles={['admin']}><CareChatInbox /></ProtectedRoute>} />
@@ -265,7 +267,7 @@ const App = () => (
 
                     <Route path="/appointments/:id" element={<ProtectedRoute allowedRoles={['pet_owner','client','service_provider','veterinarian','admin']}><AppointmentDetails /></ProtectedRoute>} />
 
-                    <Route path="/notifications" element={<ProtectedRoute allowedRoles={['pet_owner','client','service_provider','veterinarian','admin']}><Notifications /></ProtectedRoute>} />
+                    <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
                     <Route path="/provider/invitations" element={<ProtectedRoute allowedRoles={['pet_owner','client','service_provider','veterinarian','admin']}><TeamInvitations /></ProtectedRoute>} />
 

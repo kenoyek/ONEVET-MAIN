@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  Users, Stethoscope, MessageCircle, FileText, CreditCard,
+  Users, Stethoscope, Bell, MessageCircle, FileText, CreditCard,
   Shield, TrendingUp, Search, ChevronRight, AlertCircle,
   CheckCircle, Clock, XCircle, RefreshCcw, Loader2
 } from 'lucide-react';
@@ -299,11 +299,14 @@ const AdminDashboard = () => {
                   <span className="hidden sm:inline">Subscriptions</span>
                 </TabsTrigger>
               </TabsList>
-              <Button asChild variant="outline" size="sm" className="min-h-10 gap-2">
-                <Link to="/admin/messages">
-                  <MessageCircle className="size-4" aria-hidden="true" /> Messages
-                </Link>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild variant="outline" size="sm" className="min-h-10">
+                  <Link to="/admin/notifications"><Bell className="size-4" aria-hidden="true" /> Notifications</Link>
+                </Button>
+                <Button asChild variant="outline" size="sm" className="min-h-10">
+                  <Link to="/admin/messages"><MessageCircle className="size-4" aria-hidden="true" /> Messages</Link>
+                </Button>
+              </div>
             </div>
 
             {/* Vet Verification Tab */}

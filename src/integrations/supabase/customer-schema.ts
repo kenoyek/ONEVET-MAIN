@@ -75,6 +75,7 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
       };
     };
     Functions: Omit<Database['public']['Functions'],'add_pet_owner_health_entry'> & {
+      send_admin_notification: { Args: { request_id: string; notification_title: string; notification_message: string }; Returns: number };
       care_chat_assign: { Args: { chat_id: string; expected_owner: string | null; release_chat: boolean }; Returns: import('./types').Json };
       get_public_boarding_facility: { Args: { facility_slug: string }; Returns: import('./types').Json };
       list_public_boarding_facilities: { Args: { city_query: string | null; after_slug: string | null; state_query?: string | null }; Returns: import('./types').Json };
