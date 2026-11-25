@@ -31,6 +31,7 @@ const VetDashboard = lazyRoute(() => import("./pages/VetDashboard"));
 const AdminDashboard = lazyRoute(() => import("./pages/AdminDashboard"));
 const Privacy = lazyRoute(() => import("./pages/Privacy"));
 const AdminAnalytics = lazyRoute(() => import("./pages/admin/Analytics"));
+const AdminUserDetails = lazyRoute(() => import("./pages/admin/UserDetails"));
 const AdminUsers = lazyRoute(() => import("./pages/admin/Users"));
 const ProviderVerificationQueue = lazyRoute(() => import("./pages/admin/ProviderVerificationQueue"));
 const Consultations = lazyRoute(() => import("./pages/Consultations"));
@@ -138,6 +139,11 @@ const App = () => (
                     <Route path="/admin/users" element={
                       <ProtectedRoute allowedRoles={['admin']}>
                         <AdminUsers />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/admin/users/:profileId" element={
+                      <ProtectedRoute allowedRoles={['admin']}>
+                        <AdminUserDetails />
                       </ProtectedRoute>
                     } />
                     <Route path="/admin/verifications" element={

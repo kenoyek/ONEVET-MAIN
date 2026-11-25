@@ -1,11 +1,11 @@
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import {
   ArrowLeft, Users, Search, Filter, Loader2,
-  MoreVertical, Edit, Shield, ShieldOff, Trash2,
+  MoreVertical, Eye, Shield, ShieldOff, Trash2,
   CheckCircle, XCircle, Mail, Phone, MapPin, RefreshCcw, AlertCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,7 +67,6 @@ interface UserProfile {
 }
 
 export default function AdminUsers() {
-  const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -354,14 +353,16 @@ export default function AdminUsers() {
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" aria-label={`Actions for ${[user.first_name, user.last_name].filter(Boolean).join(' ') || user.email || 'user'}`}>
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => navigate(`/admin/users/${user.id}`)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  View Details
+                                <DropdownMenuItem asChild>
+                                  <Link to={`/admin/users/${user.id}`}>
+                                    <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+                                    View Details
+                                  </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setToggleStatusUserId(user)}>
                                   {user.is_active ? (
