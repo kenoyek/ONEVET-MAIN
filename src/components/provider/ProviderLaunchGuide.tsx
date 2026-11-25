@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { categoryByProvider, providerCatalogService } from '@/lib/services/provider-catalog-service';
 import { appointmentService } from '@/lib/services/appointment-service';
 
-type Props = { providerId: string; slug: string; providerType: string; status: string; suspended: boolean };
-export function ProviderLaunchGuide({ providerId, slug, providerType, status, suspended }: Props) {
+type Props = { boardingPublished?: boolean; providerId: string; slug: string; providerType: string; status: string; suspended: boolean };
+export function ProviderLaunchGuide({ boardingPublished = false, providerId, slug, providerType, status, suspended }: Props) {
   const { user } = useAuth();
   const isBoarding = providerType === 'boarding_facility';
   const supportsServices = !!categoryByProvider[providerType];
@@ -25,7 +25,9 @@ export function ProviderLaunchGuide({ providerId, slug, providerType, status, su
     ...(supportsServices ? [
       { title: 'Public service listing', done: hasListing, text: hasListing ? 'At least one service is visible in the public catalogue.' : 'Prepare a service draft below. After approval, give consent and publish it.', href: '#organization-services' },
       { title: 'Booking availability', done: hasHours, text: hasHours ? 'Booking requests are enabled with saved weekly opening hours.' : 'Choose your weekly opening hours and enable booking requests. Publishing alone does not open your calendar.', href: '#organization-availability' },
-    ] : isBoarding ? [] : [{ title: 'Shop catalogue', done: false, text: 'After approval, contact the team to add your real products and stock to the shop. Online checkout remains unavailable.', href: '/contact' }]),
+    ] : isBoarding ? [
+      { title: 'Boarding directory listing', done: approved && boardingPublished, text: 'After approval, choose whether to show your facility and business email publicly.', href: '#boarding-directory' },
+    ] : [{ title: 'Shop catalogue', done: false, text: 'After approval, contact the team to add your real products and stock to the shop. Online checkout remains unavailable.', href: '/contact' }]),
   ];
   return <section aria-labelledby="launch-guide-title" className="mb-8 rounded-2xl border bg-card p-5 sm:p-8">
     <p className="eyebrow mb-3">Your next steps</p>
@@ -39,6 +41,6 @@ export function ProviderLaunchGuide({ providerId, slug, providerType, status, su
       <p className="text-sm leading-relaxed text-muted-foreground mb-3">{step.text}</p>
       {step.href.startsWith('#') ? <a href={step.href} className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4">Open this step<ArrowDown className="h-3 w-3" aria-hidden="true" /></a> : <Link className="text-sm text-primary underline underline-offset-4" to={step.href}>Contact the team</Link>}
     </li>)}</ol>
-    <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{supportsServices ? 'Opening hours do not guarantee an available slot. Each request still needs confirmation. ' : ''}{isBoarding ? 'Boarding listings and booking are not available yet.' : 'Online payments remain unavailable.'}</p>
+    <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{supportsServices ? 'Opening hours do not guarantee an available slot. Each request still needs confirmation. ' : ''}{isBoarding ? 'Customers contact boarding facilities directly to inquire about stays.' : 'Online payments remain unavailable.'}</p>
   </section>;
 }

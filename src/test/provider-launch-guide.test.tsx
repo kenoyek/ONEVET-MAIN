@@ -39,9 +39,9 @@ describe('provider launch guide', () => {
   it('guides boarding facilities through verification without suggesting listings or bookings', () => {
     mount('draft', 'boarding_facility');
     expect(screen.getByRole('heading', { name: 'Register your boarding facility' })).toBeInTheDocument();
-    expect(screen.getByText('Boarding listings and booking are not available yet.')).toBeInTheDocument();
+    expect(screen.getByText('Customers contact boarding facilities directly to inquire about stays.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Open this step' }).map(link => link.getAttribute('href')))
-      .toEqual(['#business-details', '#organization-verification']);
+      .toEqual(['#business-details', '#organization-verification', '#boarding-directory']);
     expect(publicServices).not.toHaveBeenCalled();
     expect(schedule).not.toHaveBeenCalled();
   });

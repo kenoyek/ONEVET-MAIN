@@ -27,7 +27,7 @@ export const providerDraftSchema = z.object({
   primary_location_name: z.string().trim().max(120).refine(value => value === '' || value.length >= 2, 'Use at least two characters for the branch name.'),
 }).strict();
 export type ProviderDraftInput = z.infer<typeof providerDraftSchema>;
-export type ProviderDraft = Database['public']['Tables']['provider_organizations']['Row'];
+export type ProviderDraft = Database['public']['Tables']['provider_organizations']['Row'] & { boarding_listing_published?: boolean };
 const organizationTypeBySignup: Partial<Record<string, ProviderDraftInput['provider_type']>> = {
   veterinarian: 'independent_veterinarian',
   veterinary_clinic: 'veterinary_clinic',
@@ -75,6 +75,6 @@ export const providerDraftService = {
     if (error) throw error;
     const { data: location, error: locationError } = await supabase.from('provider_locations').select('*').eq('provider_id', organization.id).eq('is_primary', true).single();
     if (locationError) throw locationError;
-    return { organization, location };
+    return { organization: organization as ProviderDraft, location };
   },
 };

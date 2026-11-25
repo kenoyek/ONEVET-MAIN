@@ -1,3 +1,4 @@
+import { BoardingListingPanel } from '@/components/provider/BoardingListingPanel';
 import { ProviderLaunchGuide } from '@/components/provider/ProviderLaunchGuide';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { Link, useParams } from 'react-router-dom';
@@ -30,14 +31,25 @@ export default function ProviderDraftWorkspace() {
       <section className="care-path mb-8"><h2 className="text-xl mb-3">Private organization workspace</h2>
         <p className="mb-2">Status: {organization.verification_status.replaceAll('_', ' ')}</p>
         <p className="text-muted-foreground">{isBoarding
-          ? 'Submit your boarding facility’s business documents for review. Boarding listings and booking are not available yet. Owners can manage team access below.'
+          ? 'Submit your boarding facility’s business documents for review. Approved facilities can opt into the public boarding directory. Owners can manage team access below.'
           : 'Submit registration evidence for organization review, then choose which services to publish below. Set availability below to accept booking requests. Owners can manage team access below.'}</p>
         <p className="mt-4">{providerCategories[organization.provider_type as keyof typeof providerCategories] ?? organization.provider_type} · {organization.country} · {organization.timezone} · {organization.currency}</p>
         <Button variant="outline" className="mt-5" asChild><Link to="/profile">Professional profile</Link></Button>
         <Button variant="link" asChild><Link to="/contact">Contact support</Link></Button>
       </section>
-      {isOwner && <ProviderLaunchGuide providerId={organization.id} slug={organization.slug} providerType={organization.provider_type} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
+      {isOwner && <ProviderLaunchGuide boardingPublished={organization.boarding_listing_published} providerId={organization.id} slug={organization.slug} providerType={organization.provider_type} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
       {isOwner && <ProviderVerificationPanel key={`${user?.id}-${organization.id}`} providerId={organization.id} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
+      {isOwner && isBoarding && (
+        <BoardingListingPanel key={organization.id} id={organization.id} email={organization.email}
+          approved={organization.verification_status === 'approved' && organization.status !== 'suspended'}
+          published={organization.boarding_listing_published === true}
+          onChange={published => {
+            cache.setQueryData<typeof draft.data>(['provider-draft', user?.id, slug], previous => previous && ({
+              ...previous, organization: { ...previous.organization, boarding_listing_published: published },
+            }));
+            void cache.invalidateQueries({ queryKey: ['provider-draft', user?.id, slug] });
+          }} />
+      )}
       {!isBoarding && draft.data?.access.services && <ProviderServiceManager key={`${user?.id}-${organization.id}`} providerId={organization.id} providerType={organization.provider_type} slug={organization.slug} approved={organization.verification_status === 'approved'} suspended={organization.status === 'suspended'} />}
       {!isBoarding && draft.data?.access.bookings && <ProviderBookingManager key={`${user?.id}-${organization.id}`} providerId={organization.id} />}
       {isOwner && <ProviderTeamManager key={`${user?.id}-${organization.id}`} providerId={organization.id} suspended={organization.status==='suspended'}/>}

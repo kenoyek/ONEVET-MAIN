@@ -12,6 +12,8 @@ SELECT set_config('boarding_test.org',save_provider_draft('{
 }')::text,true);
 SELECT verify_test_assert((SELECT provider_type='boarding_facility' AND verification_status='draft' AND status='inactive'
   FROM provider_organizations WHERE id=current_setting('boarding_test.org')::uuid),'boarding registration creates an inactive private draft');
+SELECT verify_test_reject($q$ SELECT set_boarding_listing(current_setting('boarding_test.org')::uuid,true) $q$,
+  'unapproved boarding facilities cannot publish');
 INSERT INTO storage.objects(bucket_id,name) VALUES
   ('provider-credentials',current_setting('boarding_test.org')||'/84333333-3333-4333-8333-333333333333.pdf');
 SELECT register_provider_evidence(current_setting('boarding_test.org')::uuid,'business_registration',
@@ -23,4 +25,24 @@ SELECT set_config('request.jwt.claim.sub','84222222-2222-4222-8222-222222222222'
 SELECT review_provider_verification(current_setting('boarding_test.org')::uuid,1,'approved','');
 SELECT verify_test_assert((SELECT verification_status='approved'
   FROM provider_organizations WHERE id=current_setting('boarding_test.org')::uuid),'admin can approve boarding organization evidence');
+RESET ROLE;
+
+SET LOCAL ROLE anon;
+SELECT verify_test_assert(list_public_boarding_facilities(NULL,NULL) = '[]'::jsonb, 'boarding approval does not automatically publish');
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT verify_test_reject($q$ SELECT set_boarding_listing(current_setting('boarding_test.org')::uuid,true) $q$,
+  'reviewer cannot publish on behalf of the boarding facility');
+SELECT set_config('request.jwt.claim.sub','84111111-1111-4111-8111-111111111111',true);
+SELECT verify_test_assert(set_boarding_listing(current_setting('boarding_test.org')::uuid,true),'boarding owner can publish with current approval');
+SET LOCAL ROLE anon;
+SELECT verify_test_assert((list_public_boarding_facilities(' IBA ',NULL)->0->>'email')='boarding@example.invalid',
+  'published facility appears by city with its business email');
+SELECT verify_test_assert(NOT (list_public_boarding_facilities(NULL,NULL)->0 ? 'address'),'directory does not expose the street address');
+SELECT verify_test_assert(list_public_boarding_facilities('Abuja',NULL) = '[]'::jsonb,'city filter excludes other locations');
+RESET ROLE;
+SET LOCAL ROLE authenticated;
+SELECT verify_test_assert(NOT set_boarding_listing(current_setting('boarding_test.org')::uuid,false),'owner can withdraw the listing');
+SET LOCAL ROLE anon;
+SELECT verify_test_assert(list_public_boarding_facilities(NULL,NULL) = '[]'::jsonb,'withdrawn facility disappears from directory');
 RESET ROLE;

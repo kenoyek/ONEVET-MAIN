@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 const publicCarePages = [
   '/', '/about', '/pricing', '/subscription', '/contact',
   '/articles', '/articles/:slug', '/education',
-  '/services', '/pet-care', '/farm-care', '/find-a-vet', '/provider-marketplace',
+  '/services', '/boarding', '/pet-care', '/farm-care', '/find-a-vet', '/provider-marketplace',
   '/provider/public/:slug', '/marketplace', '/marketplace/:id',
 ];
 
