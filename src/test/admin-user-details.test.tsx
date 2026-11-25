@@ -32,12 +32,12 @@ it('opens the selected profile from View Details and uses the auth ID to load ro
   const roleResult = Object.assign(Promise.resolve({ data: roles, error: null }), { eq: rolesByUser });
   from.mockImplementation(table => ({
     select: () => table === 'profiles'
-      ? { order: vi.fn().mockResolvedValue({ data: [profile], error: null }), eq: profileById }
+      ? { order: vi.fn().mockResolvedValue({ data: [{ ...profile, id: 'suspended-profile', first_name: 'Emeka', is_active: false }, profile], error: null }), eq: profileById }
       : roleResult,
   }));
 
   render(<QueryClientProvider client={new QueryClient()}>
-    <MemoryRouter initialEntries={[{ pathname: '/admin/users', state: { roleFilter: 'pet_owner' } }]}>
+    <MemoryRouter initialEntries={[{ pathname: '/admin/users', state: { roleFilter: 'pet_owner', statusFilter: 'active' } }]}>
       <Routes>
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/users/:profileId" element={<ProtectedRoute allowedRoles={['admin']}><AdminUserDetails /></ProtectedRoute>} />
@@ -46,6 +46,7 @@ it('opens the selected profile from View Details and uses the auth ID to load ro
   </QueryClientProvider>);
 
   await screen.findByText('Ada Okafor');
+  expect(screen.queryByText('Emeka Okafor')).not.toBeInTheDocument();
   fireEvent.change(screen.getByPlaceholderText('Search by name or email...'), { target: { value: 'ada@example' } });
   fireEvent.keyDown(await screen.findByRole('button', { name: 'Actions for Ada Okafor' }), { key: 'ArrowDown' });
   const details = await screen.findByRole('menuitem', { name: 'View Details' });
@@ -58,5 +59,6 @@ it('opens the selected profile from View Details and uses the auth ID to load ro
   expect(rolesByUser).toHaveBeenCalledWith('user_id', profile.user_id);
   fireEvent.click(screen.getByRole('link', { name: 'Back to users' }));
   expect(await screen.findByPlaceholderText('Search by name or email...')).toHaveValue('ada@example');
-  expect(screen.getByRole('combobox')).toHaveTextContent('Pet Owners');
+  expect(screen.getByRole('combobox', { name: 'Role filter' })).toHaveTextContent('Pet Owners');
+  expect(screen.getByRole('combobox', { name: 'Account status filter' })).toHaveTextContent('Active');
 });

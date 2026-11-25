@@ -66,18 +66,22 @@ interface UserProfile {
   location: string | null;
 }
 
+const statusFilters = ['all', 'active', 'suspended'];
 const roleFilters = ['all', 'admin', 'veterinarian', 'service_provider', 'pet_owner'];
 
 export default function AdminUsers() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { searchQuery: savedSearch, roleFilter: savedRole } = location.state ?? {};
+  const { searchQuery: savedSearch, roleFilter: savedRole, statusFilter: savedStatus } = location.state ?? {};
   const searchQuery = typeof savedSearch === 'string' ? savedSearch : '';
   const roleFilter = roleFilters.includes(savedRole) ? savedRole : 'all';
 
-  function updateFilters(nextSearch: string, nextRole: string) {
+  const statusFilter = statusFilters.includes(savedStatus) ? savedStatus : 'all';
+  const filters = { searchQuery, roleFilter, statusFilter };
+
+  function updateFilters(changes: Partial<Record<keyof typeof filters, string>>) {
     navigate({ pathname: location.pathname, search: location.search }, {
-      replace: true, state: { searchQuery: nextSearch, roleFilter: nextRole },
+      replace: true, state: { ...filters, ...changes },
     });
   }
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -194,7 +198,8 @@ export default function AdminUsers() {
 
     const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
-    return matchesSearch && matchesRole;
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' ? user.is_active : !user.is_active);
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
   const getRoleBadge = (role: string) => {
@@ -262,12 +267,12 @@ export default function AdminUsers() {
                   <Input
                     placeholder="Search by name or email..."
                     value={searchQuery}
-                    onChange={(e) => updateFilters(e.target.value, roleFilter)}
+                    onChange={(e) => updateFilters({ searchQuery: e.target.value })}
                     className="pl-9"
                   />
                 </div>
-                <Select value={roleFilter} onValueChange={value => updateFilters(searchQuery, value)}>
-                  <SelectTrigger className="w-[180px]">
+                <Select value={roleFilter} onValueChange={value => updateFilters({ roleFilter: value })}>
+                  <SelectTrigger aria-label="Role filter" className="w-full sm:w-[180px]">
                     <Filter className="h-4 w-4 mr-2" />
                     <SelectValue placeholder="All Roles" />
                   </SelectTrigger>
@@ -277,6 +282,16 @@ export default function AdminUsers() {
                     <SelectItem value="veterinarian">Veterinarians</SelectItem>
                     <SelectItem value="service_provider">Service Providers</SelectItem>
                     <SelectItem value="pet_owner">Pet Owners</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={statusFilter} onValueChange={value => updateFilters({ statusFilter: value })}>
+                  <SelectTrigger aria-label="Account status filter" className="w-full sm:w-[165px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -370,7 +385,7 @@ export default function AdminUsers() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                  <Link to={`/admin/users/${user.id}`} state={{ searchQuery, roleFilter }}>
+                                  <Link to={`/admin/users/${user.id}`} state={filters}>
                                     <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
                                     View Details
                                   </Link>
