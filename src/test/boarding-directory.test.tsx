@@ -35,6 +35,14 @@ it('searches by city and shows a direct boarding inquiry link', async () => {
     .toHaveAttribute('href', 'mailto:boarding@example.invalid');
   expect(listBoardingFacilities).toHaveBeenLastCalledWith('Ibadan', undefined);
   expect(screen.getByRole('link', { name: 'View Garden Boarding' })).toHaveAttribute('href', '/boarding/garden?city=Ibadan');
+  const save = screen.getByRole('button', { name: 'Save Garden Boarding to shortlist' });
+  expect(save).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(save);
+  expect(save).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByText('Saved facilities (1)')).toBeInTheDocument();
+  fireEvent.click(save);
+  expect(save).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByText('Saved facilities (0)')).toBeInTheDocument();
 });
 
 it('requires publication consent and acknowledges the confirmed change', async () => {

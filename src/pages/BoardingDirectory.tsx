@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
+import { Bookmark, MapPin } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
@@ -74,9 +74,9 @@ export default function BoardingDirectory() {
                 </li>
               ))}
             </ul>
-          ) : <p className="text-sm">Open a facility page to save it here.</p>}
-          {storageError && <p role="alert" className="mt-2 text-sm text-destructive">Could not update your shortlist. Check your browser storage settings.</p>}
+          ) : <p className="text-sm">Save a facility from the results to find it here.</p>}
         </details>
+        {storageError && <p role="alert" className="mt-2 text-sm text-destructive">Could not update your shortlist. Check your browser storage settings.</p>}
         <form className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-4" onSubmit={event => {
           event.preventDefault();
           searchLocation(draftCity, draftState);
@@ -101,22 +101,33 @@ export default function BoardingDirectory() {
         {listings.isSuccess && (listings.data.facilities.length === 0
           ? <p>{(city || state) ? 'No listed boarding facilities match these filters.' : 'No boarding facilities are listed yet.'}</p>
           : <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Boarding facilities">
-            {listings.data.facilities.map(facility => (
-              <li key={facility.slug} className="flex min-w-0 flex-col items-start gap-3 rounded-xl border bg-card p-5">
-                <h2 className="break-words text-xl font-semibold">{facility.name}</h2>
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="size-4 shrink-0" aria-hidden="true" />{facility.city}, {facility.state}
-                </p>
-                {facility.description && <p className="whitespace-pre-wrap break-words text-sm">{facility.description}</p>}
-                <div className="mt-auto flex flex-wrap gap-2">
-                  <Button asChild size="sm">
-                    <Link to={{ pathname: `/boarding/${encodeURIComponent(facility.slug)}`, search: params.toString() }}
-                      aria-label={`View ${facility.name}`}>View facility</Link>
-                  </Button>
-                  <BoardingEmailLink name={facility.name} email={facility.email} />
-                </div>
-              </li>
-            ))}
+            {listings.data.facilities.map(facility => {
+              const isSaved = saved.some(item => item.slug === facility.slug);
+              return (
+                <li key={facility.slug} className="flex min-w-0 flex-col items-start gap-3 rounded-xl border bg-card p-5">
+                  <div className="flex w-full items-start justify-between gap-2">
+                    <h2 className="min-w-0 break-words text-xl font-semibold">{facility.name}</h2>
+                    <Button type="button" variant="outline" size="sm" className="shrink-0"
+                      aria-label={`Save ${facility.name} to shortlist`} aria-pressed={isSaved}
+                      onClick={() => update(facility, !isSaved)}>
+                      <Bookmark aria-hidden="true" className={isSaved ? 'fill-current' : undefined} />
+                      {isSaved ? 'Saved' : 'Save'}
+                    </Button>
+                  </div>
+                  <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="size-4 shrink-0" aria-hidden="true" />{facility.city}, {facility.state}
+                  </p>
+                  {facility.description && <p className="whitespace-pre-wrap break-words text-sm">{facility.description}</p>}
+                  <div className="mt-auto flex flex-wrap gap-2">
+                    <Button asChild size="sm">
+                      <Link to={{ pathname: `/boarding/${encodeURIComponent(facility.slug)}`, search: params.toString() }}
+                        aria-label={`View ${facility.name}`}>View facility</Link>
+                    </Button>
+                    <BoardingEmailLink name={facility.name} email={facility.email} />
+                  </div>
+                </li>
+              );
+            })}
           </ul>)}
         <div className="flex flex-wrap gap-2">
           {cursor && <Button variant="outline" onClick={() => setPagination({ city, state, pages: pages.slice(0, -1) })}>Previous page</Button>}
