@@ -157,20 +157,43 @@
 @media(max-width:1023px) { .welcome-hero-grid { gap: 30px; } .welcome-confidence-grid { gap: 40px; } .welcome-services-grid { gap: 16px; } .welcome-service-body { padding-left: 19px; padding-right: 19px; } .welcome-fees > div { flex-wrap: wrap; } .welcome-fees a { margin-left: 55px; } }
 @media(max-width:639px) { .welcome-hero { padding-top: 108px; } .welcome-hero-grid { grid-template-columns: 1fr; gap: 32px; } .welcome-hero h1 { font-size: clamp(36px,9vw,56px); } .welcome-intro { font-size: 15px; } .welcome-hero-photo { aspect-ratio: 1.28; border-radius: 35% 35% 18px 18px / 24% 24% 18px 18px; } .welcome-services-grid { grid-template-columns: 1fr; gap: 22px; } .welcome-service-image { aspect-ratio: 1.7; } .welcome-service-body { padding: 36px 22px 24px; } .welcome-confidence { padding: 55px 0; } .welcome-confidence-grid { grid-template-columns: 1fr; gap: 24px; } .welcome-confidence-list > div { gap: 14px; } .welcome-fees { padding-top: 32px; } .welcome-fees > div { padding: 24px; gap: 16px; } .welcome-fees a { margin-left: 0; } }
 @media(prefers-reduced-motion:reduce) { .welcome-service-card { transition: none; } .welcome-service-card:hover { transform: none; } }
-.welcome-finder { padding-top: 42px; }
-.welcome-finder-card { border: 1px solid var(--welcome-line); background: var(--welcome-card); border-radius: 24px; padding: 30px; box-shadow: 0 14px 35px #173d3208; }
-.welcome-finder h2 { margin: 10px 0; font-size: 27px; letter-spacing: -.035em; }
-.welcome-finder-card > div > p:last-child { font-size: 13px; color: var(--welcome-soft); }
-.welcome-finder form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 20px; align-items: end; margin-top: 24px; }
-.welcome-finder label { min-width: 0; font-size: 12px; font-weight: 600; }
-.welcome-finder label > span { display: block; margin-bottom: 9px; }
+.welcome-finder { padding-top: 40px; }
+.welcome-finder-card {
+  padding: clamp(20px, 4vw, 42px);
+  border: 1px solid var(--welcome-line);
+  border-radius: 24px;
+  background: var(--welcome-card);
+  box-shadow: 0 14px 35px #173d3208;
+}
+.welcome-finder h2 { font-size: clamp(26px, 3vw, 36px); font-weight: 500; letter-spacing: -.045em; line-height: 1.15; }
+.welcome-finder-intro { margin-top: 8px; color: var(--welcome-soft); font-size: 14px; line-height: 1.6; }
+.welcome-finder form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 16px; align-items: end; margin-top: 24px; }
+.welcome-finder-field { min-width: 0; }
+.welcome-finder label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
 .welcome-finder small { font-weight: 400; font-size: inherit; color: var(--welcome-soft); }
-.welcome-finder select,.welcome-finder-city { width: 100%; min-height: 54px; border: 1px solid var(--welcome-line); background: var(--welcome-paper); border-radius: 12px; padding: 12px; color: var(--welcome-ink); font-size: 14px; font-weight: 400; }
-.welcome-finder-city { display: flex; align-items: center; gap: 9px; }
-.welcome-finder-city input { width: 100%; min-width: 0; background: transparent; color: inherit; outline-offset: 3px; }
-.welcome-finder-city svg { flex-shrink: 0; }
-.welcome-finder-note { margin-top: 18px; color: var(--welcome-soft); font-size: 11px; line-height: 1.8; }
-@media(max-width:639px) { .welcome-finder { padding-top: 28px; } .welcome-finder-card { padding: 24px; } .welcome-finder h2 { font-size: 25px; } .welcome-finder form { grid-template-columns: 1fr; gap: 18px; } .welcome-finder button { width: 100%; } }
+.welcome-finder-control { position: relative; }
+.welcome-finder select, .welcome-finder input {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  border: 1px solid var(--welcome-line);
+  border-radius: 12px;
+  background: var(--welcome-paper);
+  color: var(--welcome-ink);
+  font-size: 16px;
+}
+.welcome-finder select { appearance: none; padding: 0 38px 0 14px; }
+.welcome-finder input { padding: 0 14px 0 40px; }
+.welcome-finder input::placeholder { color: var(--welcome-soft); }
+.welcome-finder input:focus-visible, .welcome-finder select:focus-visible { outline: 2px solid var(--welcome-ink); outline-offset: 2px; }
+.welcome-finder-control svg { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--welcome-soft); }
+.welcome-finder-chevron { right: 14px; }
+.welcome-finder-pin { left: 14px; }
+@media(max-width:639px) {
+  .welcome-finder { padding-top: 28px; }
+  .welcome-finder form { grid-template-columns: 1fr; gap: 14px; margin-top: 20px; }
+  .welcome-finder button { width: 100%; }
+}
 /* Reference-informed feature clarity, with 1Vet's own content and capabilities. */
 .welcome-workspace-grid { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 80px; }
 .welcome-workspace-intro { max-width: 430px; color: var(--welcome-soft); font-size: 15px; line-height: 1.8; }

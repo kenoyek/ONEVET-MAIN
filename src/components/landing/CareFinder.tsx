@@ -1,20 +1,46 @@
-import {useState} from 'react';
-import {useNavigate} from 'react-router-dom';
-import {ArrowUpRight, MapPin} from 'lucide-react';
-import {careSearchCategories,careSearchLink} from '@/lib/care-search';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowUpRight, ChevronDown, MapPin } from 'lucide-react';
+import { careSearchCategories, careSearchLink } from '@/lib/care-search';
 
 const finderCategories = [...careSearchCategories, ['boarding', 'Pet boarding']] as const;
 
-export function CareFinder(){
- const navigate=useNavigate();const [category,setCategory]=useState('veterinary');const [city,setCity]=useState('');
- return <section className="container-wide welcome-finder" aria-labelledby="care-finder-heading">
-  <div className="welcome-finder-card"><div><p className="welcome-kicker">Your next step starts here</p><h2 id="care-finder-heading">What care are you looking for?</h2><p>Browse providers before creating an account.</p></div>
-   <form onSubmit={event=>{event.preventDefault();navigate(careSearchLink(category,city));}}>
-    <label><span>Type of care</span><select value={category} onChange={event=>setCategory(event.target.value)}>{finderCategories.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label>
-    <label><span>City <small>(optional)</small></span><div className="welcome-finder-city"><MapPin size={16} aria-hidden="true"/><input value={city} maxLength={80} autoComplete="address-level2" placeholder="e.g. Lagos or Ibadan" onChange={event=>setCity(event.target.value)}/></div></label>
-    <button className="welcome-button welcome-button-primary" type="submit">Find care <span><ArrowUpRight size={19} aria-hidden="true"/></span></button>
-   </form>
-   <p className="welcome-finder-note">Availability and fees depend on the provider. For immediate distress, seek in-person veterinary care.</p>
-  </div>
- </section>;
+export function CareFinder() {
+  const navigate = useNavigate();
+  const [category, setCategory] = useState('veterinary');
+  const [city, setCity] = useState('');
+
+  return (
+    <section className="container-wide welcome-finder" aria-labelledby="care-finder-heading">
+      <div className="welcome-finder-card">
+        <h2 id="care-finder-heading">Find care near you</h2>
+        <p className="welcome-finder-intro">Browse without an account. Providers confirm availability and fees.</p>
+        <form onSubmit={event => {
+          event.preventDefault();
+          navigate(careSearchLink(category, city));
+        }}>
+          <div className="welcome-finder-field">
+            <label htmlFor="care-finder-type">Type of care</label>
+            <div className="welcome-finder-control">
+              <select id="care-finder-type" value={category} onChange={event => setCategory(event.target.value)}>
+                {finderCategories.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+              </select>
+              <ChevronDown className="welcome-finder-chevron" size={17} aria-hidden="true" />
+            </div>
+          </div>
+          <div className="welcome-finder-field">
+            <label htmlFor="care-finder-city">City <small>(optional)</small></label>
+            <div className="welcome-finder-control">
+              <MapPin className="welcome-finder-pin" size={17} aria-hidden="true" />
+              <input id="care-finder-city" value={city} maxLength={80} autoComplete="address-level2"
+                placeholder="e.g. Lagos or Ibadan" onChange={event => setCity(event.target.value)} />
+            </div>
+          </div>
+          <button className="welcome-button welcome-button-primary" type="submit">
+            Find care <span><ArrowUpRight size={19} aria-hidden="true" /></span>
+          </button>
+        </form>
+      </div>
+    </section>
+  );
 }
