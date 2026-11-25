@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { setBoardingListing } from '@/lib/services/boarding-directory';
 
 export function BoardingListingPanel({
-  id, approved, published, email, onChange,
+  id, slug, approved, published, email, onChange,
 }: {
   id: string;
+  slug: string;
   approved: boolean;
   published: boolean;
   email: string;
@@ -38,7 +39,11 @@ export function BoardingListingPanel({
       <div className="flex flex-wrap gap-2">
         {published || approved ? <Button disabled={save.isPending || (!published && !consent)}
           onClick={() => save.mutate(!published)}>{published ? 'Unpublish listing' : 'Publish listing'}</Button> : null}
-        <Button asChild variant="outline"><Link to="/boarding">Open boarding directory</Link></Button>
+        <Button asChild variant="outline">
+          {published && approved
+            ? <Link to={`/boarding/${encodeURIComponent(slug)}`}>View public listing</Link>
+            : <Link to="/boarding">Open boarding directory</Link>}
+        </Button>
       </div>
       {save.isError && <p role="alert" className="text-sm text-destructive">Could not confirm the listing update. Try again.</p>}
     </section>

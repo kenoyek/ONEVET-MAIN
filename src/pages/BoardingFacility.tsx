@@ -1,0 +1,61 @@
+import { useQuery } from '@tanstack/react-query';
+import { MapPin } from 'lucide-react';
+import { Link, useLocation, useParams } from 'react-router-dom';
+import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
+import { Footer } from '@/components/layout/Footer';
+import { Navbar } from '@/components/layout/Navbar';
+import { PageHeading } from '@/components/layout/PageHeading';
+import { SEO } from '@/components/shared/SEO';
+import { Button } from '@/components/ui/button';
+import { getBoardingFacility } from '@/lib/services/boarding-directory';
+
+export default function BoardingFacility() {
+  const { slug = '' } = useParams();
+  const { search } = useLocation();
+  const facility = useQuery({
+    queryKey: ['boarding-directory', 'facility', slug],
+    queryFn: () => getBoardingFacility(slug),
+    retry: false,
+    gcTime: 0,
+  });
+  const listing = facility.isSuccess ? facility.data : null;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEO title={listing?.name ?? 'Boarding facility'}
+        description={listing ? `Contact ${listing.name} in ${listing.city}, ${listing.state} about pet boarding.` : 'Browse approved pet boarding facilities in Nigeria.'} />
+      <Navbar />
+      <main id="main-content" tabIndex={-1} className="container-wide max-w-4xl space-y-6 pb-20 pt-28">
+        <Link to={{ pathname: '/boarding', search }} className="text-sm text-primary underline">Back to boarding directory</Link>
+        {facility.isPending && <p role="status">Loading facility…</p>}
+        {facility.isError && (
+          <div className="rounded-xl border bg-card p-5">
+            <p role="alert">Could not load this facility.</p>
+            <Button variant="link" onClick={() => void facility.refetch()}>Retry listing</Button>
+          </div>
+        )}
+        {facility.isSuccess && !listing && <PageHeading title="Listing unavailable" description="Browse the boarding directory for other facilities." />}
+        {listing && (
+          <>
+            <PageHeading size="display" eyebrow="Pet boarding" title={listing.name} />
+            <p className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="size-5 shrink-0" aria-hidden="true" />{listing.city}, {listing.state}
+            </p>
+            {listing.description && (
+              <section className="space-y-3 rounded-xl border bg-card p-5">
+                <h2 className="text-xl font-semibold">About this facility</h2>
+                <p className="whitespace-pre-wrap leading-relaxed [overflow-wrap:anywhere]">{listing.description}</p>
+              </section>
+            )}
+            <section className="space-y-3 rounded-xl border bg-card p-5">
+              <h2 className="text-xl font-semibold">Ask about a stay</h2>
+              <p className="text-sm text-muted-foreground">Contact the facility directly to confirm dates, rates, and what your pet needs to bring.</p>
+              <BoardingEmailLink name={listing.name} email={listing.email} />
+            </section>
+          </>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+}

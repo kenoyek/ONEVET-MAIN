@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Mail, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
+import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
 import { Footer } from '@/components/layout/Footer';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { SEO } from '@/components/shared/SEO';
@@ -72,10 +73,13 @@ export default function BoardingDirectory() {
                   <MapPin className="size-4 shrink-0" aria-hidden="true" />{facility.city}, {facility.state}
                 </p>
                 {facility.description && <p className="whitespace-pre-wrap break-words text-sm">{facility.description}</p>}
-                <Button asChild variant="outline" size="sm" className="mt-auto">
-                  <a href={`mailto:${encodeURIComponent(facility.email).replace(/%40/g, '@')}`}
-                    aria-label={`Email ${facility.name}`}><Mail aria-hidden="true" />Email facility</a>
-                </Button>
+                <div className="mt-auto flex flex-wrap gap-2">
+                  <Button asChild size="sm">
+                    <Link to={{ pathname: `/boarding/${encodeURIComponent(facility.slug)}`, search: params.toString() }}
+                      aria-label={`View ${facility.name}`}>View facility</Link>
+                  </Button>
+                  <BoardingEmailLink name={facility.name} email={facility.email} />
+                </div>
               </li>
             ))}
           </ul>)}

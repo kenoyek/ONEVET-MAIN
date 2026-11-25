@@ -1,15 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
+import BoardingFacility from '@/pages/BoardingFacility';
 import BoardingDirectory from '@/pages/BoardingDirectory';
 import { BoardingListingPanel } from '@/components/provider/BoardingListingPanel';
-import { listBoardingFacilities, setBoardingListing } from '@/lib/services/boarding-directory';
+import { getBoardingFacility, listBoardingFacilities, setBoardingListing } from '@/lib/services/boarding-directory';
 
 vi.mock('@/components/layout/Navbar', () => ({ Navbar: () => null }));
 vi.mock('@/components/layout/Footer', () => ({ Footer: () => null }));
 vi.mock('@/lib/services/boarding-directory', () => ({
-  listBoardingFacilities: vi.fn(), setBoardingListing: vi.fn(),
+  getBoardingFacility: vi.fn(), listBoardingFacilities: vi.fn(), setBoardingListing: vi.fn(),
 }));
 
 function mount(element: React.ReactNode) {
@@ -31,12 +32,13 @@ it('searches by city and shows a direct boarding inquiry link', async () => {
   expect(await screen.findByRole('link', { name: 'Email Garden Boarding' }))
     .toHaveAttribute('href', 'mailto:boarding@example.invalid');
   expect(listBoardingFacilities).toHaveBeenLastCalledWith('Ibadan', undefined);
+  expect(screen.getByRole('link', { name: 'View Garden Boarding' })).toHaveAttribute('href', '/boarding/garden?city=Ibadan');
 });
 
 it('requires publication consent and acknowledges the confirmed change', async () => {
   const onChange = vi.fn();
   vi.mocked(setBoardingListing).mockResolvedValueOnce(undefined);
-  mount(<BoardingListingPanel id="facility" approved published={false}
+  mount(<BoardingListingPanel id="facility" slug="garden" approved published={false}
     email="boarding@example.invalid" onChange={onChange} />);
   const publish = screen.getByRole('button', { name: 'Publish listing' });
   expect(publish).toBeDisabled();
@@ -68,4 +70,31 @@ it('restores the city search from a link and when the browser goes back', async 
   fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
   await screen.findByText('?city=Ibadan');
   expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
+});
+
+it('opens a facility directly and keeps the city filter in the return link', async () => {
+  vi.mocked(getBoardingFacility).mockResolvedValueOnce({
+    name: 'Garden Boarding', slug: 'garden', description: 'Overnight facilities',
+    email: 'boarding@example.invalid', city: 'Ibadan', state: 'Oyo',
+  });
+  render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter initialEntries={['/boarding/garden?city=Ibadan']}>
+      <Routes><Route path="/boarding/:slug" element={<BoardingFacility />} /></Routes>
+    </MemoryRouter>
+  </QueryClientProvider>);
+  await screen.findByRole('heading', { name: 'Garden Boarding' });
+  expect(screen.getByRole('link', { name: 'Back to boarding directory' })).toHaveAttribute('href', '/boarding?city=Ibadan');
+  expect(screen.getByRole('link', { name: 'Email Garden Boarding' })).toHaveAttribute('href', 'mailto:boarding@example.invalid');
+  expect(getBoardingFacility).toHaveBeenLastCalledWith('garden');
+});
+
+it('shows an unavailable listing without offering a contact link', async () => {
+  vi.mocked(getBoardingFacility).mockResolvedValueOnce(null);
+  render(<QueryClientProvider client={new QueryClient()}>
+    <MemoryRouter initialEntries={['/boarding/withdrawn']}>
+      <Routes><Route path="/boarding/:slug" element={<BoardingFacility />} /></Routes>
+    </MemoryRouter>
+  </QueryClientProvider>);
+  await screen.findByRole('heading', { name: 'Listing unavailable' });
+  expect(screen.queryByRole('link', { name: /Email facility/ })).not.toBeInTheDocument();
 });

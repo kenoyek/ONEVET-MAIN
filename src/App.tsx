@@ -59,6 +59,7 @@ const CareChat = lazyRoute(() => import("./pages/CareChat"));
 const AdminMessages = lazyRoute(() => import("./pages/admin/Messages"));
 const SupportInbox = lazyRoute(() => import("./pages/admin/SupportInbox"));
 const CareChatInbox = lazyRoute(() => import("./pages/admin/CareChatInbox"));
+const BoardingFacility = lazyRoute(() => import("./pages/BoardingFacility"));
 const BoardingDirectory = lazyRoute(() => import("./pages/BoardingDirectory"));
 const Contact = lazyRoute(() => import("./pages/Contact"));
 const Pricing = lazyRoute(() => import("./pages/Pricing"));
@@ -103,6 +104,7 @@ const App = () => (
                     <Route path="/education" element={<Articles />} />
                     <Route path="/articles/:slug" element={<ArticleDetail />} />
                     <Route path="/boarding" element={<BoardingDirectory />} />
+                    <Route path="/boarding/:slug" element={<BoardingFacility />} />
                     <Route path="/services" element={<Services />} />
                     <Route path="/pet-care" element={<CareGuide />} />
                     <Route path="/farm-care" element={<CareGuide />} />

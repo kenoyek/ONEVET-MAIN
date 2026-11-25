@@ -40,7 +40,7 @@ export default function ProviderDraftWorkspace() {
       {isOwner && <ProviderLaunchGuide boardingPublished={organization.boarding_listing_published} providerId={organization.id} slug={organization.slug} providerType={organization.provider_type} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
       {isOwner && <ProviderVerificationPanel key={`${user?.id}-${organization.id}`} providerId={organization.id} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
       {isOwner && isBoarding && (
-        <BoardingListingPanel key={organization.id} id={organization.id} email={organization.email}
+        <BoardingListingPanel key={organization.id} id={organization.id} slug={organization.slug} email={organization.email}
           approved={organization.verification_status === 'approved' && organization.status !== 'suspended'}
           published={organization.boarding_listing_published === true}
           onChange={published => {

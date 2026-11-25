@@ -29,6 +29,8 @@ RESET ROLE;
 
 SET LOCAL ROLE anon;
 SELECT verify_test_assert(list_public_boarding_facilities(NULL,NULL) = '[]'::jsonb, 'boarding approval does not automatically publish');
+SELECT verify_test_assert(get_public_boarding_facility('boarding-registration-fixture') IS NULL,'unpublished boarding profile is private');
+SELECT verify_test_assert(NOT has_table_privilege('anon','public.boarding_directory_entries','SELECT'),'boarding projection is available only through public endpoints');
 RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT verify_test_reject($q$ SELECT set_boarding_listing(current_setting('boarding_test.org')::uuid,true) $q$,
@@ -39,10 +41,14 @@ SET LOCAL ROLE anon;
 SELECT verify_test_assert((list_public_boarding_facilities(' IBA ',NULL)->0->>'email')='boarding@example.invalid',
   'published facility appears by city with its business email');
 SELECT verify_test_assert(NOT (list_public_boarding_facilities(NULL,NULL)->0 ? 'address'),'directory does not expose the street address');
+SELECT verify_test_assert(get_public_boarding_facility('boarding-registration-fixture') = list_public_boarding_facilities('Ibadan',NULL)->0,
+  'boarding profile returns the same approved public fields as the directory');
+SELECT verify_test_assert(get_public_boarding_facility('missing-facility') IS NULL,'unknown boarding profile returns no data');
 SELECT verify_test_assert(list_public_boarding_facilities('Abuja',NULL) = '[]'::jsonb,'city filter excludes other locations');
 RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT verify_test_assert(NOT set_boarding_listing(current_setting('boarding_test.org')::uuid,false),'owner can withdraw the listing');
 SET LOCAL ROLE anon;
 SELECT verify_test_assert(list_public_boarding_facilities(NULL,NULL) = '[]'::jsonb,'withdrawn facility disappears from directory');
+SELECT verify_test_assert(get_public_boarding_facility('boarding-registration-fixture') IS NULL,'withdrawn boarding profile no longer opens');
 RESET ROLE;

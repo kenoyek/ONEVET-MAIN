@@ -19,3 +19,9 @@ export async function setBoardingListing(providerId: string, published: boolean)
   if (error) throw error;
   if (data !== published) throw Error('Listing update not confirmed');
 }
+
+export async function getBoardingFacility(slug: string) {
+  const { data, error } = await supabase.rpc('get_public_boarding_facility', { facility_slug: slug });
+  if (error) throw error;
+  return data as BoardingListing | null;
+}
