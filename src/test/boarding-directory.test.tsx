@@ -1,3 +1,4 @@
+import { BoardingInquiryForm } from '@/components/boarding/BoardingInquiryForm';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
@@ -256,5 +257,30 @@ it('shares saved facility names and public links when clipboard access is blocke
     localStorage.removeItem(key);
     if (originalClipboard) Object.defineProperty(navigator, 'clipboard', originalClipboard);
     else Reflect.deleteProperty(navigator, 'clipboard');
+  }
+});
+
+
+it('reuses only stay dates in another inquiry in the same tab', () => {
+  const first = render(<BoardingInquiryForm name="Garden Boarding" email="garden@example.invalid" />);
+  try {
+    fireEvent.change(screen.getByLabelText('Arrival date'), { target: { value: '2099-01-10' } });
+    fireEvent.change(screen.getByLabelText('Departure date'), { target: { value: '2099-01-12' } });
+    fireEvent.change(screen.getByLabelText('Pets'), { target: { value: '1 dog' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Remember dates in this tab' }));
+    first.unmount();
+
+    const second = render(<BoardingInquiryForm name="Park Boarding" email="park@example.invalid" />);
+    expect(screen.getByLabelText('Arrival date')).toHaveValue('2099-01-10');
+    expect(screen.getByLabelText('Departure date')).toHaveValue('2099-01-12');
+    expect(screen.getByLabelText('Pets')).toHaveValue('');
+    fireEvent.click(screen.getByRole('button', { name: 'Clear remembered dates' }));
+    second.unmount();
+
+    render(<BoardingInquiryForm name="Garden Boarding" email="garden@example.invalid" />);
+    expect(screen.getByLabelText('Arrival date')).toHaveValue('');
+    expect(screen.getByLabelText('Departure date')).toHaveValue('');
+  } finally {
+    sessionStorage.removeItem('onevet.boarding-stay-dates');
   }
 });

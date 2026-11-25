@@ -45,9 +45,29 @@ function BoardingInquiryDraft({ email, draft }: { email: string; draft: InquiryD
   );
 }
 
+type StayDates = { arrival: string; departure: string };
+const stayDatesKey = 'onevet.boarding-stay-dates';
+
+function readStayDates(): StayDates | null {
+  try {
+    const dates = JSON.parse(sessionStorage.getItem(stayDatesKey) ?? 'null');
+    const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+    if (typeof dates?.arrival !== 'string' || typeof dates.departure !== 'string'
+      || !isoDate.test(dates.arrival) || !isoDate.test(dates.departure)
+      || dates.arrival < boardingDate.format(new Date()) || dates.departure <= dates.arrival) {
+      return null;
+    }
+    return { arrival: dates.arrival, departure: dates.departure };
+  } catch {
+    return null;
+  }
+}
+
 export function BoardingInquiryForm({ name, email }: { name: string; email: string }) {
-  const [arrival, setArrival] = useState('');
-  const [departure, setDeparture] = useState('');
+  const [remembered, setRemembered] = useState(readStayDates);
+  const [arrival, setArrival] = useState(remembered?.arrival ?? '');
+  const [departure, setDeparture] = useState(remembered?.departure ?? '');
+  const [datesNotice, setDatesNotice] = useState(remembered ? 'Using dates remembered in this tab.' : '');
   const [draft, setDraft] = useState<InquiryDraft | null>(null);
   const [error, setError] = useState('');
   const today = boardingDate.format(new Date());
@@ -58,6 +78,17 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
   const nights = (departureDay - arrivalDay) / dayInMilliseconds;
   const validStay = arrivalDay >= Date.parse(today) && nights > 0;
   const stayLength = `${nights} ${nights === 1 ? 'night' : 'nights'}`;
+
+  function rememberDates(dates: StayDates | null) {
+    try {
+      if (dates) sessionStorage.setItem(stayDatesKey, JSON.stringify(dates));
+      else sessionStorage.removeItem(stayDatesKey);
+      setRemembered(dates);
+      setDatesNotice(dates ? 'Dates remembered for other facility pages in this tab.' : 'Remembered dates cleared.');
+    } catch {
+      setDatesNotice('Could not update remembered dates. Check your browser storage settings.');
+    }
+  }
 
   function prepareDraft(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,7 +142,18 @@ export function BoardingInquiryForm({ name, email }: { name: string; email: stri
             value={departure} onChange={(event) => setDeparture(event.target.value)} />
         </div>
       </div>
-      <p role="status" className="text-sm text-muted-foreground">{validStay ? stayLength : ''}</p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <p role="status" className="text-sm text-muted-foreground">{validStay ? stayLength : ''}</p>
+        {validStay && (arrival !== remembered?.arrival || departure !== remembered?.departure) && (
+          <Button type="button" variant="outline" size="sm" onClick={() => rememberDates({ arrival, departure })}>
+            Remember dates in this tab
+          </Button>
+        )}
+        {remembered && <Button type="button" variant="outline" size="sm" onClick={() => rememberDates(null)}>
+          Clear remembered dates
+        </Button>}
+      </div>
+      {datesNotice && <p role="status" className="text-sm text-muted-foreground">{datesNotice}</p>}
       <div className="space-y-2">
         <Label htmlFor="boarding-pets">Pets</Label>
         <Input id="boarding-pets" name="pets" required maxLength={160} placeholder="e.g. 2 dogs, one small and one medium" />
