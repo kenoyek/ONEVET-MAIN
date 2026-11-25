@@ -86,6 +86,26 @@ it('opens a facility directly and keeps the city filter in the return link', asy
   expect(screen.getByRole('link', { name: 'Back to boarding directory' })).toHaveAttribute('href', '/boarding?city=Ibadan');
   expect(screen.getByRole('link', { name: 'Email Garden Boarding' })).toHaveAttribute('href', 'mailto:boarding@example.invalid');
   expect(getBoardingFacility).toHaveBeenLastCalledWith('garden');
+  const arrival = screen.getByLabelText('Arrival date');
+  const departure = screen.getByLabelText('Departure date');
+  const pets = screen.getByLabelText('Pets');
+  const prepare = screen.getByRole('button', { name: 'Prepare email' });
+  fireEvent.change(arrival, { target: { value: '2099-01-10' } });
+  fireEvent.change(departure, { target: { value: '2099-01-10' } });
+  fireEvent.change(pets, { target: { value: '1 dog & 1 cat' } });
+  fireEvent.click(prepare);
+  expect(screen.getByRole('alert')).toHaveTextContent('departure date after arrival');
+  expect(screen.queryByRole('link', { name: 'Open email draft' })).toBeNull();
+
+  fireEvent.change(departure, { target: { value: '2099-01-12' } });
+  fireEvent.click(prepare);
+  const draft = new URL(screen.getByRole('link', { name: 'Open email draft' }).getAttribute('href')!);
+  expect(draft.pathname).toBe('boarding@example.invalid');
+  expect(draft.searchParams.get('subject')).toBe('Boarding inquiry for Garden Boarding');
+  expect(draft.searchParams.get('body')).toContain('Arrival: 2099-01-10\r\nDeparture: 2099-01-12\r\nPets: 1 dog & 1 cat');
+
+  fireEvent.change(pets, { target: { value: '1 dog' } });
+  expect(screen.queryByRole('link', { name: 'Open email draft' })).toBeNull();
 });
 
 it('shows an unavailable listing without offering a contact link', async () => {

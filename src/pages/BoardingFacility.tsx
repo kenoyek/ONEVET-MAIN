@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MapPin } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
+import { BoardingInquiryForm } from '@/components/boarding/BoardingInquiryForm';
 import { Footer } from '@/components/layout/Footer';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -50,6 +51,7 @@ export default function BoardingFacility() {
             <section className="space-y-3 rounded-xl border bg-card p-5">
               <h2 className="text-xl font-semibold">Ask about a stay</h2>
               <p className="text-sm text-muted-foreground">Contact the facility directly to confirm dates, rates, and what your pet needs to bring.</p>
+              <BoardingInquiryForm key={listing.slug} name={listing.name} email={listing.email} />
               <BoardingEmailLink name={listing.name} email={listing.email} />
             </section>
           </>
