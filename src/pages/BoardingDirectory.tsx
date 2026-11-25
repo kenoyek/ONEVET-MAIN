@@ -5,6 +5,7 @@ import { Bookmark, MapPin } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useBoardingShortlist } from '@/components/boarding/useBoardingShortlist';
 import { BoardingEmailLink } from '@/components/boarding/BoardingEmailLink';
+import { BoardingShortlistShare } from '@/components/boarding/BoardingShortlistShare';
 import { Footer } from '@/components/layout/Footer';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { SEO } from '@/components/shared/SEO';
@@ -75,6 +76,7 @@ export default function BoardingDirectory() {
               ))}
             </ul>
           ) : <p className="text-sm">Save a facility from the results to find it here.</p>}
+          {saved.length > 0 && <BoardingShortlistShare facilities={saved} />}
         </details>
         {storageError && <p role="alert" className="mt-2 text-sm text-destructive">Could not update your shortlist. Check your browser storage settings.</p>}
         <form className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-4" onSubmit={event => {

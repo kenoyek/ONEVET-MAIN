@@ -216,3 +216,32 @@ it('refreshes the open directory when another tab changes or clears the shortlis
     localStorage.removeItem(key);
   }
 });
+
+it('shares saved facility names and public links when clipboard access is blocked', async () => {
+  const key = 'onevet.boarding-shortlist';
+  localStorage.setItem(key, JSON.stringify([
+    { slug: 'garden', name: 'Garden Boarding' },
+    { slug: 'park', name: 'Park Boarding' },
+  ]));
+  vi.mocked(listBoardingFacilities).mockResolvedValueOnce({ facilities: [], hasMore: false });
+
+  const originalClipboard = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+  const writeText = vi.fn().mockRejectedValue(new Error('Permission denied'));
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+  try {
+    mount(<BoardingDirectory />);
+    fireEvent.click(screen.getByText('Saved facilities (2)'));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy shortlist' }));
+    const expected = [
+      'Pet boarding shortlist',
+      `Garden Boarding\n${window.location.origin}/boarding/garden`,
+      `Park Boarding\n${window.location.origin}/boarding/park`,
+    ].join('\n\n');
+    expect(await screen.findByLabelText('Shortlist to share')).toHaveValue(expected);
+    expect(writeText).toHaveBeenCalledWith(expected);
+  } finally {
+    localStorage.removeItem(key);
+    if (originalClipboard) Object.defineProperty(navigator, 'clipboard', originalClipboard);
+    else Reflect.deleteProperty(navigator, 'clipboard');
+  }
+});
