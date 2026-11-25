@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { expect, it, vi } from 'vitest';
 import BoardingFacility from '@/pages/BoardingFacility';
@@ -184,4 +184,35 @@ it('saves a facility on its public page and removes it from the directory shortl
   expect(screen.getByRole('link', { name: 'Garden Boarding' })).toHaveAttribute('href', '/boarding/garden');
   fireEvent.click(screen.getByRole('button', { name: 'Remove Garden Boarding from shortlist' }));
   expect(screen.getByText('Saved facilities (0)')).toBeInTheDocument();
+});
+
+
+it('refreshes the open directory when another tab changes or clears the shortlist', async () => {
+  const key = 'onevet.boarding-shortlist';
+  vi.mocked(listBoardingFacilities).mockResolvedValueOnce({ facilities: [{
+    name: 'Garden Boarding', slug: 'garden', description: '',
+    email: 'boarding@example.invalid', city: 'Ibadan', state: 'Oyo',
+  }], hasMore: false });
+  mount(<BoardingDirectory />);
+  const save = await screen.findByRole('button', { name: 'Save Garden Boarding to shortlist' });
+  expect(save).toHaveAttribute('aria-pressed', 'false');
+
+  try {
+    act(() => {
+      const newValue = JSON.stringify([{ slug: 'garden', name: 'Garden Boarding' }]);
+      localStorage.setItem(key, newValue);
+      window.dispatchEvent(new StorageEvent('storage', { key, newValue, storageArea: localStorage }));
+    });
+    expect(save).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Saved facilities (1)')).toBeInTheDocument();
+
+    act(() => {
+      localStorage.removeItem(key);
+      window.dispatchEvent(new StorageEvent('storage', { key: null, storageArea: localStorage }));
+    });
+    expect(save).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Saved facilities (0)')).toBeInTheDocument();
+  } finally {
+    localStorage.removeItem(key);
+  }
 });

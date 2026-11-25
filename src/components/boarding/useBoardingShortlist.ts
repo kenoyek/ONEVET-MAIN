@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { BoardingListing } from '@/lib/services/boarding-directory';
 
 type SavedFacility = Pick<BoardingListing, 'slug' | 'name'>;
@@ -19,6 +19,17 @@ function readShortlist(): SavedFacility[] {
 export function useBoardingShortlist() {
   const [saved, setSaved] = useState(readShortlist);
   const [storageError, setStorageError] = useState(false);
+
+  useEffect(() => {
+    function syncShortlist(event: StorageEvent) {
+      if (event.key === storageKey || event.key === null) {
+        setSaved(readShortlist());
+      }
+    }
+
+    window.addEventListener('storage', syncShortlist);
+    return () => window.removeEventListener('storage', syncShortlist);
+  }, []);
 
   function update({ slug, name }: SavedFacility, keep: boolean) {
     const current = readShortlist();
