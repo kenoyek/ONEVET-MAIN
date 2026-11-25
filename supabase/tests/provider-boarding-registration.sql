@@ -45,6 +45,12 @@ SELECT verify_test_assert(get_public_boarding_facility('boarding-registration-fi
   'boarding profile returns the same approved public fields as the directory');
 SELECT verify_test_assert(get_public_boarding_facility('missing-facility') IS NULL,'unknown boarding profile returns no data');
 SELECT verify_test_assert(list_public_boarding_facilities('Abuja',NULL) = '[]'::jsonb,'city filter excludes other locations');
+SELECT verify_test_assert(list_public_boarding_facilities('Ibadan',NULL,' OYO ') = list_public_boarding_facilities('Ibadan',NULL),
+  'city and state filters combine and ignore case and padding');
+SELECT verify_test_assert(list_public_boarding_facilities('Ibadan',NULL,'Lagos') = '[]'::jsonb,
+  'matching city cannot bypass the state filter');
+SELECT verify_test_assert(list_public_boarding_facilities(NULL,'boarding-registration-fixture','Oyo') = '[]'::jsonb,
+  'state-only search respects the cursor');
 RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT verify_test_assert(NOT set_boarding_listing(current_setting('boarding_test.org')::uuid,false),'owner can withdraw the listing');

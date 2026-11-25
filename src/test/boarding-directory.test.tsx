@@ -61,15 +61,18 @@ it('restores the city search from a link and when the browser goes back', async 
       <NavigationProbe /><BoardingDirectory />
     </MemoryRouter>
   </QueryClientProvider>);
-  await screen.findByText('No listed boarding facilities match this city.');
+  await screen.findByText('No listed boarding facilities match these filters.');
   expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
   expect(listBoardingFacilities).toHaveBeenLastCalledWith('Ibadan', undefined);
   fireEvent.change(screen.getByLabelText('City'), { target: { value: ' Lagos ' } });
+  fireEvent.change(screen.getByLabelText('State or FCT'), { target: { value: ' Lagos ' } });
   fireEvent.click(screen.getByRole('button', { name: 'Find facilities' }));
-  await screen.findByText('?city=Lagos');
+  await screen.findByText('?city=Lagos&state=Lagos');
+  await vi.waitFor(() => expect(listBoardingFacilities).toHaveBeenLastCalledWith('Lagos', undefined, 'Lagos'));
   fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
   await screen.findByText('?city=Ibadan');
   expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
+  expect(screen.getByLabelText('State or FCT')).toHaveValue('');
 });
 
 it('opens a facility directly and keeps the city filter in the return link', async () => {

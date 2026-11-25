@@ -15,26 +15,35 @@ import { listBoardingFacilities } from '@/lib/services/boarding-directory';
 export default function BoardingDirectory() {
   const [params, setParams] = useSearchParams();
   const city = (params.get('city') ?? '').trim().slice(0, 80);
-  const [draft, setDraft] = useState(city);
-  const [pagination, setPagination] = useState<{ city: string; pages: string[] }>({ city, pages: [] });
-  const pages = pagination.city === city ? pagination.pages : [];
+  const state = (params.get('state') ?? '').trim().slice(0, 80);
+  const [draftCity, setDraftCity] = useState(city);
+  const [draftState, setDraftState] = useState(state);
+  const [pagination, setPagination] = useState<{ city: string; state: string; pages: string[] }>({ city, state, pages: [] });
+  const pages = pagination.city === city && pagination.state === state ? pagination.pages : [];
   const cursor = pages.at(-1);
 
-  useEffect(() => setDraft(city), [city]);
+  useEffect(() => {
+    setDraftCity(city);
+    setDraftState(state);
+  }, [city, state]);
 
-  function searchCity(value: string) {
-    const nextCity = value.trim().slice(0, 80);
-    setDraft(nextCity);
-    setPagination({ city: nextCity, pages: [] });
-    if (nextCity === city) return;
+  function searchLocation(cityValue: string, stateValue: string) {
+    const nextCity = cityValue.trim().slice(0, 80);
+    const nextState = stateValue.trim().slice(0, 80);
+    setDraftCity(nextCity);
+    setDraftState(nextState);
+    setPagination({ city: nextCity, state: nextState, pages: [] });
+    if (nextCity === city && nextState === state) return;
     const next = new URLSearchParams(params);
     if (nextCity) next.set('city', nextCity);
     else next.delete('city');
+    if (nextState) next.set('state', nextState);
+    else next.delete('state');
     setParams(next);
   }
   const listings = useQuery({
-    queryKey: ['boarding-directory', city, cursor],
-    queryFn: () => listBoardingFacilities(city, cursor),
+    queryKey: ['boarding-directory', city, state, cursor],
+    queryFn: () => state ? listBoardingFacilities(city, cursor, state) : listBoardingFacilities(city, cursor),
     retry: false,
   });
   const last = listings.data?.facilities.at(-1);
@@ -49,22 +58,27 @@ export default function BoardingDirectory() {
           description="Browse approved facilities and contact them directly to ask about dates, rates, and requirements for your pet’s stay." />
         <form className="flex flex-wrap items-end gap-2 rounded-xl border bg-card p-4" onSubmit={event => {
           event.preventDefault();
-          searchCity(draft);
+          searchLocation(draftCity, draftState);
         }}>
           <div className="min-w-44 flex-1 space-y-1">
             <Label htmlFor="boarding-city">City</Label>
-            <Input id="boarding-city" value={draft} maxLength={80} placeholder="Any city"
-              onChange={event => setDraft(event.target.value)} />
+            <Input id="boarding-city" value={draftCity} maxLength={80} placeholder="Any city"
+              onChange={event => setDraftCity(event.target.value)} />
+          </div>
+          <div className="min-w-44 flex-1 space-y-1">
+            <Label htmlFor="boarding-state">State or FCT</Label>
+            <Input id="boarding-state" value={draftState} maxLength={80} placeholder="Any state"
+              onChange={event => setDraftState(event.target.value)} />
           </div>
           <Button type="submit">Find facilities</Button>
-          {(city || draft) && <Button type="button" variant="outline" onClick={() => searchCity('')}>Clear city</Button>}
+          {(city || state || draftCity || draftState) && <Button type="button" variant="outline" onClick={() => searchLocation('', '')}>Clear filters</Button>}
         </form>
-        {city && <p className="text-sm text-muted-foreground">Boarding facilities in <span className="font-semibold [overflow-wrap:anywhere]">{city}</span></p>}
+        {(city || state) && <p className="text-sm text-muted-foreground">Boarding facilities in <span className="font-semibold [overflow-wrap:anywhere]">{[city, state].filter(Boolean).join(', ')}</span></p>}
         {listings.isPending && <p role="status">Loading boarding facilities…</p>}
         {listings.isError && <div><p role="alert">Could not load the boarding directory.</p>
           <Button variant="link" onClick={() => void listings.refetch()}>Retry directory</Button></div>}
         {listings.isSuccess && (listings.data.facilities.length === 0
-          ? <p>{city ? 'No listed boarding facilities match this city.' : 'No boarding facilities are listed yet.'}</p>
+          ? <p>{(city || state) ? 'No listed boarding facilities match these filters.' : 'No boarding facilities are listed yet.'}</p>
           : <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Boarding facilities">
             {listings.data.facilities.map(facility => (
               <li key={facility.slug} className="flex min-w-0 flex-col items-start gap-3 rounded-xl border bg-card p-5">
@@ -84,9 +98,9 @@ export default function BoardingDirectory() {
             ))}
           </ul>)}
         <div className="flex flex-wrap gap-2">
-          {cursor && <Button variant="outline" onClick={() => setPagination({ city, pages: pages.slice(0, -1) })}>Previous page</Button>}
+          {cursor && <Button variant="outline" onClick={() => setPagination({ city, state, pages: pages.slice(0, -1) })}>Previous page</Button>}
           {listings.isSuccess && listings.data.hasMore && last && <Button variant="outline"
-            disabled={listings.isFetching} onClick={() => setPagination({ city, pages: [...pages, last.slug] })}>Next page</Button>}
+            disabled={listings.isFetching} onClick={() => setPagination({ city, state, pages: [...pages, last.slug] })}>Next page</Button>}
         </div>
       </main>
       <Footer />

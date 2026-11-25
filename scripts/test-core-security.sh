@@ -33,7 +33,8 @@ done
  supabase/migrations/20261111030000_site_analytics.sql \
  supabase/migrations/20261125010000_enable_boarding_organization_registration.sql \
  supabase/migrations/20261125020000_boarding_facility_directory.sql \
- supabase/migrations/20261125030000_boarding_facility_profiles.sql
+ supabase/migrations/20261125030000_boarding_facility_profiles.sql \
+ supabase/migrations/20261125040000_boarding_state_filter.sql
  echo 'BEGIN;'
  cat supabase/tests/core-security.sql \
  supabase/tests/provider-drafts.sql \

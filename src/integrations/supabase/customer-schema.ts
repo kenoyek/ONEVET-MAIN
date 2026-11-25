@@ -77,7 +77,7 @@ export type CustomerDatabase = Omit<Database, 'public'> & {
     Functions: Omit<Database['public']['Functions'],'add_pet_owner_health_entry'> & {
       care_chat_assign: { Args: { chat_id: string; expected_owner: string | null; release_chat: boolean }; Returns: import('./types').Json };
       get_public_boarding_facility: { Args: { facility_slug: string }; Returns: import('./types').Json };
-      list_public_boarding_facilities: { Args: { city_query: string | null; after_slug: string | null }; Returns: import('./types').Json };
+      list_public_boarding_facilities: { Args: { city_query: string | null; after_slug: string | null; state_query?: string | null }; Returns: import('./types').Json };
       set_boarding_listing: { Args: { provider_uuid: string; publish: boolean }; Returns: boolean };
       list_support_message_notes: { Args: { target_message: string; before_note: number | null }; Returns: import('./types').Json };
       add_support_message_note: { Args: { target_message: string; note_request: string; note_body: string }; Returns: undefined };

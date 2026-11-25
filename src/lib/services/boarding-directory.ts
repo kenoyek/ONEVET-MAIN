@@ -2,9 +2,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 export type BoardingListing = { name: string; slug: string; description: string; email: string; city: string; state: string };
 
-export async function listBoardingFacilities(city: string, cursor?: string) {
+export async function listBoardingFacilities(city: string, cursor?: string, state?: string) {
   const { data, error } = await supabase.rpc('list_public_boarding_facilities', {
-    city_query: city || null, after_slug: cursor ?? null,
+    city_query: city || null, after_slug: cursor ?? null, ...(state ? { state_query: state } : {}),
   });
   if (error) throw error;
   if (!Array.isArray(data)) throw Error('Boarding directory unavailable');
