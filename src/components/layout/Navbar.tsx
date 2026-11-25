@@ -29,6 +29,7 @@ import { Separator } from '@/components/ui/separator';
 const navLinks = [
   { href: '/find-a-vet', label: 'Find a vet' },
   { href: '/pet-care', label: 'Pet care' },
+  { href: '/boarding', label: 'Pet boarding' },
   { href: '/farm-care', label: 'Farm & livestock' },
   { href: '/services', label: 'Services' },
   { href: '/marketplace', label: 'Marketplace' },

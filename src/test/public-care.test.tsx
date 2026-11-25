@@ -125,3 +125,19 @@ it('resets a veterinary search without removing the required veterinary category
  fireEvent.click(screen.getByRole('button',{name:'Clear search filters'}));
  expect(mocks.search).toHaveBeenLastCalledWith(expect.objectContaining({category:'veterinary',city:undefined,delivery_mode:undefined}));
 });
+
+it('opens the boarding directory from the care finder with the entered city', () => {
+  function BoardingDestination() {
+    const { search } = useLocation();
+    return <p>Boarding in {new URLSearchParams(search).get('city')}</p>;
+  }
+
+  render(<MemoryRouter><Routes>
+    <Route path="/" element={<CareFinder />} />
+    <Route path="/boarding" element={<BoardingDestination />} />
+  </Routes></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('Type of care'), { target: { value: 'boarding' } });
+  fireEvent.change(screen.getByLabelText(/City/), { target: { value: ' Port Harcourt ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Find care' }));
+  expect(screen.getByText('Boarding in Port Harcourt')).toBeInTheDocument();
+});

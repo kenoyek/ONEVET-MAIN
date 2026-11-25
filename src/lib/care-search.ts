@@ -11,7 +11,8 @@ export function careSearchFilters(params:URLSearchParams) {
 export function careSearchLink(category:string,city:string) {
   const filters=careSearchFilters(new URLSearchParams({category,city}));
   const params=new URLSearchParams();
-  if(filters.category!=='all')params.set('category',filters.category);
+  if(category!=='boarding' && filters.category!=='all')params.set('category',filters.category);
   if(filters.city)params.set('city',filters.city);
-  return '/provider-marketplace'+(params.size?'?'+params.toString():'');
+  const path = category === 'boarding' ? '/boarding' : '/provider-marketplace';
+  return path + (params.size ? '?' + params.toString() : '');
 }

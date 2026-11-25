@@ -7,6 +7,7 @@ const groups = [
     links: [
       ['Find a veterinarian', '/find-a-vet'],
       ['Pet care', '/pet-care'],
+      ['Pet boarding', '/boarding'],
       ['Farm & livestock', '/farm-care'],
       ['All services', '/services'],
       ['Consultation pricing', '/pricing'],
