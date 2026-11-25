@@ -321,3 +321,32 @@ it('shares the shortlist through the device and keeps copying available', async 
     else Reflect.deleteProperty(navigator, 'share');
   }
 });
+
+it('compares current public listings and handles a withdrawn facility', async () => {
+  const key = 'onevet.boarding-shortlist';
+  localStorage.setItem(key, JSON.stringify([
+    { slug: 'garden', name: 'Garden Boarding' }, { slug: 'park', name: 'Park Boarding' },
+  ]));
+  vi.mocked(listBoardingFacilities).mockResolvedValueOnce({ facilities: [], hasMore: false });
+  vi.mocked(getBoardingFacility).mockResolvedValueOnce({
+    name: 'Garden Boarding', slug: 'garden', city: 'Ibadan', state: 'Oyo',
+    description: 'Overnight facilities', email: 'boarding@example.invalid',
+  }).mockResolvedValueOnce(null);
+  try {
+    mount(<BoardingDirectory />);
+    fireEvent.click(screen.getByText('Saved facilities (2)'));
+    fireEvent.click(screen.getByText('Compare saved facilities'));
+    const compare = screen.getByRole('button', { name: 'Compare selected' });
+    expect(compare).toBeDisabled();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Garden Boarding' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Park Boarding' }));
+    fireEvent.click(compare);
+    const comparison = within(screen.getByRole('region', { name: 'Boarding comparison' }));
+    expect(await comparison.findByText('Overnight facilities')).toBeInTheDocument();
+    expect(await comparison.findByText('This listing is unavailable.')).toBeInTheDocument();
+    expect(comparison.getByRole('link', { name: 'Open Garden Boarding for inquiries' }))
+      .toHaveAttribute('href', '/boarding/garden');
+  } finally {
+    localStorage.removeItem(key);
+  }
+});
