@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate new license policies in a rollback-only transaction before or after deployment."""
+"""Verify deployed license storage and review policies in a rollback-only transaction."""
 import argparse
 import importlib.util
 import pathlib
@@ -14,7 +14,7 @@ if not args.main:
     raise SystemExit(0)
 spec = importlib.util.spec_from_file_location('deployment', ROOT / 'scripts/deploy-reviewed-repairs.py')
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-uid, other = str(uuid.uuid4()), str(uuid.uuid4())
+uid, other, admin = (str(uuid.uuid4()) for _ in range(3))
 suffix = uuid.uuid4().hex
 checks = []
 def check(condition, label):
@@ -22,9 +22,10 @@ def check(condition, label):
     return f"do $check$ begin if not ({condition}) then raise exception 'License storage check failed: {label}'; end if; end $check$;"
 path = uid + '/reviewed.pdf'; orphan = uid + '/orphan.pdf'; fresh = uid + '/new.pdf'
 # Match the Storage API's transaction flag for metadata deletion; RLS remains active.
-sql = ["begin; set local storage.allow_delete_query='true';", (ROOT / 'supabase/migrations/20261110010000_license_document_integrity.sql').read_text()]
-for index, actor in enumerate([uid, other]):
+sql = ["begin; set local statement_timeout='20s'; set local storage.allow_delete_query='true';"]
+for index, actor in enumerate([uid, other, admin]):
     sql.append(f"insert into auth.users(id,email,raw_user_meta_data) values('{actor}','license-{index}+{suffix}@example.invalid','{{\"role\":\"veterinarian\"}}');")
+sql.append(f"insert into public.user_roles(user_id,role) values('{admin}','admin');")
 sql.append(f"insert into storage.objects(bucket_id,name,owner_id) values('licenses','{path}','{uid}'),('licenses','{orphan}','{uid}');")
 sql.append(f"update profiles set license_url='{path}',license_verified=true,verification_status='approved' where user_id='{uid}';")
 sql.append(f"set local role authenticated; select set_config('request.jwt.claim.sub','{uid}',true);")
@@ -40,8 +41,13 @@ sql.append(check(f"exists(select 1 from storage.objects where name='{fresh}')", 
 sql.append(f"select set_config('request.jwt.claim.sub','{other}',true);")
 sql.append(check(f"not exists(select 1 from storage.objects where bucket_id='licenses' and name='{path}')", 'other account cannot read license'))
 sql.append(f"select set_config('request.jwt.claim.sub','{uid}',true);")
-sql.append(f"update profiles set license_url='{fresh}' where user_id='{uid}';")
+sql.append(f"update profiles set license_url='{fresh}', license_number='FIXTURE-ONLY' where user_id='{uid}';")
 sql.append(check(f"(select not license_verified and verification_status='pending' from profiles where user_id='{uid}')", 'replacement requires fresh approval'))
+sql.append(f"select set_config('request.jwt.claim.sub','{admin}',true);")
+sql.append(check(f"exists(select 1 from storage.objects where bucket_id='licenses' and name='{fresh}')", 'admin can access applicant document'))
+sql.append(f"update profiles set license_verified=true,verification_status='approved' where user_id='{uid}' and verification_status='pending' and license_url='{fresh}' and license_number='FIXTURE-ONLY';")
+sql.append(check(f"public.is_verified_veterinarian('{uid}')", 'admin approval enables verified veterinarian status'))
+sql.append(check(f"exists(select 1 from audit_logs where user_id='{admin}' and action='profile_verification_changed')", 'admin decision is recorded'))
 sql.append("reset role; rollback; select 'passed_and_rolled_back' as verification;")
 result = m.request('/database/query', {'query':'\n'.join(sql)})
 assert result == [{'verification':'passed_and_rolled_back'}], 'Unexpected response'

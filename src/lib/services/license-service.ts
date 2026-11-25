@@ -20,13 +20,14 @@ export function licenseBelongsToApplicant(value: string | null, userId: string) 
 
 export async function uploadVeterinaryLicense(userId: string, profileId: string, file: File, licenseNumber: string) {
   if (!licenseNumber.trim() || licenseNumber.trim().length > 100) throw new Error('Enter a valid license number before uploading.');
-  const extension: Record<string, string> = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/jpg': 'jpg', 'image/png': 'png' };
-  const ext = extension[file.type];
+  const extension: Record<string, string> = { 'application/pdf': 'pdf', 'image/jpeg': 'jpg', 'image/png': 'png' };
+  const contentType = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
+  const ext = extension[contentType];
   if (!ext || file.size > 10 * 1024 * 1024 || file.size === 0) throw new Error('Choose a PDF, JPG or PNG up to 10 MB.');
   // New immutable object paths ensure replacements reset professional verification.
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
   const bucket = supabase.storage.from('licenses');
-  const { error } = await bucket.upload(path, file, { upsert: false });
+  const { error } = await bucket.upload(path, file, { upsert: false, contentType });
   if (error) throw error;
   try {
     const result = await supabase.from('profiles').update({ license_url: path, license_number: licenseNumber.trim() }).eq('id', profileId).eq('user_id', userId).select('id').single();

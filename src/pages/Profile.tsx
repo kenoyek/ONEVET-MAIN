@@ -1,5 +1,6 @@
 import { validContactPhone } from '@/lib/contact-phone';
 import { vetOnboardingStatus } from '@/lib/vet-onboarding';
+import { LicenseDocumentLink } from '@/components/onboarding/LicenseDocumentLink';
 import { uploadVeterinaryLicense } from '@/lib/services/license-service';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState, useEffect, useRef } from 'react';
@@ -459,6 +460,9 @@ function ProfileEditor() {
                               <p className="text-sm text-muted-foreground font-medium">
                                 {professionalStatus.checklist[1]?.complete ? 'A document is attached to your account.' : 'Upload a valid document belonging to your account.'}
                               </p>
+                              {professionalStatus.checklist[1]?.complete && user?.id && (
+                                <LicenseDocumentLink key={profile.license_url} value={profile.license_url} ownerUserId={user.id} />
+                              )}
                             </div>
                           </div>
                           <Button

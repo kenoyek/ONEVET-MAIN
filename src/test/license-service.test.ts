@@ -12,8 +12,15 @@ afterEach(()=>vi.unstubAllGlobals());
 describe('veterinary license submission',()=>{
  it('uploads a distinct private object and leaves verification fields to the database',async()=>{
   await uploadVeterinaryLicense(uid,'profile',new File(['pdf'],'license.pdf',{type:'application/pdf'}),'VCN-123');
-  expect(mocks.upload).toHaveBeenCalledWith(`${uid}/f2222222-2222-4222-8222-222222222222.pdf`,expect.any(File),{upsert:false});
+  expect(mocks.upload).toHaveBeenCalledWith(`${uid}/f2222222-2222-4222-8222-222222222222.pdf`,expect.any(File),{upsert:false,contentType:'application/pdf'});
   expect(mocks.update).toHaveBeenCalledWith({license_url:`${uid}/f2222222-2222-4222-8222-222222222222.pdf`,license_number:'VCN-123'});
+ });
+ it('normalizes JPG uploads to the MIME type accepted by the license bucket', async () => {
+  const file = new File(['jpeg'], 'license.jpg', { type: 'image/jpg' });
+  await uploadVeterinaryLicense(uid, 'profile', file, 'VCN-123');
+  expect(mocks.upload).toHaveBeenCalledWith(expect.stringMatching(/\.jpg$/), file, {
+    upsert: false, contentType: 'image/jpeg',
+  });
  });
  it('removes an orphan upload when attaching it to the profile fails',async()=>{
   mocks.single.mockResolvedValue({data:null,error:new Error('denied')});
