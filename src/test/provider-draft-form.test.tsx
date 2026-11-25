@@ -64,6 +64,7 @@ it.each([
   ['veterinary_pharmacy', 'pharmacy'],
   ['vendor_store', 'pet_store'],
   ['pet_trainer', 'pet_trainer'],
+  ['boarding_facility', 'boarding_facility'],
 ])('carries the %s signup category into organization setup', (signup, organization) => {
   expect(emptyProviderDraft('provider@example.invalid', signup).provider_type).toBe(organization);
 });

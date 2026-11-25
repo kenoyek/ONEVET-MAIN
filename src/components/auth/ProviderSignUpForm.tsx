@@ -41,7 +41,7 @@ const roleOptions: { value: ProviderRole; label: string; description: string; ic
   {
     value: 'service_provider',
     label: 'Boarding Facility',
-    description: 'Create a provider account. Boarding organization registration is not yet available.',
+    description: 'Register your boarding facility and submit your business documents for review.',
     icon: <Home className="h-5 w-5" />,
   },
   {

@@ -21,6 +21,7 @@ export default function ProviderDraftWorkspace() {
   const draft = useQuery({ queryKey: ['provider-draft', user?.id, slug], queryFn: async () => { const data=await providerDraftService.get(slug); const access=await providerTeamService.access(data.organization.id); return {...data,access}; }, enabled: !!user && !!slug, refetchInterval:30_000 });
   const organization = draft.data?.organization;
   const location = draft.data?.location;
+  const isBoarding = organization?.provider_type === 'boarding_facility';
   const isOwner = organization?.created_by === user?.id;
   return <div className="min-h-screen bg-background"><Navbar /><main id="main-content" tabIndex={-1} className="container-wide max-w-4xl pt-32 pb-20">
     <Link to="/provider/register" className="text-primary underline">Your organizations</Link>
@@ -28,15 +29,17 @@ export default function ProviderDraftWorkspace() {
       <PageHeading size="workspace" className="my-6" title={<> {organization.name} </>}/>
       <section className="care-path mb-8"><h2 className="text-xl mb-3">Private organization workspace</h2>
         <p className="mb-2">Status: {organization.verification_status.replaceAll('_', ' ')}</p>
-        <p className="text-muted-foreground">Submit registration evidence for organization review, then choose which services to publish below. Set availability below to accept booking requests. Owners can manage team access below.</p>
+        <p className="text-muted-foreground">{isBoarding
+          ? 'Submit your boarding facility’s business documents for review. Boarding listings and booking are not available yet. Owners can manage team access below.'
+          : 'Submit registration evidence for organization review, then choose which services to publish below. Set availability below to accept booking requests. Owners can manage team access below.'}</p>
         <p className="mt-4">{providerCategories[organization.provider_type as keyof typeof providerCategories] ?? organization.provider_type} · {organization.country} · {organization.timezone} · {organization.currency}</p>
         <Button variant="outline" className="mt-5" asChild><Link to="/profile">Professional profile</Link></Button>
         <Button variant="link" asChild><Link to="/contact">Contact support</Link></Button>
       </section>
       {isOwner && <ProviderLaunchGuide providerId={organization.id} slug={organization.slug} providerType={organization.provider_type} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
       {isOwner && <ProviderVerificationPanel key={`${user?.id}-${organization.id}`} providerId={organization.id} status={organization.verification_status} suspended={organization.status === 'suspended'} />}
-      {draft.data?.access.services && <ProviderServiceManager key={`${user?.id}-${organization.id}`} providerId={organization.id} providerType={organization.provider_type} slug={organization.slug} approved={organization.verification_status === 'approved'} suspended={organization.status === 'suspended'} />}
-      {draft.data?.access.bookings && <ProviderBookingManager key={`${user?.id}-${organization.id}`} providerId={organization.id} />}
+      {!isBoarding && draft.data?.access.services && <ProviderServiceManager key={`${user?.id}-${organization.id}`} providerId={organization.id} providerType={organization.provider_type} slug={organization.slug} approved={organization.verification_status === 'approved'} suspended={organization.status === 'suspended'} />}
+      {!isBoarding && draft.data?.access.bookings && <ProviderBookingManager key={`${user?.id}-${organization.id}`} providerId={organization.id} />}
       {isOwner && <ProviderTeamManager key={`${user?.id}-${organization.id}`} providerId={organization.id} suspended={organization.status==='suspended'}/>}
       {!isOwner && draft.data?.access.workspace && <p className="mb-6 text-muted-foreground">You have delegated organization access. Business-profile changes, verification documents and team controls stay with the owner. Team roles do not grant clinical permissions or add appointment capacity.</p>}
       {!isOwner && !draft.data?.access.workspace && <p className="mb-6">You are viewing this organization as an administrator. <Link className="text-primary underline" to="/admin/verifications">Open the verification queue</Link> to review its application.</p>}

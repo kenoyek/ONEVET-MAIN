@@ -11,6 +11,7 @@ export const providerCategories = {
   pet_store: 'Pet store',
   pet_trainer: 'Pet trainer',
   mobile_service_provider: 'Mobile service provider',
+  boarding_facility: 'Boarding facility',
 } as const;
 export const providerDraftSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -36,6 +37,7 @@ const organizationTypeBySignup: Partial<Record<string, ProviderDraftInput['provi
   vendor_store: 'pet_store',
   pet_trainer: 'pet_trainer',
   mobile_service_provider: 'mobile_service_provider',
+  boarding_facility: 'boarding_facility',
 };
 
 export const emptyProviderDraft = (email = '', signupCategory?: string | null): ProviderDraftInput => ({

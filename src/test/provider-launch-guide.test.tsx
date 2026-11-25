@@ -36,6 +36,15 @@ describe('provider launch guide', () => {
     await screen.findByRole('alert'); fireEvent.click(screen.getByRole('button', { name: 'Refresh setup checks' }));
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument()); expect(publicServices).toHaveBeenCalledTimes(2);
   });
+  it('guides boarding facilities through verification without suggesting listings or bookings', () => {
+    mount('draft', 'boarding_facility');
+    expect(screen.getByRole('heading', { name: 'Register your boarding facility' })).toBeInTheDocument();
+    expect(screen.getByText('Boarding listings and booking are not available yet.')).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Open this step' }).map(link => link.getAttribute('href')))
+      .toEqual(['#business-details', '#organization-verification']);
+    expect(publicServices).not.toHaveBeenCalled();
+    expect(schedule).not.toHaveBeenCalled();
+  });
   it('gives shop businesses a relevant route without querying service or booking data', () => {
     mount('approved', 'pet_store'); expect(screen.getByRole('link', { name: 'Contact the team' })).toHaveAttribute('href', '/contact');
     expect(publicServices).not.toHaveBeenCalled(); expect(schedule).not.toHaveBeenCalled(); expect(screen.queryByText('4. Booking availability')).not.toBeInTheDocument();

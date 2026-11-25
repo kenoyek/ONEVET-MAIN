@@ -9,6 +9,7 @@ import { appointmentService } from '@/lib/services/appointment-service';
 type Props = { providerId: string; slug: string; providerType: string; status: string; suspended: boolean };
 export function ProviderLaunchGuide({ providerId, slug, providerType, status, suspended }: Props) {
   const { user } = useAuth();
+  const isBoarding = providerType === 'boarding_facility';
   const supportsServices = !!categoryByProvider[providerType];
   const published = useQuery({ queryKey: ['provider-launch-public', user?.id, providerId, slug], queryFn: () => providerCatalogService.publicServices(slug), enabled: !!user && supportsServices, refetchInterval: 30_000 });
   const schedule = useQuery({ queryKey: ['provider-booking-schedule', user?.id, providerId], queryFn: () => appointmentService.schedule(providerId), enabled: !!user && supportsServices });
@@ -24,12 +25,13 @@ export function ProviderLaunchGuide({ providerId, slug, providerType, status, su
     ...(supportsServices ? [
       { title: 'Public service listing', done: hasListing, text: hasListing ? 'At least one service is visible in the public catalogue.' : 'Prepare a service draft below. After approval, give consent and publish it.', href: '#organization-services' },
       { title: 'Booking availability', done: hasHours, text: hasHours ? 'Booking requests are enabled with saved weekly opening hours.' : 'Choose your weekly opening hours and enable booking requests. Publishing alone does not open your calendar.', href: '#organization-availability' },
-    ] : [{ title: 'Shop catalogue', done: false, text: 'After approval, contact the team to add your real products and stock to the shop. Online checkout remains unavailable.', href: '/contact' }]),
+    ] : isBoarding ? [] : [{ title: 'Shop catalogue', done: false, text: 'After approval, contact the team to add your real products and stock to the shop. Online checkout remains unavailable.', href: '/contact' }]),
   ];
   return <section aria-labelledby="launch-guide-title" className="mb-8 rounded-2xl border bg-card p-5 sm:p-8">
     <p className="eyebrow mb-3">Your next steps</p>
-    <h2 id="launch-guide-title" className="text-2xl mb-3">Get ready to welcome clients</h2>
-    <p className="text-sm text-muted-foreground mb-6">Registration, approval, publication and availability are separate steps. Follow the guide below to finish your setup.</p>
+    <h2 id="launch-guide-title" className="text-2xl mb-3">{isBoarding ? 'Register your boarding facility' : 'Get ready to welcome clients'}</h2>
+    <p className="text-sm text-muted-foreground mb-6">{isBoarding ? 'Save your facility details and submit them for review.'
+      : 'Registration, approval, publication and availability are separate steps. Follow the guide below to finish your setup.'}</p>
     {loading && <p role="status" className="mb-4 text-sm">Checking your public listing and saved availability…</p>}
     {failed && <div role="alert" className="mb-5 rounded-xl border p-4"><p className="text-sm">Some setup checks could not be loaded. Refresh them before relying on this guide.</p><Button type="button" variant="outline" className="mt-3" onClick={() => { void published.refetch(); void schedule.refetch(); }}>Refresh setup checks</Button></div>}
     <ol className="grid gap-4 sm:grid-cols-2">{steps.map((step, index) => <li key={step.title} className="min-w-0 rounded-xl border p-4">
@@ -37,6 +39,6 @@ export function ProviderLaunchGuide({ providerId, slug, providerType, status, su
       <p className="text-sm leading-relaxed text-muted-foreground mb-3">{step.text}</p>
       {step.href.startsWith('#') ? <a href={step.href} className="inline-flex items-center gap-2 text-sm text-primary underline underline-offset-4">Open this step<ArrowDown className="h-3 w-3" aria-hidden="true" /></a> : <Link className="text-sm text-primary underline underline-offset-4" to={step.href}>Contact the team</Link>}
     </li>)}</ol>
-    <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{supportsServices ? 'Opening hours do not guarantee an available slot. Each request still needs confirmation. ' : ''}Online payments remain unavailable.</p>
+    <p className="mt-5 text-xs leading-relaxed text-muted-foreground">{supportsServices ? 'Opening hours do not guarantee an available slot. Each request still needs confirmation. ' : ''}{isBoarding ? 'Boarding listings and booking are not available yet.' : 'Online payments remain unavailable.'}</p>
   </section>;
 }

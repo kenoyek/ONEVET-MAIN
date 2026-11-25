@@ -16,7 +16,7 @@ export default function ProviderOnboarding() {
     <main id="main-content" tabIndex={-1} className="container-wide pt-32 pb-20 max-w-4xl">
       <p className="eyebrow mb-4">Veterinary & service partners</p>
       <PageHeading size="workspace" className="mb-4" title={<> Register your organization </>}/>
-      <p className="text-muted-foreground mb-8">Save your business details as a private draft. Registration does not grant professional approval or publish your business. After saving, attach documents and submit your organization for review. After approval, publish services and opt into booking requests. Owners can also invite a team.</p>
+      <p className="text-muted-foreground mb-8">Save your business details as a private draft. Registration does not grant professional approval or publish your business. After saving, attach documents and submit your organization for review. Approved organizations can publish services and accept booking requests where those features are available for their category. Owners can also invite a team.</p>
       <Button asChild variant="outline" className="mb-6"><Link to="/provider/invitations">Team invitations and workspaces</Link></Button>
       <section className="care-path mb-8" aria-labelledby="your-organizations">
         <h2 id="your-organizations" className="text-xl mb-4">Your organizations</h2>

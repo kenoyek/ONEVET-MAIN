@@ -30,11 +30,13 @@ done
  supabase/migrations/20261110010000_license_document_integrity.sql \
  supabase/migrations/20261111010000_admin_shop_catalogue.sql \
  supabase/migrations/20261111020000_platform_image_uploads.sql \
- supabase/migrations/20261111030000_site_analytics.sql
+ supabase/migrations/20261111030000_site_analytics.sql \
+ supabase/migrations/20261125010000_enable_boarding_organization_registration.sql
  echo 'BEGIN;'
  cat supabase/tests/core-security.sql \
  supabase/tests/provider-drafts.sql \
  supabase/tests/provider-verification.sql \
+ supabase/tests/provider-boarding-registration.sql \
  supabase/tests/provider-publication.sql \
  supabase/tests/provider-booking-setup.sql \
  supabase/tests/provider-booking.sql \
