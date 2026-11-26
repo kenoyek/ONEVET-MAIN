@@ -10,7 +10,6 @@ const steps = [
   { icon: CalendarCheck, title: 'Wait for confirmation', text: 'Your request stays pending until the provider confirms. Check My bookings for updates and messages.' },
 ];
 const questions = [
-  ['How are providers reviewed?', 'Providers submit organization details and supporting documents for review. Approved providers can publish eligible services or boarding listings. Confirm availability, fees, and any special requirements directly with the provider.'],
   ['How do I speak to a veterinarian?', 'Browse veterinary services, review a provider’s profile and fees, then sign in to request care. Availability must be confirmed by the provider; a listing does not guarantee an immediate response.'],
   ['Can I get help with livestock?', 'You can seek veterinary guidance for farm animals as well as pets. Confirm the provider’s species expertise before booking. Farm records support animal groups and owner observations. Eligible veterinary and diagnostic appointment requests can use an active farm group. The provider must confirm the request.'],
   ['What does an online consultation include?', 'A remote conversation can help you explain a concern and discuss next steps. A veterinarian may recommend an examination, testing, or treatment in person. Audio and video availability must be confirmed with the provider.'],
