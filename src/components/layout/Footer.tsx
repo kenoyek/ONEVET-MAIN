@@ -26,11 +26,20 @@ const groups = [
     ],
   },
 ];
-export function Footer() {
+export function Footer({ home = false }: { home?: boolean }) {
   return (
-    <footer className="bg-card border-t pb-8 pt-14">
+    <footer className={home ? "welcome-footer" : "bg-card border-t pb-8 pt-14"}>
       <div className="container-wide">
-        <div className="grid md:grid-cols-[1.5fr_1fr_1fr] gap-10">
+        {home && (
+          <section className="welcome-footer-cta" aria-labelledby="home-footer-heading">
+            <h2 id="home-footer-heading">Need help finding care?</h2>
+            <p>Ask the 1Vet care team about general care or get help finding a service.</p>
+            <Link to="/care-chat" className="welcome-footer-action">
+              Chat with our care team <ArrowUpRight size={18} aria-hidden="true" />
+            </Link>
+          </section>
+        )}
+        <div className={home ? "welcome-footer-links" : "grid md:grid-cols-[1.5fr_1fr_1fr] gap-10"}>
           <div>
             <Link
               to="/"

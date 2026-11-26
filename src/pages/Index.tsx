@@ -10,5 +10,5 @@ import { CarePathways } from '@/components/landing/CarePathways';
 import { SEO } from '@/components/shared/SEO';
 
 export default function Index() {
- return <div className="welcome-home min-h-screen"><SEO /><Navbar /><main id="main-content" tabIndex={-1}><Hero /><CareFinder /><ProviderReviewOverview /><CareServices /><CarePathways /><MarketplaceWelcome /></main><Footer /></div>;
+ return <div className="welcome-home min-h-screen"><SEO /><Navbar /><main id="main-content" tabIndex={-1}><Hero /><CareFinder /><ProviderReviewOverview /><CareServices /><CarePathways /><MarketplaceWelcome /></main><Footer home /></div>;
 }
