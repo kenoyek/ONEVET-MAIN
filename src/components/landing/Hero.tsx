@@ -18,7 +18,7 @@ export function Hero() {
         </div>
         <div className="welcome-hero-photo">
           <img src={careImage} srcSet={`${smallCareImage} 640w, ${careImage} 1100w`}
-            sizes="(min-width: 1024px) 46vw, (min-width: 640px) 80vw, 100vw"
+            sizes="(min-width: 768px) 56vw, 100vw"
             alt="A veterinarian gently examining a cat beside its owner" width="1100" height="825"
             fetchPriority="high" decoding="async" />
         </div>

@@ -23,8 +23,8 @@ it('switches the feature preview between pets and farm groups without implying s
  fireEvent.click(screen.getByRole('button',{name:'Farm animals'}));
  expect(screen.getByRole('button',{name:'Farm animals'})).toHaveAttribute('aria-pressed','true');
  expect(screen.getByRole('heading',{name:'Your farm & animal groups'})).toBeInTheDocument();
- expect(screen.getByText('Feature preview')).toBeInTheDocument();
- expect(screen.getByText(/Your records appear after you add them/)).toBeInTheDocument();
+ expect(screen.getByText('Preview')).toBeInTheDocument();
+ expect(screen.getByText('Example appointment · Awaiting provider confirmation')).toBeInTheDocument();
  expect(screen.getByText(/Account creation is free. Provider services have their own fees/)).toBeInTheDocument();
 });
 it('links homepage shopping categories to recognized catalogue filters',()=>{
