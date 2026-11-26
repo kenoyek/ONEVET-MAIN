@@ -106,3 +106,22 @@ it('shows the current services when the selected service is no longer listed', a
   expect(await screen.findByText(/The selected service is no longer listed/)).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Coat care' })).toBeInTheDocument();
 });
+
+it('shows booking options only for services accepting online requests', () => {
+  const base = {
+    category: 'grooming', base_price: 5000, currency: 'NGN', delivery_mode: 'clinic_visit',
+    organization: { id: 'org-id', name: 'Approved Organization', slug: 'approved-org' },
+  };
+  directory.mockReturnValue({ marketplaceItems: [
+    { ...base, id: 'nails', name: 'Nail trim', booking_enabled: true },
+    { ...base, id: 'coat', name: 'Coat care', booking_enabled: false },
+  ], isLoading: false, isError: false, refetch: vi.fn() });
+  render(<MemoryRouter><ProviderMarketplace /></MemoryRouter>);
+  expect(screen.getByRole('link', { name: 'View booking options' })).toHaveAttribute(
+    'href', '/provider/public/approved-org?directory=care&service=nails',
+  );
+  expect(screen.getByRole('link', { name: 'View service' })).toHaveAttribute(
+    'href', '/provider/public/approved-org?directory=care&service=coat',
+  );
+  expect(screen.getByText('Online requests require provider confirmation.')).toBeInTheDocument();
+});

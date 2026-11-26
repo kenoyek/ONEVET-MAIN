@@ -375,27 +375,29 @@ function ProviderMarketplaceContent() {
                         </span>
                       </div>
                     </div>
+                    {!item.legacy && item.booking_enabled && (
+                      <p className="text-xs text-muted-foreground">
+                        Online requests require provider confirmation.
+                      </p>
+                    )}
                   </CardContent>
 
                   <CardFooter>
-                    <Link
-                      to={
+                    <Button asChild className="w-full">
+                      <Link to={
                         item.legacy
                           ? item.category === 'vet_clinic'
                             ? '/consultations/new'
                             : '/contact'
                           : providerProfileLink(item.organization?.slug, item.id)
-                      }
-                      className="w-full"
-                    >
-                      <Button className="w-full">
+                      }>
                         {item.legacy
                           ? item.category === 'vet_clinic'
                             ? 'Request veterinary care'
                             : 'Ask about this service'
-                          : 'View service'}
-                      </Button>
-                    </Link>
+                          : item.booking_enabled ? 'View booking options' : 'View service'}
+                      </Link>
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}

@@ -50,6 +50,7 @@ export interface MarketplaceServiceItem {
   is_emergency_service?: boolean;
   is_active?: boolean;
   legacy?: boolean;
+  booking_enabled?: boolean;
   organization?: {
     id: string;
     name: string;
@@ -118,6 +119,7 @@ export const marketplaceService = {
       id: item.id!, name: item.name!, category: item.category!, description: item.description,
       base_price: Number(item.base_price), currency: item.currency!, delivery_mode: item.delivery_mode!, duration_minutes: item.duration_minutes,
       legacy: false,
+      booking_enabled: item.booking_enabled === true,
       organization: { id: item.provider_id!, name: item.organization_name!, slug: item.provider_slug, status: 'active', verification_status: 'approved', provider_type: item.provider_type, country: item.country, city: item.city },
       location: { id: item.provider_id!, city: item.city, state: item.state },
     })));
