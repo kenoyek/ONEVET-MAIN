@@ -51,6 +51,22 @@ SELECT verify_test_assert(list_public_boarding_facilities('Ibadan',NULL,'Lagos')
   'matching city cannot bypass the state filter');
 SELECT verify_test_assert(list_public_boarding_facilities(NULL,'boarding-registration-fixture','Oyo') = '[]'::jsonb,
   'state-only search respects the cursor');
+SELECT verify_test_assert(list_public_boarding_facilities(NULL,NULL,'Federal Capital Territory') = '[]'::jsonb,
+  'FCT filter excludes listings in other states');
+RESET ROLE;
+UPDATE provider_locations SET city='Gwagwalada', state=' Abuja '
+  WHERE provider_id=current_setting('boarding_test.org')::uuid AND is_primary;
+SET LOCAL ROLE anon;
+SELECT verify_test_assert((list_public_boarding_facilities('Gwagwalada',NULL,'Federal Capital Territory')->0->>'slug')='boarding-registration-fixture',
+  'FCT picker includes older listings saved as Abuja');
+SELECT verify_test_assert(list_public_boarding_facilities('Ibadan',NULL,'FCT') = '[]'::jsonb,
+  'FCT aliases still respect the city filter');
+RESET ROLE;
+UPDATE provider_locations SET state='Federal Capital Territory'
+  WHERE provider_id=current_setting('boarding_test.org')::uuid AND is_primary;
+SET LOCAL ROLE anon;
+SELECT verify_test_assert((list_public_boarding_facilities(NULL,NULL,' FCT ')->0->>'slug')='boarding-registration-fixture',
+  'older FCT search links find listings saved under the full name');
 RESET ROLE;
 SET LOCAL ROLE authenticated;
 SELECT verify_test_assert(NOT set_boarding_listing(current_setting('boarding_test.org')::uuid,false),'owner can withdraw the listing');
