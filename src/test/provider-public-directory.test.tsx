@@ -10,9 +10,9 @@ vi.mock('@/hooks/useProviderMarketplace', () => ({ useProviderMarketplace: direc
 vi.mock('@/lib/services/provider-catalog-service', async original => ({ ...await original<typeof import('@/lib/services/provider-catalog-service')>(), providerCatalogService: { publicServices } }));
 import PublicProviderProfile from '@/pages/provider/PublicProviderProfile';
 import ProviderMarketplace from '@/pages/marketplace/ProviderMarketplace';
-function profile() {
+function profile(search = '') {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/provider/public/approved-org']}><Routes><Route path="/provider/public/:slug" element={<PublicProviderProfile />} /></Routes></MemoryRouter></QueryClientProvider>);
+  render(<QueryClientProvider client={cache}><MemoryRouter initialEntries={['/provider/public/approved-org' + search]}><Routes><Route path="/provider/public/:slug" element={<PublicProviderProfile />} /></Routes></MemoryRouter></QueryClientProvider>);
 }
 afterEach(cleanup);
 describe('Published provider directory', () => {
@@ -22,6 +22,7 @@ describe('Published provider directory', () => {
     profile();
     expect(await screen.findByRole('heading', { name: 'Provider unavailable' })).toBeInTheDocument();
     expect(publicServices).toHaveBeenCalledWith('approved-org');
+    expect(screen.getByRole('link', { name: 'Browse care services' })).toHaveAttribute('href', '/provider-marketplace');
     expect(screen.queryByRole('link', { name: 'Contact the team' })).not.toBeInTheDocument();
   });
   it('shows declared service details without an appointment or payment claim', async () => {
@@ -39,7 +40,7 @@ describe('Published provider directory', () => {
     ], isLoading: false, isError: false, refetch: vi.fn() });
     render(<MemoryRouter><ProviderMarketplace /></MemoryRouter>);
     expect(screen.getByText('Ibadan, Oyo, Nigeria')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'View provider' })).toHaveAttribute('href', '/provider/public/approved-org');
+    expect(screen.getByRole('link', { name: 'View provider' })).toHaveAttribute('href', '/provider/public/approved-org?directory=care');
     expect(screen.getByRole('link', { name: 'Request veterinary care' })).toHaveAttribute('href', '/consultations/new');
     expect(screen.queryByRole('link', { name: 'Request appointment' })).not.toBeInTheDocument();
   });
@@ -74,4 +75,13 @@ it('applies and clears a state filter on Find a Vet', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Clear search filters' }));
   expect(screen.getByLabelText('State or FCT')).toHaveValue('');
   expect(directory).toHaveBeenLastCalledWith(expect.objectContaining({ category: 'veterinary', state: undefined }));
+});
+
+it('returns from an unavailable provider to the original veterinary search', async () => {
+  publicServices.mockResolvedValue([]);
+  profile('?directory=vets&city=Garki&state=FCT&delivery=home_visit&category=grooming&unrecognized=1');
+  await screen.findByRole('heading', { name: 'Provider unavailable' });
+  expect(screen.getByRole('link', { name: 'Back to search results' })).toHaveAttribute(
+    'href', '/find-a-vet?city=Garki&state=Federal+Capital+Territory&delivery=home_visit',
+  );
 });

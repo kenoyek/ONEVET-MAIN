@@ -1,4 +1,4 @@
-import {bookingAnimalContext,withBookingAnimal} from '@/lib/booking-animal-context';
+import {bookingAnimalContext} from '@/lib/booking-animal-context';
 import { normalizeCareState } from '@/lib/care-search';
 import {directoryFilters,directorySearchParams} from '@/lib/directory-search';
 import { PageHeading } from '@/components/layout/PageHeading';
@@ -69,6 +69,12 @@ function ProviderMarketplaceContent() {
   const selectedDeliveryMode=initial.delivery;
   const emergencyOnly=initial.urgent;
   const hasFilters=!!(initial.query||initial.city||initial.state||initial.delivery!=='all'||initial.urgent||(!veterinaryOnly&&initial.category!=='all'));
+  const providerSearch = directorySearchParams(initial, veterinaryOnly, animalContext);
+  providerSearch.set('directory', veterinaryOnly ? 'vets' : 'care');
+  function providerProfileLink(slug: string | undefined) {
+    return { pathname: `/provider/public/${slug}`, search: providerSearch.toString() };
+  }
+
   function applySearch(change:Partial<ReturnType<typeof directoryFilters>>={}){
     setParams(directorySearchParams({...initial,query:searchQuery,city:cityQuery,state:stateQuery,...change},veterinaryOnly,animalContext));
   }
@@ -319,7 +325,7 @@ function ProviderMarketplaceContent() {
                             </span>
                           ) : (
                             <Link
-                              to={withBookingAnimal(`/provider/public/${item.organization?.slug}`,animalContext)}
+                              to={providerProfileLink(item.organization?.slug)}
                               className="font-semibold text-sm hover:underline"
                             >
                               {String(item.organization?.name ?? 'Provider')}
@@ -376,7 +382,7 @@ function ProviderMarketplaceContent() {
                           ? item.category === 'vet_clinic'
                             ? '/consultations/new'
                             : '/contact'
-                          : withBookingAnimal(`/provider/public/${item.organization?.slug}`,animalContext)
+                          : providerProfileLink(item.organization?.slug)
                       }
                       className="w-full"
                     >

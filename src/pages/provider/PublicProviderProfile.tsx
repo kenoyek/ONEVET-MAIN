@@ -1,4 +1,5 @@
-import {bookingAnimalContext,withBookingAnimal} from '@/lib/booking-animal-context';
+import {bookingAnimalContext} from '@/lib/booking-animal-context';
+import { providerDirectoryReturn } from '@/lib/directory-search';
 import {useEffect,useState} from 'react';
 import {MapPin,ShieldCheck,Search} from 'lucide-react';
 import {Input} from '@/components/ui/input';
@@ -16,6 +17,7 @@ import { providerCatalogService } from '@/lib/services/provider-catalog-service'
 export default function PublicProviderProfile() {
   const { slug = '' } = useParams();
   const [params]=useSearchParams();
+  const directoryReturn = providerDirectoryReturn(params);
   const animalContext=bookingAnimalContext(params.get('animal'));
   const services = useQuery({ queryKey: ['public-provider', slug], queryFn: () => providerCatalogService.publicServices(slug), enabled: !!slug, staleTime: 0, refetchOnMount: 'always', refetchInterval: 60_000 });
   const organization = services.data?.[0];
@@ -25,7 +27,7 @@ export default function PublicProviderProfile() {
   const visible=(services.data??[]).filter(item=>(category==='all'||item.category===category)&&`${item.name??''} ${item.description??''}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
 
   return <div className="public-provider-profile min-h-screen bg-background"><SEO title={organization?.organization_name||'Provider profile'} description="Review currently published services, base fees and listed availability. Appointment requests need provider confirmation."/><Navbar /><main id="main-content" tabIndex={-1} className="container-wide max-w-5xl pt-32 pb-20">
-    <Link className="text-primary underline" to={withBookingAnimal("/provider-marketplace",animalContext)}>Browse care services</Link>
+    <Link className="text-primary underline" to={directoryReturn.href}>{directoryReturn.label}</Link>
     {services.isPending ? <p role="status" className="mt-8">Loading provider…</p> : services.isError ? <section className="care-path mt-8"><h1 className="text-2xl mb-4">Could not load this provider</h1><Button onClick={() => void services.refetch()}>Try again</Button></section> : !organization ? <section className="care-path mt-8"><h1 className="text-2xl mb-4">Provider unavailable</h1><p>This provider has no currently eligible published services. Please browse the directory for other care options.</p></section> : <>
       <PageHeading size="workspace" className="my-6" title={<> {organization.organization_name} </>}/>
       <p className="text-muted-foreground mb-4 flex items-center gap-2"><MapPin size={17} aria-hidden="true"/>{[organization.city,organization.state,organization.country].filter(Boolean).join(', ')||'Confirm location with provider'}</p>

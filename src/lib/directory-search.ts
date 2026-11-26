@@ -18,3 +18,16 @@ export function directorySearchParams(input:ReturnType<typeof directoryFilters>,
  if(animal)params.set('animal',animal);
  return params;
 }
+
+export function providerDirectoryReturn(params: URLSearchParams) {
+  const source = params.get('directory');
+  const fromVetDirectory = source === 'vets';
+  const fromDirectory = fromVetDirectory || source === 'care';
+  const path = fromVetDirectory ? '/find-a-vet' : '/provider-marketplace';
+  const filters = directoryFilters(fromDirectory ? params : new URLSearchParams());
+  const search = directorySearchParams(filters, fromVetDirectory, params.get('animal') ?? '');
+  return {
+    href: search.size ? `${path}?${search}` : path,
+    label: fromDirectory ? 'Back to search results' : 'Browse care services',
+  };
+}
