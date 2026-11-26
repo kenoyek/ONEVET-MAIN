@@ -143,7 +143,6 @@ it('opens the boarding directory from the care finder with the entered city and 
     <Route path="/" element={<CareFinder />} />
     <Route path="/boarding" element={<BoardingDestination />} />
   </Routes></MemoryRouter>);
-  expect(screen.queryByLabelText(/State or FCT/)).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Type of care'), { target: { value: 'boarding' } });
   fireEvent.change(screen.getByLabelText(/State or FCT/), { target: { value: 'Rivers' } });
   fireEvent.change(screen.getByLabelText(/City/), { target: { value: ' Port Harcourt ' } });

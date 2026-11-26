@@ -4,6 +4,7 @@ import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Footer } from '@/components/layout/Footer';
+import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import { SEO } from '@/components/shared/SEO';
 import { Navbar } from '@/components/layout/Navbar';
 import {
@@ -61,12 +62,13 @@ function ProviderMarketplaceContent() {
   const veterinaryOnly = location.pathname === '/find-a-vet';
   const [searchQuery, setSearchQuery] = useState(initial.query);
   const [cityQuery, setCityQuery] = useState(initial.city);
+  const [stateQuery, setStateQuery] = useState(initial.state);
   const selectedCategory=initial.category;
   const selectedDeliveryMode=initial.delivery;
   const emergencyOnly=initial.urgent;
-  const hasFilters=!!(initial.query||initial.city||initial.delivery!=='all'||initial.urgent||(!veterinaryOnly&&initial.category!=='all'));
+  const hasFilters=!!(initial.query||initial.city||initial.state||initial.delivery!=='all'||initial.urgent||(!veterinaryOnly&&initial.category!=='all'));
   function applySearch(change:Partial<ReturnType<typeof directoryFilters>>={}){
-    setParams(directorySearchParams({...initial,query:searchQuery,city:cityQuery,...change},veterinaryOnly,animalContext));
+    setParams(directorySearchParams({...initial,query:searchQuery,city:cityQuery,state:stateQuery,...change},veterinaryOnly,animalContext));
   }
 
   const filter: SearchProvidersFilter = {
@@ -82,6 +84,7 @@ function ProviderMarketplaceContent() {
     is_emergency_service: emergencyOnly ? true : undefined,
     query: initial.query || undefined,
     city: initial.city || undefined,
+    state: initial.state || undefined,
   };
 
   const {
@@ -135,7 +138,7 @@ function ProviderMarketplaceContent() {
             {/* Search Bar */}
             <form
               onSubmit={handleSearchSubmit}
-              className="discovery-search flex flex-col sm:flex-row gap-3"
+              className="discovery-search grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,12rem)_minmax(0,14rem)_auto]"
             >
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
@@ -147,7 +150,7 @@ function ProviderMarketplaceContent() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="relative sm:w-48">
+              <div className="relative">
                 <MapPin className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   aria-label="City" maxLength={80}
@@ -157,6 +160,8 @@ function ProviderMarketplaceContent() {
                   onChange={(e) => setCityQuery(e.target.value)}
                 />
               </div>
+              <NigeriaStatePicker aria-label="State or FCT" autoComplete="off" emptyLabel="Any state or FCT"
+                value={stateQuery} onChange={event => setStateQuery(event.target.value)} />
               <Button type="submit" size="lg">
                 Search
               </Button>
@@ -230,7 +235,7 @@ function ProviderMarketplaceContent() {
             </p>
           </div>
 
-          {hasFilters&&<section aria-label="Current care search" className="mb-6 rounded-xl border bg-card p-4"><p className="text-sm leading-relaxed break-words">Searching {veterinaryOnly?'veterinary care':CATEGORIES.find(category=>category.value===initial.category)?.label.toLowerCase()||'all services'}{initial.city?` in ${initial.city}`:''}{initial.query?` matching “${initial.query}”`:''}{initial.delivery!=='all'?` · ${initial.delivery.replaceAll('_',' ')}`:''}{initial.urgent?' · listed urgent-care services':''}</p><Button variant="link" className="mt-2 px-0" onClick={()=>setParams(new URLSearchParams(animalContext?{animal:animalContext}:{}))}>Clear search filters</Button></section>}
+          {hasFilters&&<section aria-label="Current care search" className="mb-6 rounded-xl border bg-card p-4"><p className="text-sm leading-relaxed break-words">Searching {veterinaryOnly?'veterinary care':CATEGORIES.find(category=>category.value===initial.category)?.label.toLowerCase()||'all services'}{initial.city||initial.state?` in ${[initial.city,initial.state].filter(Boolean).join(', ')}`:''}{initial.query?` matching “${initial.query}”`:''}{initial.delivery!=='all'?` · ${initial.delivery.replaceAll('_',' ')}`:''}{initial.urgent?' · listed urgent-care services':''}</p><Button variant="link" className="mt-2 px-0" onClick={()=>setParams(new URLSearchParams(animalContext?{animal:animalContext}:{}))}>Clear search filters</Button></section>}
           {emergencyOnly&&<p className="mb-6 text-sm text-muted-foreground">An urgent-service listing does not confirm current emergency capacity. If your animal is in immediate distress, <Link className="underline" to="/urgent-care">seek in-person care now</Link>.</p>}
           {/* Services Grid */}
           {isError ? (

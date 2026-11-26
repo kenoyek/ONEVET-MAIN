@@ -164,7 +164,7 @@
 }
 .welcome-finder h2 { font-size: clamp(26px, 3vw, 36px); font-weight: 500; letter-spacing: -.045em; line-height: 1.15; }
 .welcome-finder-intro { margin-top: 8px; color: var(--welcome-soft); font-size: 14px; line-height: 1.6; }
-.welcome-finder form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 16px; align-items: end; margin-top: 24px; }
+.welcome-finder form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 16px; align-items: end; margin-top: 24px; }
 .welcome-finder-field { min-width: 0; }
 .welcome-finder label { display: block; margin-bottom: 8px; font-size: 13px; font-weight: 600; }
 .welcome-finder small { font-weight: 400; font-size: inherit; color: var(--welcome-soft); }
@@ -372,9 +372,6 @@
 .welcome-professional-path p { margin-top: 6px; color: var(--welcome-soft); font-size: 14px; line-height: 1.55; }
 @media (max-width: 767px) { .welcome-professionals-grid { grid-template-columns: 1fr; } }
 
-@media (min-width: 640px) {
-  .welcome-finder form.welcome-finder-boarding { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (min-width: 1024px) {
-  .welcome-finder form.welcome-finder-boarding { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
+@media (min-width: 640px) and (max-width: 1023px) {
+  .welcome-finder form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

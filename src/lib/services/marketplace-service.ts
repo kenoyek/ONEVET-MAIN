@@ -1,3 +1,4 @@
+import { normalizeCareState } from '@/lib/care-search';
 import { providerCatalogService } from './provider-catalog-service';
 import { plannedSupabase } from '@/integrations/supabase/planned-client';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +9,7 @@ export interface SearchProvidersFilter {
   provider_type?: string;
   delivery_mode?: ServiceDeliveryMode;
   city?: string;
+  state?: string;
   is_emergency_service?: boolean;
   min_price?: number;
   max_price?: number;
@@ -58,6 +60,7 @@ export interface MarketplaceServiceItem {
   location?: {
     id: string;
     city?: string | null;
+    state?: string | null;
     [key: string]: unknown;
   } | null;
   [key: string]: unknown;
@@ -115,7 +118,7 @@ export const marketplaceService = {
       base_price: Number(item.base_price), currency: item.currency!, delivery_mode: item.delivery_mode!, duration_minutes: item.duration_minutes,
       legacy: false,
       organization: { id: item.provider_id!, name: item.organization_name!, slug: item.provider_slug, status: 'active', verification_status: 'approved', provider_type: item.provider_type, country: item.country, city: item.city },
-      location: { id: item.provider_id!, city: item.city },
+      location: { id: item.provider_id!, city: item.city, state: item.state },
     })));
     if (filter.delivery_mode) results = results.filter(item => !item.legacy);
     if (filter.provider_type) results = results.filter(item => item.organization?.provider_type === filter.provider_type);
@@ -139,6 +142,20 @@ export const marketplaceService = {
           (item.organization?.city &&
             item.organization.city.toLowerCase().includes(cityQ)),
       );
+    }
+
+    if (filter.state) {
+      const state = normalizeCareState(filter.state).toLowerCase();
+      results = results.filter(item => {
+        // Older listings store the location in one public text field.
+        let listedState = item.location?.state;
+        if (item.legacy) {
+          const parts = item.location?.city?.split(',').map(part => part.trim()).filter(Boolean);
+          if (parts?.at(-1)?.toLowerCase() === 'nigeria') parts.pop();
+          listedState = parts?.at(-1);
+        }
+        return normalizeCareState(listedState ?? '').toLowerCase() === state;
+      });
     }
 
     return results;

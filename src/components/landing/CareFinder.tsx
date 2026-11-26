@@ -11,14 +11,13 @@ export function CareFinder() {
   const [category, setCategory] = useState('veterinary');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const isBoarding = category === 'boarding';
 
   return (
     <section className="container-wide welcome-finder" aria-labelledby="care-finder-heading">
       <div className="welcome-finder-card">
         <h2 id="care-finder-heading">Find care near you</h2>
         <p className="welcome-finder-intro">Browse without an account. Providers confirm availability and fees.</p>
-        <form className={isBoarding ? 'welcome-finder-boarding' : undefined} onSubmit={event => {
+        <form onSubmit={event => {
           event.preventDefault();
           navigate(careSearchLink(category, city, state));
         }}>
@@ -39,15 +38,13 @@ export function CareFinder() {
                 placeholder="e.g. Lagos or Ibadan" onChange={event => setCity(event.target.value)} />
             </div>
           </div>
-          {isBoarding && (
-            <div className="welcome-finder-field">
-              <label htmlFor="care-finder-state">State or FCT <small>(optional)</small></label>
-              <div className="welcome-finder-control">
-                <NigeriaStatePicker id="care-finder-state" value={state} onChange={event => setState(event.target.value)} />
-                <ChevronDown className="welcome-finder-chevron" size={17} aria-hidden="true" />
-              </div>
+          <div className="welcome-finder-field">
+            <label htmlFor="care-finder-state">State or FCT <small>(optional)</small></label>
+            <div className="welcome-finder-control">
+              <NigeriaStatePicker id="care-finder-state" value={state} onChange={event => setState(event.target.value)} />
+              <ChevronDown className="welcome-finder-chevron" size={17} aria-hidden="true" />
             </div>
-          )}
+          </div>
           <button className="welcome-button welcome-button-primary" type="submit">
             Find care <span><ArrowUpRight size={19} aria-hidden="true" /></span>
           </button>

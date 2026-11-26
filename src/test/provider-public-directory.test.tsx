@@ -54,3 +54,16 @@ it('filters only the current published list and restores services on clear',asyn
  fireEvent.change(screen.getByLabelText('Search this provider’s services'),{target:{value:'unmatched'}});expect(screen.getByText('No published services match these filters.')).toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Clear service filters'}));expect(screen.getByRole('heading',{name:'Wellness visit'})).toBeInTheDocument();
 });
+
+it('applies and clears a state filter on Find a Vet', () => {
+  directory.mockReturnValue({ marketplaceItems: [], isLoading: false, isError: false, refetch: vi.fn() });
+  render(<MemoryRouter initialEntries={['/find-a-vet?city=Garki']}><ProviderMarketplace /></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('State or FCT'), { target: { value: 'Federal Capital Territory' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+  expect(directory).toHaveBeenLastCalledWith(expect.objectContaining({
+    category: 'veterinary', city: 'Garki', state: 'Federal Capital Territory',
+  }));
+  fireEvent.click(screen.getByRole('button', { name: 'Clear search filters' }));
+  expect(screen.getByLabelText('State or FCT')).toHaveValue('');
+  expect(directory).toHaveBeenLastCalledWith(expect.objectContaining({ category: 'veterinary', state: undefined }));
+});
