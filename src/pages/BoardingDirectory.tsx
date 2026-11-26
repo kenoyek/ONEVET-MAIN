@@ -13,6 +13,7 @@ import { PageHeading } from '@/components/layout/PageHeading';
 import { SEO } from '@/components/shared/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import { Label } from '@/components/ui/label';
 import { boardingRegistrationPath } from '@/lib/registration-intent';
 import { listBoardingFacilities } from '@/lib/services/boarding-directory';
@@ -121,7 +122,7 @@ export default function BoardingDirectory() {
           </div>
           <div className="min-w-44 flex-1 space-y-1">
             <Label htmlFor="boarding-state">State or FCT</Label>
-            <Input id="boarding-state" value={draftState} maxLength={80} placeholder="Any state"
+            <NigeriaStatePicker id="boarding-state" value={draftState} emptyLabel="Any state or FCT" autoComplete="off"
               onChange={event => setDraftState(event.target.value)} />
           </div>
           <Button type="submit">Find facilities</Button>

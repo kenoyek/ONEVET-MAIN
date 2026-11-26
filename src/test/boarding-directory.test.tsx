@@ -66,7 +66,7 @@ it('requires publication consent and acknowledges the confirmed change', async (
   expect(setBoardingListing).toHaveBeenCalledExactlyOnceWith('facility', true);
 });
 
-it('restores the city search from a link and when the browser goes back', async () => {
+it('restores city and legacy state filters from a link and when the browser goes back', async () => {
   function NavigationProbe() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -75,22 +75,22 @@ it('restores the city search from a link and when the browser goes back', async 
 
   vi.mocked(listBoardingFacilities).mockResolvedValue({ facilities: [], hasMore: false });
   render(<QueryClientProvider client={new QueryClient()}>
-    <MemoryRouter initialEntries={['/boarding?city=Ibadan']}>
+    <MemoryRouter initialEntries={['/boarding?city=Ibadan&state=Oy']}>
       <NavigationProbe /><BoardingDirectory />
     </MemoryRouter>
   </QueryClientProvider>);
   await screen.findByText('No listed boarding facilities match these filters.');
   expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
-  expect(listBoardingFacilities).toHaveBeenLastCalledWith('Ibadan', undefined);
+  expect(listBoardingFacilities).toHaveBeenLastCalledWith('Ibadan', undefined, 'Oy');
   fireEvent.change(screen.getByLabelText('City'), { target: { value: ' Lagos ' } });
-  fireEvent.change(screen.getByLabelText('State or FCT'), { target: { value: ' Lagos ' } });
+  fireEvent.change(screen.getByLabelText('State or FCT'), { target: { value: 'Lagos' } });
   fireEvent.click(screen.getByRole('button', { name: 'Find facilities' }));
   await screen.findByText('?city=Lagos&state=Lagos');
   await vi.waitFor(() => expect(listBoardingFacilities).toHaveBeenLastCalledWith('Lagos', undefined, 'Lagos'));
   fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
-  await screen.findByText('?city=Ibadan');
+  await screen.findByText('?city=Ibadan&state=Oy');
   expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
-  expect(screen.getByLabelText('State or FCT')).toHaveValue('');
+  expect(screen.getByLabelText('State or FCT')).toHaveValue('Oy');
 });
 
 it('opens a facility directly and keeps the city filter in the return link', async () => {
