@@ -71,7 +71,7 @@ function ProviderMarketplaceContent() {
   const hasFilters=!!(initial.query||initial.city||initial.state||initial.delivery!=='all'||initial.urgent||(!veterinaryOnly&&initial.category!=='all'));
   const providerSearch = directorySearchParams(initial, veterinaryOnly, animalContext);
   providerSearch.set('directory', veterinaryOnly ? 'vets' : 'care');
-  function providerProfileLink(slug: string | undefined) {
+  function providerProfileLink(slug?: string | null) {
     return { pathname: `/provider/public/${slug}`, search: providerSearch.toString() };
   }
 

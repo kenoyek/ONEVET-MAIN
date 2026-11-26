@@ -53,6 +53,7 @@ export interface MarketplaceServiceItem {
   organization?: {
     id: string;
     name: string;
+    slug?: string | null;
     status: string;
     city?: string | null;
     [key: string]: unknown;
