@@ -100,7 +100,48 @@
 @media(prefers-reduced-motion: reduce) { .welcome-home .welcome-path-image img, .welcome-home .welcome-button, .welcome-home .welcome-path-card { transition: none; } .welcome-home .welcome-path-card:hover img { transform: none; } }
 
 /* A clearer editorial rhythm for care, services and everyday essentials. */
-.welcome-services { padding-bottom: 84px; }
+.welcome-services.welcome-section {
+  display: grid;
+  grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr);
+  gap: clamp(22px, 7vw, 96px);
+  align-items: start;
+  padding-block: clamp(42px, 7vw, 96px);
+}
+.welcome-services-intro h2 {
+  max-width: 12ch;
+  font-size: clamp(32px, 4.1vw, 56px);
+  line-height: 1.08;
+  font-weight: 500;
+  letter-spacing: -.045em;
+}
+.welcome-services-intro > a { margin-top: 10px; }
+.welcome-service-list { border-top: 1px solid var(--welcome-line); }
+.welcome-service-list li { border-bottom: 1px solid var(--welcome-line); }
+.welcome-service-list a {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 8px;
+}
+.welcome-service-list a:hover { background: var(--welcome-sage); }
+.welcome-service-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--welcome-sage);
+}
+.welcome-service-list a:hover .welcome-service-icon { background: var(--welcome-card); }
+.welcome-service-text { display: grid; gap: 3px; }
+.welcome-service-text strong { font-size: 16px; font-weight: 600; }
+.welcome-service-text > span { color: var(--welcome-soft); font-size: 14px; line-height: 1.5; }
+@media (max-width: 767px) {
+  .welcome-services.welcome-section { grid-template-columns: 1fr; gap: 12px; }
+  .welcome-services-intro h2 { max-width: none; }
+}
+
 .welcome-confidence { background: var(--welcome-sage); padding: 76px 0; }
 .welcome-confidence-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items: center; }
 .welcome-confidence h2 { font-size: clamp(36px,4vw,54px); letter-spacing: -.045em; line-height: 1.15; margin: 18px 0; }
@@ -119,7 +160,6 @@
 .welcome-home a:focus-visible { outline: 2px solid currentColor; outline-offset: 5px; }
 @media(max-width:1023px) { .welcome-confidence-grid { gap: 40px; } .welcome-fees > div { flex-wrap: wrap; } .welcome-fees a { margin-left: 55px; } }
 @media(max-width:639px) { .welcome-confidence { padding: 55px 0; } .welcome-confidence-grid { grid-template-columns: 1fr; gap: 24px; } .welcome-confidence-list > div { gap: 14px; } .welcome-fees { padding-top: 32px; } .welcome-fees > div { padding: 24px; gap: 16px; } .welcome-fees a { margin-left: 0; } }
-@media(prefers-reduced-motion:reduce) { .welcome-service-card { transition: none; } .welcome-service-card:hover { transform: none; } }
 .welcome-finder { padding-top: 40px; }
 .welcome-finder-card {
   padding: clamp(20px, 4vw, 42px);
@@ -196,21 +236,6 @@
 .welcome-hero-actions { margin-top: 26px; }
 .welcome-hero-photo { position: relative; min-height: clamp(420px, 44vw, 650px); background: var(--welcome-sand); }
 .welcome-hero-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
-.welcome-services-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 28px); }
-.welcome-service-card { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--welcome-line); border-radius: 24px; background: var(--welcome-card); transition: border-color .2s; }
-.welcome-service-card:hover { border-color: #82967b; }
-.welcome-service-image { position: relative; aspect-ratio: 2; background: var(--welcome-sage); }
-.welcome-service-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.welcome-service-body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: clamp(20px, 3vw, 40px); }
-.welcome-service-body h3 { font-size: clamp(22px, 2.5vw, 34px); font-weight: 500; letter-spacing: -.04em; line-height: 1.1; }
-.welcome-service-body p { max-width: 44ch; margin: 12px 0 24px; color: var(--welcome-soft); font-size: 15px; line-height: 1.65; }
-.welcome-service-action { display: inline-flex; align-items: center; gap: 8px; margin-top: auto; font-size: 14px; font-weight: 600; }
-.welcome-service-card:hover .welcome-service-action { text-decoration: underline; text-underline-offset: 4px; }
-.welcome-service-feature { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); background: var(--welcome-sand); }
-.welcome-service-feature .welcome-service-body { justify-content: center; padding: clamp(24px, 5vw, 70px); }
-.welcome-service-feature .welcome-service-body h3 { font-size: clamp(32px, 4.4vw, 62px); }
-.welcome-service-feature .welcome-service-image { aspect-ratio: auto; min-height: clamp(270px, 32vw, 470px); }
-.welcome-service-feature .welcome-service-action { margin-top: 0; }
 .welcome-workspace-features > .welcome-workspace-example { margin-top: 14px; padding: 12px; background: var(--welcome-sage); border: 0; border-radius: 14px; }
 .welcome-workspace-features > .welcome-workspace-example > span { background: var(--welcome-card); }
 @media (max-width: 767px) {
@@ -218,10 +243,7 @@
   .welcome-hero-copy { padding: 24px; }
   .welcome-hero h1 { max-width: 15ch; font-size: clamp(33px, 8vw, 55px); }
   .welcome-hero-photo { min-height: 0; aspect-ratio: 1.5; }
-  .welcome-service-feature { grid-template-columns: 1fr; }
-  .welcome-service-feature .welcome-service-image { aspect-ratio: 1.65; min-height: 0; }
 }
-@media (max-width: 539px) { .welcome-services-grid { grid-template-columns: 1fr; } }
 
 .welcome-provider-review { padding-top: clamp(26px, 4vw, 52px); }
 .welcome-provider-review-panel {

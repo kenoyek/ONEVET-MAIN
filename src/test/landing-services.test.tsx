@@ -8,9 +8,10 @@ import {CareServices} from '@/components/landing/CareServices';
 afterEach(cleanup);
 it('offers public service discovery, signup and honest pricing guidance',()=>{
  render(<MemoryRouter><CareServices/></MemoryRouter>);
- expect(screen.getByRole('link',{name:/Veterinary care/})).toHaveAttribute('href','/find-a-vet');
+ expect(screen.getByRole('link',{name:/Veterinary consultations/})).toHaveAttribute('href','/find-a-vet');
  expect(screen.getByRole('link',{name:/Grooming & wellbeing/})).toHaveAttribute('href','/provider-marketplace?category=grooming');
- expect(screen.getByRole('link',{name:/Farm & livestock care/})).toHaveAttribute('href','/farm-care');
+ expect(screen.getByRole('link',{name:/Diagnostics & labs/})).toHaveAttribute('href','/provider-marketplace?category=diagnostics');
+ expect(screen.getByRole('link',{name:/Training & behaviour/})).toHaveAttribute('href','/provider-marketplace?category=training');
  expect(screen.getByRole('link',{name:/Create your free account/})).toHaveAttribute('href','/auth?mode=signup');
  expect(screen.getByText(/Online payments are currently unavailable/)).toBeInTheDocument();
  expect(screen.getByRole('link',{name:/Explore pricing & plans/})).toHaveAttribute('href','/pricing');
