@@ -17,13 +17,19 @@ export function normalizeCareState(value: string) {
   return fctAliases.has(state.toLowerCase()) ? 'Federal Capital Territory' : state;
 }
 
+export function careLocationParams(city: string, state: string, params = new URLSearchParams()) {
+  const cityFilter = city.trim().slice(0, 80);
+  const stateFilter = normalizeCareState(state);
+  if (cityFilter) params.set('city', cityFilter);
+  if (stateFilter) params.set('state', stateFilter);
+  return params;
+}
+
 export function careSearchLink(category:string,city:string,state='') {
-  const filters=careSearchFilters(new URLSearchParams({category,city}));
+  const filters=careSearchFilters(new URLSearchParams({category}));
   const params=new URLSearchParams();
   if(category!=='boarding' && filters.category!=='all')params.set('category',filters.category);
-  if(filters.city)params.set('city',filters.city);
+  careLocationParams(city, state, params);
   const path = category === 'boarding' ? '/boarding' : '/provider-marketplace';
-  const stateFilter = normalizeCareState(state);
-  if (stateFilter) params.set('state', stateFilter);
   return path + (params.size ? '?' + params.toString() : '');
 }

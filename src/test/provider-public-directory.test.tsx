@@ -58,12 +58,15 @@ it('filters only the current published list and restores services on clear',asyn
 
 it('applies and clears a state filter on Find a Vet', () => {
   directory.mockReturnValue({ marketplaceItems: [], isLoading: false, isError: false, refetch: vi.fn() });
-  render(<MemoryRouter initialEntries={['/find-a-vet?city=Garki']}><ProviderMarketplace /></MemoryRouter>);
+  render(<MemoryRouter initialEntries={['/find-a-vet?city=Garki&q=wellness&delivery=home_visit']}><ProviderMarketplace /></MemoryRouter>);
   fireEvent.change(screen.getByLabelText('State or FCT'), { target: { value: 'Federal Capital Territory' } });
   fireEvent.click(screen.getByRole('button', { name: 'Search' }));
   expect(directory).toHaveBeenLastCalledWith(expect.objectContaining({
     category: 'veterinary', city: 'Garki', state: 'Federal Capital Territory',
   }));
+  expect(screen.getByRole('link', { name: 'Pet boarding' })).toHaveAttribute(
+    'href', '/boarding?city=Garki&state=Federal+Capital+Territory',
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Search all cities in Federal Capital Territory' }));
   expect(directory).toHaveBeenLastCalledWith(expect.objectContaining({
     category: 'veterinary', city: undefined, state: 'Federal Capital Territory',

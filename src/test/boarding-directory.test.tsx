@@ -86,6 +86,7 @@ it('restores city and legacy state filters from a link and when the browser goes
   fireEvent.change(screen.getByLabelText('State or FCT'), { target: { value: 'Lagos' } });
   fireEvent.click(screen.getByRole('button', { name: 'Find facilities' }));
   await screen.findByText('?city=Lagos&state=Lagos');
+  expect(screen.getByRole('link', { name: 'Find a vet' })).toHaveAttribute('href', '/find-a-vet?city=Lagos&state=Lagos');
   await vi.waitFor(() => expect(listBoardingFacilities).toHaveBeenLastCalledWith('Lagos', undefined, 'Lagos'));
   fireEvent.click(screen.getByRole('button', { name: 'Browser back' }));
   await screen.findByText('?city=Ibadan&state=Oy');

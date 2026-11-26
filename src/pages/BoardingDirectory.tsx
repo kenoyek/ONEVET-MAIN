@@ -13,6 +13,7 @@ import { PageHeading } from '@/components/layout/PageHeading';
 import { SEO } from '@/components/shared/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CareDirectoryNav } from '@/components/shared/CareDirectoryNav';
 import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import { Label } from '@/components/ui/label';
 import { boardingRegistrationPath } from '@/lib/registration-intent';
@@ -73,6 +74,7 @@ export default function BoardingDirectory() {
         <Link to="/services" className="text-sm text-primary underline">Back to care services</Link>
         <PageHeading size="display" title="Pet boarding directory"
           description="Browse approved facilities and contact them directly to ask about dates, rates, and requirements for your pet’s stay." />
+        <CareDirectoryNav currentPath="/boarding" city={city} state={state} />
         <details id="saved-facilities" ref={shortlist} className="scroll-mt-28 rounded-xl border bg-card p-4">
           <summary className="scroll-mt-28 cursor-pointer font-semibold">Saved facilities ({saved.length})</summary>
           <p className="my-3 text-sm text-muted-foreground">Your shortlist is saved in this browser.</p>

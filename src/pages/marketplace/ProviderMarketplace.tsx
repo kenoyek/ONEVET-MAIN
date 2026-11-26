@@ -5,6 +5,7 @@ import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { Footer } from '@/components/layout/Footer';
+import { CareDirectoryNav } from '@/components/shared/CareDirectoryNav';
 import { NigeriaStatePicker } from '@/components/shared/NigeriaStatePicker';
 import { SEO } from '@/components/shared/SEO';
 import { Navbar } from '@/components/layout/Navbar';
@@ -135,6 +136,8 @@ function ProviderMarketplaceContent() {
               Explore provider services and listed fees. Confirm species
               expertise and availability directly with the provider.
             </p>
+
+            <CareDirectoryNav currentPath={location.pathname} city={initial.city} state={initial.state} />
 
             {/* Search Bar */}
             <form
