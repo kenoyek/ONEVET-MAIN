@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, House, Search, CalendarPlus, CalendarCheck, TriangleAlert, Plus } from 'lucide-react';
+import { ArrowUpRight, House, Search, CalendarPlus, CalendarCheck, TriangleAlert, Stethoscope, Building2 } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import farmImage from '@/assets/marketing/welcome-farm-760.webp';
 import petImage from '@/assets/marketing/welcome-pets-760.webp';
@@ -115,6 +115,22 @@ export function CareGuidance() {
       </Accordion>
     </section>
     <section className="container-wide welcome-urgent"><div><TriangleAlert size={22} strokeWidth={1.6} aria-hidden="true" /><div><h2>An emergency needs in-person care.</h2><p>If your animal is in immediate distress, contact a nearby veterinary clinic. Don’t wait for an online reply.</p></div><Link to="/urgent-care" className="welcome-text-link">Urgent care guidance <ArrowUpRight size={17} aria-hidden="true" /></Link></div></section>
-    <section className="container-wide welcome-professionals" aria-labelledby="professional-heading"><div><div><p className="welcome-kicker"><Plus size={15} aria-hidden="true" /> For veterinary professionals</p><h2 id="professional-heading">Your expertise.<br /><em>A little more reach.</em></h2><p>Connect with animal owners and bring your care to more lives. Start a provider application for review.</p></div><Link className="welcome-button welcome-button-primary" to="/auth?mode=signup&role=veterinarian">Apply to join 1Vet <span><ArrowUpRight size={19} aria-hidden="true" /></span></Link></div></section>
+    <section className="container-wide welcome-professionals" aria-labelledby="professional-heading">
+      <div className="welcome-professionals-panel">
+        <h2 id="professional-heading">Provide care through 1Vet</h2>
+        <div className="welcome-professionals-grid">
+          <Link to="/auth?mode=signup&role=veterinarian" className="welcome-professional-path">
+            <Stethoscope size={24} strokeWidth={1.6} aria-hidden="true" />
+            <div><h3>Join as a veterinarian</h3><p>Create an account and submit your veterinary licence for review.</p></div>
+            <ArrowUpRight size={19} aria-hidden="true" />
+          </Link>
+          <Link to="/provider/register" className="welcome-professional-path">
+            <Building2 size={24} strokeWidth={1.6} aria-hidden="true" />
+            <div><h3>Register a care business</h3><p>Apply to list a clinic, grooming business, boarding facility, or other care service.</p></div>
+            <ArrowUpRight size={19} aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    </section>
   </>;
 }

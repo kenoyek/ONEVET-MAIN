@@ -45,6 +45,10 @@ describe('Public care journeys', () => {
       screen.getByRole('link', { name: 'Farm & livestock care' }),
     ).toHaveAttribute('href', '/farm-care');
     expect(screen.getByRole('link', { name: 'Pet boarding' })).toHaveAttribute('href', '/boarding');
+    expect(screen.getByRole('link', { name: /Join as a veterinarian/ }))
+      .toHaveAttribute('href', '/auth?mode=signup&role=veterinarian');
+    expect(screen.getByRole('link', { name: /Register a care business/ }))
+      .toHaveAttribute('href', '/provider/register');
     expect(container.textContent).not.toMatch(
       /500\+|50k\+|instant availability guaranteed/i,
     );
