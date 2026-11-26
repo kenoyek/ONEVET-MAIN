@@ -317,3 +317,5 @@
 @media (max-width: 767px) {
   .welcome-footer { padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
 }
+
+.welcome-home .welcome-faq h2 { max-width: 15ch; margin: 0 0 12px; }

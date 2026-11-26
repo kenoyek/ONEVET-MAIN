@@ -10,10 +10,24 @@ const steps = [
   { icon: CalendarCheck, title: 'Wait for confirmation', text: 'Your request stays pending until the provider confirms. Check My bookings for updates and messages.' },
 ];
 const questions = [
-  ['How do I speak to a veterinarian?', 'Browse veterinary services, review a provider’s profile and fees, then sign in to request care. Availability must be confirmed by the provider; a listing does not guarantee an immediate response.'],
-  ['Can I get help with livestock?', 'You can seek veterinary guidance for farm animals as well as pets. Confirm the provider’s species expertise before booking. Farm records support animal groups and owner observations. Eligible veterinary and diagnostic appointment requests can use an active farm group. The provider must confirm the request.'],
-  ['What does an online consultation include?', 'A remote conversation can help you explain a concern and discuss next steps. A veterinarian may recommend an examination, testing, or treatment in person. Audio and video availability must be confirmed with the provider.'],
-  ['What if my animal needs urgent care?', 'If your animal may need emergency treatment, seek an in-person veterinarian immediately. Do not wait for a reply online. 1Vet does not guarantee emergency dispatch or round-the-clock provider availability.'],
+  { id: 'appointments', question: 'How do I request a veterinary appointment?',
+    answer: 'Choose a service and provider, then sign in to request a time. Your request stays pending until the provider confirms it.',
+    href: '/find-a-vet', action: 'Find a veterinarian' },
+  { id: 'costs', question: 'How do I check fees?',
+    answer: 'Check the listed fee and ask the provider what it includes. Confirm any extra charges for travel, tests, or medicines before the visit.',
+    href: '/pricing', action: 'Explore pricing and plans' },
+  { id: 'boarding', question: 'How do I arrange pet boarding?',
+    answer: 'Search the boarding directory by city or state. Contact the facility directly to confirm dates, rates, and what your pet needs to bring.',
+    href: '/boarding', action: 'Browse boarding facilities' },
+  { id: 'livestock', question: 'Can I get help with livestock?',
+    answer: 'You can browse veterinary services for farm animals and keep herd or flock records in your account. Check that the provider works with your species.',
+    href: '/farm-care', action: 'Explore farm and livestock care' },
+  { id: 'remote', question: 'What can a remote consultation help with?',
+    answer: 'A remote consultation can help you describe a concern and discuss next steps. Confirm remote availability with the provider. A veterinarian may recommend an in-person examination.',
+    href: '/services', action: 'Explore care services' },
+  { id: 'urgent', question: 'What if my animal needs urgent care?',
+    answer: 'If your animal is in immediate distress, contact a nearby veterinary clinic right away. Go to a clinic for an in-person assessment.',
+    href: '/urgent-care', action: 'Read urgent care guidance' },
 ];
 
 export function CarePathways() {
@@ -74,7 +88,27 @@ export function CarePathways() {
         </ol>
       </div>
     </section>
-    <section className="container-wide welcome-section welcome-faq" aria-labelledby="welcome-faq-heading"><div><p className="welcome-kicker">A little reassurance</p><h2 id="welcome-faq-heading">Good questions.<br /><em>Clearer answers.</em></h2><p className="welcome-section-description">Know what to expect, so you can choose your next step with confidence.</p><Link className="welcome-text-link" to="/pricing">Review pricing and plans <ArrowUpRight size={17} aria-hidden="true" /></Link></div><Accordion type="single" collapsible className="welcome-accordion">{questions.map(([q,a])=><AccordionItem value={q!} key={q}><AccordionTrigger className="text-left gap-4 py-6 text-base">{q}</AccordionTrigger><AccordionContent className="text-muted-foreground leading-relaxed pb-6">{a}</AccordionContent></AccordionItem>)}</Accordion></section>
+    <section className="container-wide welcome-section welcome-faq" aria-labelledby="welcome-faq-heading">
+      <div>
+        <h2 id="welcome-faq-heading">Frequently asked <em>questions</em></h2>
+        <Link className="welcome-text-link" to="/contact">
+          Contact support <ArrowUpRight size={17} aria-hidden="true" />
+        </Link>
+      </div>
+      <Accordion type="single" collapsible className="welcome-accordion">
+        {questions.map(({ id, question, answer, href, action }) => (
+          <AccordionItem value={id} key={id}>
+            <AccordionTrigger className="gap-4 py-5 text-left text-base">{question}</AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <p className="text-muted-foreground leading-relaxed">{answer}</p>
+              <Link className="welcome-text-link mt-1" to={href}>
+                {action} <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </section>
     <section className="container-wide welcome-urgent"><div><TriangleAlert size={22} strokeWidth={1.6} aria-hidden="true" /><div><h2>An emergency needs in-person care.</h2><p>If your animal is in immediate distress, contact a nearby veterinary clinic. Don’t wait for an online reply.</p></div><Link to="/urgent-care" className="welcome-text-link">Urgent care guidance <ArrowUpRight size={17} aria-hidden="true" /></Link></div></section>
     <section className="container-wide welcome-professionals" aria-labelledby="professional-heading"><div><div><p className="welcome-kicker"><Plus size={15} aria-hidden="true" /> For veterinary professionals</p><h2 id="professional-heading">Your expertise.<br /><em>A little more reach.</em></h2><p>Connect with animal owners and bring your care to more lives. Start a provider application for review.</p></div><Link className="welcome-button welcome-button-primary" to="/auth?mode=signup&role=veterinarian">Apply to join 1Vet <span><ArrowUpRight size={19} aria-hidden="true" /></span></Link></div></section>
   </>;
