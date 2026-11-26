@@ -1,4 +1,5 @@
 import {bookingAnimalContext,withBookingAnimal} from '@/lib/booking-animal-context';
+import { normalizeCareState } from '@/lib/care-search';
 import {directoryFilters,directorySearchParams} from '@/lib/directory-search';
 import { PageHeading } from '@/components/layout/PageHeading';
 import { useState } from 'react';
@@ -263,9 +264,13 @@ function ProviderMarketplaceContent() {
                   No services match your search
                 </h3>
                 <p className="text-muted-foreground">
-                  Try another search or city. Availability must be confirmed
-                  with the provider.
+                  Try another search, city, or state.
                 </p>
+                {initial.city && initial.state && (
+                  <Button type="button" variant="outline" onClick={() => {
+                    setParams(directorySearchParams({ ...initial, city: '' }, veterinaryOnly, animalContext));
+                  }}>Search all cities in {initial.state}</Button>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -326,8 +331,9 @@ function ProviderMarketplaceContent() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {item.location?.city || item.organization?.city},{' '}
-                          {String(item.organization?.country ?? '')}
+                          {[item.location?.city || item.organization?.city,
+                            normalizeCareState(item.location?.state ?? ''),
+                            item.organization?.country].filter(Boolean).join(', ')}
                         </p>
                       </div>
 

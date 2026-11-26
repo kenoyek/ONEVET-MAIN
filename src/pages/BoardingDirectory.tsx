@@ -133,7 +133,10 @@ export default function BoardingDirectory() {
         {listings.isError && <div><p role="alert">Could not load the boarding directory.</p>
           <Button variant="link" onClick={() => void listings.refetch()}>Retry directory</Button></div>}
         {listings.isSuccess && (listings.data.facilities.length === 0
-          ? <p>{(city || state) ? 'No listed boarding facilities match these filters.' : 'No boarding facilities are listed yet.'}</p>
+          ? <div className="space-y-2">
+              <p>{(city || state) ? 'No listed boarding facilities match these filters.' : 'No boarding facilities are listed yet.'}</p>
+              {city && state && <Button type="button" variant="outline" onClick={() => searchLocation('', state)}>Search all cities in {state}</Button>}
+            </div>
           : <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Boarding facilities">
             {listings.data.facilities.map(facility => {
               const isSaved = saved.some(item => item.slug === facility.slug);

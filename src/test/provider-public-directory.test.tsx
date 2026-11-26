@@ -34,10 +34,11 @@ describe('Published provider directory', () => {
   });
   it('routes new listings to provider details and retains existing veterinary request links', () => {
     directory.mockReturnValue({ marketplaceItems: [
-      { id: 'service-id', name: 'Organization grooming', category: 'grooming', base_price: 5000, currency: 'NGN', delivery_mode: 'clinic_visit', duration_minutes: 45, organization: { id: 'org-id', name: 'Approved Organization', slug: 'approved-org', verification_status: 'approved', city: 'Ibadan', country: 'Nigeria' } },
+      { id: 'service-id', name: 'Organization grooming', category: 'grooming', base_price: 5000, currency: 'NGN', delivery_mode: 'clinic_visit', duration_minutes: 45, organization: { id: 'org-id', name: 'Approved Organization', slug: 'approved-org', verification_status: 'approved', city: 'Ibadan', country: 'Nigeria' }, location: { id: 'org-id', city: 'Ibadan', state: 'Oyo' } },
       { id: 'legacy-id', name: 'Existing veterinary care', category: 'vet_clinic', legacy: true, base_price: 4000, currency: 'NGN', delivery_mode: 'confirm_with_provider', organization: { id: 'vet-id', name: 'Existing Veterinarian', city: 'Ibadan', country: 'Nigeria' } },
     ], isLoading: false, isError: false, refetch: vi.fn() });
     render(<MemoryRouter><ProviderMarketplace /></MemoryRouter>);
+    expect(screen.getByText('Ibadan, Oyo, Nigeria')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'View provider' })).toHaveAttribute('href', '/provider/public/approved-org');
     expect(screen.getByRole('link', { name: 'Request veterinary care' })).toHaveAttribute('href', '/consultations/new');
     expect(screen.queryByRole('link', { name: 'Request appointment' })).not.toBeInTheDocument();
@@ -62,6 +63,10 @@ it('applies and clears a state filter on Find a Vet', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Search' }));
   expect(directory).toHaveBeenLastCalledWith(expect.objectContaining({
     category: 'veterinary', city: 'Garki', state: 'Federal Capital Territory',
+  }));
+  fireEvent.click(screen.getByRole('button', { name: 'Search all cities in Federal Capital Territory' }));
+  expect(directory).toHaveBeenLastCalledWith(expect.objectContaining({
+    category: 'veterinary', city: undefined, state: 'Federal Capital Territory',
   }));
   fireEvent.click(screen.getByRole('button', { name: 'Clear search filters' }));
   expect(screen.getByLabelText('State or FCT')).toHaveValue('');

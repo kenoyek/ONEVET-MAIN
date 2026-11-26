@@ -91,6 +91,9 @@ it('restores city and legacy state filters from a link and when the browser goes
   await screen.findByText('?city=Ibadan&state=Oy');
   expect(screen.getByLabelText('City')).toHaveValue('Ibadan');
   expect(screen.getByLabelText('State or FCT')).toHaveValue('Oy');
+  fireEvent.click(screen.getByRole('button', { name: 'Search all cities in Oy' }));
+  await screen.findByText('?state=Oy');
+  expect(listBoardingFacilities).toHaveBeenLastCalledWith('', undefined, 'Oy');
 });
 
 it('opens a facility directly and keeps the city filter in the return link', async () => {
