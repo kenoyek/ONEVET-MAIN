@@ -175,17 +175,8 @@
 .welcome-workspace-features > div > span { background: var(--welcome-sage); border-radius: 12px; width: 44px; height: 44px; display: grid; place-items: center; flex-shrink: 0; }
 .welcome-workspace-features h3 { font-size: 16px; font-weight: 600; }
 .welcome-workspace-features p { font-size: 12px; line-height: 1.8; color: var(--welcome-soft); margin-top: 7px; }
-.welcome-shop-categories { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
-.welcome-shop-categories li { min-width: 0; }
-.welcome-shop-categories a { display: flex; flex-direction: column; min-height: 185px; height: 100%; padding: 23px; background: var(--welcome-paper); border: 1px solid var(--welcome-line); border-radius: 19px; transition: border-color .2s; }
-.welcome-shop-categories a:hover { border-color: var(--welcome-soft); }
-.welcome-shop-category-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--welcome-sage); margin-bottom: 20px; }
-.welcome-shop-categories h3 { font-size: 16px; font-weight: 500; line-height: 1.5; margin-bottom: 15px; }
-.welcome-shop-category-link { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: auto; font-size: 11px; line-height: 1.6; }
-.welcome-shop-category-link svg { flex-shrink: 0; }
 @media(max-width:1023px) { .welcome-workspace-grid { gap: 35px; } }
-@media(max-width:639px) { .welcome-workspace-grid { grid-template-columns: 1fr; gap: 32px; } .welcome-workspace-preview { padding: 21px; } .welcome-workspace-features > div { gap: 12px; } .welcome-workspace-features > div > span { width: 38px; height: 38px; } .welcome-shop-categories { gap: 10px; } .welcome-shop-categories a { padding: 16px; min-height: 190px; } .welcome-shop-categories h3 { font-size: 14px; } .welcome-shop-category-link { flex-wrap: wrap; } }
-@media(prefers-reduced-motion:reduce) { .welcome-shop-categories a { transition: none; } }
+@media(max-width:639px) { .welcome-workspace-grid { grid-template-columns: 1fr; gap: 32px; } .welcome-workspace-preview { padding: 21px; } .welcome-workspace-features > div { gap: 12px; } .welcome-workspace-features > div > span { width: 38px; height: 38px; } }
 
 .welcome-hero { padding: clamp(104px, 10vw, 146px) 0 0; }
 .welcome-hero-grid {
@@ -319,3 +310,38 @@
 }
 
 .welcome-home .welcome-faq h2 { max-width: 15ch; margin: 0 0 12px; }
+
+.welcome-marketplace { padding-block: clamp(42px, 7vw, 96px); }
+.welcome-marketplace-panel {
+  padding: clamp(20px, 4vw, 54px);
+  border: 1px solid var(--welcome-line);
+  border-radius: 26px;
+  background: var(--welcome-sage);
+}
+.welcome-marketplace-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px 32px; }
+.welcome-marketplace-heading h2 { font-size: clamp(29px, 4vw, 50px); font-weight: 500; line-height: 1.12; letter-spacing: -.045em; }
+.welcome-marketplace-heading p { max-width: 44ch; margin-top: 10px; font-size: 14px; line-height: 1.65; color: var(--welcome-soft); }
+.welcome-marketplace-heading > a { flex-shrink: 0; }
+.welcome-shop-categories { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 24px; }
+.welcome-shop-categories li { min-width: 0; }
+.welcome-shop-categories a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: space-between;
+  align-items: end;
+  gap: 16px 6px;
+  height: 100%;
+  min-height: 122px;
+  padding: clamp(12px, 2vw, 20px);
+  border: 1px solid var(--welcome-line);
+  border-radius: 16px;
+  background: var(--welcome-card);
+}
+.welcome-shop-categories a:hover { border-color: var(--welcome-soft); }
+.welcome-shop-category-icon { grid-column: 1 / -1; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--welcome-sage); }
+.welcome-shop-category-name { font-size: 14px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.welcome-shop-category-arrow { align-self: center; }
+@media (max-width: 767px) {
+  .welcome-marketplace-heading { flex-direction: column; align-items: flex-start; row-gap: 8px; }
+  .welcome-shop-categories { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+}

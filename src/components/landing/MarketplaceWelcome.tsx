@@ -1,25 +1,38 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, ShoppingBag, PawPrint, Sprout, Package, HeartPulse } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowUpRight, PawPrint, Sprout, Package, HeartPulse } from 'lucide-react';
+
+const categories = [
+  { Icon: PawPrint, title: 'Food & nutrition', category: 'Pet Food' },
+  { Icon: HeartPulse, title: 'Health & wellbeing', category: 'Pet Health' },
+  { Icon: Sprout, title: 'Farm essentials', category: 'Livestock' },
+  { Icon: Package, title: 'Everyday accessories', category: 'Accessories' },
+];
 
 export function MarketplaceWelcome() {
-  return <section aria-labelledby="home-marketplace-heading" className="container-wide py-12 md:py-20">
-    <div className="overflow-hidden rounded-[2rem] border bg-card p-6 sm:p-10 lg:p-14">
-      <div className="grid items-center gap-10 lg:grid-cols-2">
-        <div>
-          <p className="welcome-kicker flex items-center gap-2"><ShoppingBag size={18} aria-hidden="true" />The 1Vet marketplace</p>
-          <h2 id="home-marketplace-heading" className="mt-4 font-display text-3xl sm:text-4xl leading-tight">Care for them.<br />Find their everyday essentials.</h2>
-          <p className="mt-5 max-w-lg leading-relaxed text-muted-foreground">Explore pet and farm supplies, compare listed prices and build your cart. Browse freely—no account needed.</p>
-          <Button asChild className="mt-7"><Link to="/marketplace">Explore marketplace<ArrowUpRight className="ml-2 h-4 w-4" aria-hidden="true" /></Link></Button>
-          <p className="mt-4 text-xs text-muted-foreground">The catalogue is growing. Online checkout is currently unavailable.</p>
+  return (
+    <section aria-labelledby="home-marketplace-heading" className="container-wide welcome-marketplace">
+      <div className="welcome-marketplace-panel">
+        <div className="welcome-marketplace-heading">
+          <div>
+            <h2 id="home-marketplace-heading">Pet and farm essentials</h2>
+            <p>Browse supplies and compare listed prices. Online checkout is currently unavailable.</p>
+          </div>
+          <Link to="/marketplace" className="welcome-text-link">
+            Browse all products <ArrowUpRight size={17} aria-hidden="true" />
+          </Link>
         </div>
-        <ul className="welcome-shop-categories">{[
-          {Icon: PawPrint,title:'Food & nutrition',text:'Browse pet food',category:'Pet Food'},
-          {Icon: HeartPulse,title:'Health & wellbeing',text:'Explore health supplies',category:'Pet Health'},
-          {Icon: Sprout,title:'Farm essentials',text:'Browse livestock supplies',category:'Livestock'},
-          {Icon: Package,title:'Everyday accessories',text:'Explore accessories',category:'Accessories'},
-        ].map(({Icon,title,text,category})=><li key={category}><Link to={'/marketplace?'+new URLSearchParams({category})}><span className="welcome-shop-category-icon"><Icon size={27} strokeWidth={1.4} aria-hidden="true"/></span><h3>{title}</h3><span className="welcome-shop-category-link">{text}<ArrowUpRight size={16} aria-hidden="true"/></span></Link></li>)}</ul>
+        <ul className="welcome-shop-categories" aria-label="Shop by category">
+          {categories.map(({ Icon, title, category }) => (
+            <li key={category}>
+              <Link to={`/marketplace?${new URLSearchParams({ category })}`}>
+                <span className="welcome-shop-category-icon"><Icon size={22} strokeWidth={1.6} aria-hidden="true" /></span>
+                <span className="welcome-shop-category-name">{title}</span>
+                <ArrowUpRight className="welcome-shop-category-arrow" size={17} aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
-    </div>
-  </section>;
+    </section>
+  );
 }
