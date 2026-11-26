@@ -34,7 +34,7 @@
 .welcome-section-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; margin-bottom: 38px; }
 .welcome-home .welcome-section-heading h2, .welcome-faq h2, .welcome-professionals h2 { font-size: clamp(35px, 3.3vw, 50px); font-weight: 500; letter-spacing: -.045em; line-height: 1.17; margin-top: 17px; }
 .welcome-section-heading > p { max-width: 340px; color: var(--welcome-soft); font-size: 14px; line-height: 1.8; padding-bottom: 4px; }
-.welcome-pathways { scroll-margin-top: 95px; }
+.welcome-pathways.welcome-section { scroll-margin-top: 95px; padding-block: clamp(42px, 6vw, 80px) 0; }
 .welcome-home .welcome-pathways h2 { max-width: 21ch; margin-top: 0; }
 .welcome-path-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
 .welcome-path-card { display: flex; flex-direction: column; min-width: 0; padding: 0 0 24px; overflow: hidden; border: 1px solid var(--welcome-line); border-radius: 21px; background: var(--welcome-card); transition: border-color .2s, box-shadow .2s; }

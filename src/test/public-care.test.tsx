@@ -4,7 +4,7 @@ import { fireEvent, render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Hero } from '@/components/landing/Hero';
-import { CarePathways } from '@/components/landing/CarePathways';
+import { CareGuidance, CarePathways } from '@/components/landing/CarePathways';
 import ProviderMarketplace from '@/pages/marketplace/ProviderMarketplace';
 
 const mocks = vi.hoisted(() => ({ refetch: vi.fn(), search: vi.fn() }));
@@ -32,6 +32,7 @@ describe('Public care journeys', () => {
       <MemoryRouter>
         <Hero />
         <CarePathways />
+        <CareGuidance />
       </MemoryRouter>,
     );
     expect(

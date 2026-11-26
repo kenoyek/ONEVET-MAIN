@@ -31,7 +31,7 @@ const questions = [
 ];
 
 export function CarePathways() {
-  return <>
+  return (
     <section id="care-pathways" className="container-wide welcome-section welcome-pathways" aria-labelledby="pathways-heading">
       <div className="welcome-section-heading">
         <h2 id="pathways-heading">Care for life at home <em>and on the farm.</em></h2>
@@ -73,6 +73,11 @@ export function CarePathways() {
         </Link>
       </div>
     </section>
+  );
+}
+
+export function CareGuidance() {
+  return <>
     <section className="welcome-steps" aria-labelledby="steps-heading">
       <div className="container-wide">
         <div className="welcome-section-heading">
