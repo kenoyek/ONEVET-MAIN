@@ -40,7 +40,7 @@ describe('Published provider directory', () => {
     ], isLoading: false, isError: false, refetch: vi.fn() });
     render(<MemoryRouter><ProviderMarketplace /></MemoryRouter>);
     expect(screen.getByText('Ibadan, Oyo, Nigeria')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'View provider' })).toHaveAttribute('href', '/provider/public/approved-org?directory=care');
+    expect(screen.getByRole('link', { name: 'View service' })).toHaveAttribute('href', '/provider/public/approved-org?directory=care&service=service-id');
     expect(screen.getByRole('link', { name: 'Request veterinary care' })).toHaveAttribute('href', '/consultations/new');
     expect(screen.queryByRole('link', { name: 'Request appointment' })).not.toBeInTheDocument();
   });
@@ -84,4 +84,25 @@ it('returns from an unavailable provider to the original veterinary search', asy
   expect(screen.getByRole('link', { name: 'Back to search results' })).toHaveAttribute(
     'href', '/find-a-vet?city=Garki&state=Federal+Capital+Territory&delivery=home_visit',
   );
+});
+
+it('puts the selected published service first and focuses its heading', async () => {
+  const base = { organization_name: 'Approved Organization', category: 'grooming' };
+  publicServices.mockResolvedValue([
+    { ...base, id: 'coat', name: 'Coat care' },
+    { ...base, id: 'nails', name: 'Nail trim' },
+  ]);
+  profile('?directory=care&service=nails');
+  const selected = await screen.findByRole('heading', { name: 'Nail trim' });
+  expect(selected).toHaveFocus();
+  expect(screen.getAllByRole('heading', { level: 3 })[0]).toBe(selected);
+  expect(screen.getByRole('heading', { name: 'Coat care' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Back to search results' })).toHaveAttribute('href', '/provider-marketplace');
+});
+
+it('shows the current services when the selected service is no longer listed', async () => {
+  publicServices.mockResolvedValue([{ id: 'coat', name: 'Coat care', organization_name: 'Approved Organization' }]);
+  profile('?service=retired');
+  expect(await screen.findByText(/The selected service is no longer listed/)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Coat care' })).toBeInTheDocument();
 });

@@ -71,8 +71,10 @@ function ProviderMarketplaceContent() {
   const hasFilters=!!(initial.query||initial.city||initial.state||initial.delivery!=='all'||initial.urgent||(!veterinaryOnly&&initial.category!=='all'));
   const providerSearch = directorySearchParams(initial, veterinaryOnly, animalContext);
   providerSearch.set('directory', veterinaryOnly ? 'vets' : 'care');
-  function providerProfileLink(slug?: string | null) {
-    return { pathname: `/provider/public/${slug}`, search: providerSearch.toString() };
+  function providerProfileLink(slug?: string | null, serviceId?: string) {
+    const search = new URLSearchParams(providerSearch);
+    if (serviceId) search.set('service', serviceId);
+    return { pathname: `/provider/public/${slug}`, search: search.toString() };
   }
 
   function applySearch(change:Partial<ReturnType<typeof directoryFilters>>={}){
@@ -382,7 +384,7 @@ function ProviderMarketplaceContent() {
                           ? item.category === 'vet_clinic'
                             ? '/consultations/new'
                             : '/contact'
-                          : providerProfileLink(item.organization?.slug)
+                          : providerProfileLink(item.organization?.slug, item.id)
                       }
                       className="w-full"
                     >
@@ -391,7 +393,7 @@ function ProviderMarketplaceContent() {
                           ? item.category === 'vet_clinic'
                             ? 'Request veterinary care'
                             : 'Ask about this service'
-                          : 'View provider'}
+                          : 'View service'}
                       </Button>
                     </Link>
                   </CardFooter>
